@@ -323,7 +323,10 @@ C 保留的细节更多，但缩放产生的过渡色让它显得软；D 说明*
 - `W` `A` `S` `D` 或 `↑` `←` `↓` `→`：四向移动；
 - 同时按多个方向：**以最后按下的为准**，不会斜着走；
 - 松开按键：下一帧（约 16 ms）即停，动画冻结在待机帧；
-- 窗口失焦 / 切到后台：自动松开所有键，不会一直飘。
+- 窗口失焦 / 切到后台：自动松开所有键，不会一直飘；
+- `T`：切换角色尺寸（大 96 → 中 48 → 小 24，到两端反弹）；
+- `M`：静音 / 恢复背景音乐；
+- 手机触屏：见 2.6。
 
 ### 2.3 移动参数
 
@@ -373,6 +376,46 @@ C 保留的细节更多，但缩放产生的过渡色让它显得软；D 说明*
 
 > 实现要点：转身逻辑放在**按键事件**里，不放在渲染循环里检测方向变化——
 > 后者在标签页掉帧时会漏掉中间那一步，导致偶尔转错。
+
+### 2.6 手机触屏操控（`touch-controls.js`）
+
+一套 DOM 覆盖层，**只在触屏设备或 `?touch=1` 时挂载**，桌面完全不受影响。
+
+| 控件 | 位置 | 绑定 |
+| --- | --- | --- |
+| 半透明摇杆 `#stick-base` + `#stick-knob` | 左下，132px 圆 | 拖动 → `__input.setTouchDir(dir)`，松手 → `null` |
+| `A` | 右下，74px（比其它键大） | `__input.cycleShape()`，等同键盘 `T` |
+| `B` `X` `Y` | 右下，62px | 占位，虚线描边 + `pointerdown` 被 `preventDefault` |
+
+规则与实现要点：
+
+- **挂载条件**：`matchMedia('(pointer: coarse)')` 为真，或 URL 带 `?touch=1`（桌面预览用）。
+- **四向、不做斜向**：按主导轴判定（`|dx| >= |dy|` 取水平），与键盘行为一致；死区 10px，摇杆头最大位移 44px。
+- **不会断触**：`pointerdown` 时 `setPointerCapture`，手指拖出圆外仍继续收到 `pointermove`；
+  `pointerup / pointercancel / lostpointercapture` 三处都复位。
+- **方向由 `__input.setTouchDir` 并入键盘的同一套状态机**（`touchDir` 与 `pressed` 取最后者），
+  所以转身、碰撞、动画全都自动复用，没有第二份移动逻辑。
+- **竖屏预留操作带**：`html.touch-mode { --touch-band: 236px }`，`#stage` 的 `bottom` 跟着抬，
+  场景在操作带上方居中，不会贴着摇杆；`main.js` 的 `fit()` 也读这个变量扣掉可用高度。
+- **横屏改为叠加**：`--touch-band: 0`，控件半透明压在场景左右下角；`(orientation: landscape) and (max-height: 560px)`
+  时 `#abxy` 缩 0.78、摇杆缩 0.84，避免矮屏被控件吃掉。
+- **触屏模式隐藏键盘提示条**（`.hud`），因为摇杆/ABXY 已经取代了它。
+- **安全区与手势**：控件位置用 `env(safe-area-inset-*)`，页面禁用双击缩放、下拉刷新与文本选中。
+- **A 键面显示当前形状**：`main.js` 的 `setSize()` 派发 `crab:shape` 事件，控件监听后只更新键面文字，
+  所以用蓝牙键盘按 `T` 时键面也会同步。
+- **尺寸适配要补一次**：`touch-controls.js` 在 `main.js` 之后执行，首帧 `fit()` 时 `--touch-band` 还没定义，
+  所以挂载完再 `dispatchEvent(new Event('resize'))` 让画布重算一次。
+- **验收探针**：`__touch.visible / dir / shape`，加 `__input.setTouchDir('right')`、`__input.cycleShape()`。
+
+已验证（844×390 横屏 / 390×844 竖屏，Playwright 真机 UA + `hasTouch`）：
+
+| 检查 | 结果 |
+| --- | --- |
+| 四向位移（各 420 ms） | `right +54 / down +54 / left -53.3 / up -53.3` px，方向切换时 `face` 按圆弧规则变 |
+| 松手 | `dir = null`、`moving = false` |
+| 死区（推 4,3 px） | `dir = null`，不动 |
+| `A` 连按 4 次 | `小 24 → 中 48 → 大 96 → 中 48`（到 96 反弹），键面文字同步 |
+| 桌面（无触屏） | 不挂载、`--touch-band` 未定义、画布 826×465 与改动前一致、HUD 正常 |
 
 ---
 
@@ -575,11 +618,15 @@ bg = small.quantize(colors=64,                          # 2. 压到 64 色
 
 ```
 crab-coast/
-├── index.html                    页面骨架
-├── main.js                       渲染 / 输入 / 朝向状态机
+├── index.html                    页面骨架（画布 + HUD + 加载提示 + 触屏覆盖层宿主）
+├── main.js                       渲染 / 输入 / 朝向状态机 / 尺寸切换 / 探针
+├── touch-controls.js             手机触屏：左摇杆 + 右 ABXY（见 2.6，仅触屏加载）
 ├── serve.cmd                     一键本地启动
 ├── requirements.md               需求台账（reqledger 生成，勿手改）
 ├── ASSET-PIPELINE.md             本文档
+├── docs/
+│   ├── gameplay.png              桌面端截图（README 首图）
+│   └── touch_controls.png        手机端截图（摇杆 + ABXY）
 ├── music/                        背景音乐（见 3.5）
 │   ├── seaside_lazy_loop_40s.wav **当前在用** · 40.000s 无缝循环 · 32 kHz 立体声 · 5.12 MB
 │   ├── seaside_lazy_loop_40s.mp3 同内容压缩版（962 KB，备选）
@@ -621,5 +668,6 @@ crab-coast/
 ```
 
 **换场景**：替换 `assets/gpt/scene_ref.png` → `python tools/build_scene.py`
-**换角色**：替换 `assets/gpt/crab_sheet_ref.png` → `python tools/slice_crab.py` → `python tools/check_sheet.py`
-**跑起来**：`serve.cmd` 或双击 `index.html`
+**换角色**：替换 `assets/gpt/crab_sheet_ref.png` → `python tools/slice_crab_v2.py` → `python tools/check_sheet.py`
+**改触屏控件**：只动 `touch-controls.js`（样式、键位、绑定都在里面，别把移动逻辑抄第二份）
+**跑起来**：`serve.cmd` 或双击 `index.html`；桌面预览触屏界面用 `index.html?touch=1`

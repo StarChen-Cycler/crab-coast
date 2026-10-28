@@ -89,6 +89,7 @@
   const pressed = [];
   let facing = 'down';
   let moving = false;
+  let touchDir = null;      // 触屏摇杆的方向（null = 没推）
 
   function pushDir(dir) {
     if (!pressed.includes(dir)) pressed.push(dir);
@@ -122,6 +123,10 @@
       sizeBtn.title = '切换角色尺寸（T 键）';
     }
     sizeBtn && sizeBtn.blur();
+    // 触屏 A 键要显示当前形状，键盘 HUD 不需要知道
+    window.dispatchEvent(new CustomEvent('crab:shape', {
+      detail: { label: curSize().label, name: curSize().name },
+    }));
   }
   let sizeDir = 1;                 // +1 往小，-1 往大；撞到两头就反向
   function toggleSize() {
@@ -306,16 +311,17 @@
     fpsAvg = fpsAvg * 0.92 + (1 / Math.max(dtRaw, 0.0001)) * 0.08;
     if (dtRaw > 0.05) longFrame += 1;
 
-    moving = pressed.length > 0;
+    moving = pressed.length > 0 || touchDir !== null;
     if (moving) {
-      player.dir = facing;
+      player.dir = touchDir || facing;
       const step = SPEED * dt;
       let nx = player.x;
       let ny = player.y;
-      if (facing === 'left') nx -= step;
-      else if (facing === 'right') nx += step;
-      else if (facing === 'up') ny -= step;
-      else if (facing === 'down') ny += step;
+      const dir = touchDir || facing;
+      if (dir === 'left') nx -= step;
+      else if (dir === 'right') nx += step;
+      else if (dir === 'up') ny -= step;
+      else if (dir === 'down') ny += step;
 
       if (canStand(nx, player.y)) player.x = nx;
       if (canStand(player.x, ny)) player.y = ny;
@@ -347,7 +353,11 @@
   function fit() {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    let scale = Math.min((vw * 0.98) / W, (vh * 0.94) / H);
+    // 触屏竖屏会把底部一条让给摇杆/ABXY（CSS 变量 --touch-band），这里跟着扣掉
+    const band = parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue('--touch-band')
+    ) || 0;
+    let scale = Math.min((vw * 0.98) / W, ((vh - band) * 0.94) / H);
     if (scale >= 1) scale = Math.floor(scale * 4) / 4;
     canvas.style.width = Math.round(W * scale) + 'px';
     canvas.style.height = Math.round(H * scale) + 'px';
@@ -355,6 +365,18 @@
   window.addEventListener('resize', fit);
 
   // ---------------------------------------------------------------- 探针
+  // 触屏控件用的输入接口（摇杆 / ABXY）
+  window.__input = {
+    setTouchDir(d) {
+      if (d === touchDir) return;
+      touchDir = d;
+      if (d) setActive(d);
+    },
+    get touchDir() { return touchDir; },
+    cycleShape() { toggleSize(); },          // A 键：形状/尺寸轮询
+    get shape() { return curSize().label + ' ' + curSize().name; },
+  };
+
   window.__probe = {
     get ready() { return !!assets.bg; },
     state() {
