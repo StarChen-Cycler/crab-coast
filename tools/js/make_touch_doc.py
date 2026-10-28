@@ -1,6 +1,6 @@
 from PIL import Image
 import os
-src = r"C:\Users\LENOVO\.dsh\attachments\v1\objects\51\516e8a2b4d764243fac1a7e38f3e8a6dde87aa299372d7318c96990c45b30c3c"
+src = r"C:\Users\LENOVO\.dsh\attachments\v1\objects\bc\bca40e676ff2c26b48a65d835c6e574809272d15adea8411233e8119446f6fa1"
 im = Image.open(src).convert("RGB")
 q = im.quantize(colors=160, method=Image.MEDIANCUT, dither=Image.NONE).convert("RGB")
 q.save("docs/touch_controls.png", optimize=True)

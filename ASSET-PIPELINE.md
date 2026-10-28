@@ -386,6 +386,10 @@ C 保留的细节更多，但缩放产生的过渡色让它显得软；D 说明*
 | 半透明摇杆 `#stick-base` + `#stick-knob` | 左下，132px 圆 | 拖动 → `__input.setTouchDir(dir)`，松手 → `null` |
 | `A` | 右下，74px（比其它键大） | `__input.cycleShape()`，等同键盘 `T` |
 | `B` `X` `Y` | 右下，62px | 占位，虚线描边 + `pointerdown` 被 `preventDefault` |
+| `⌄ 收起按键` / `☰ 显示按键` `#touch-toggle` | 右上，音乐按钮下方 | 隐藏 / 恢复整套虚拟按键（见下） |
+
+**左上角「尺寸」按钮在触屏下隐藏**：`html.touch-mode #size-btn { display: none !important; }`。
+A 键已经负责换形状、键面还显示当前大/中/小，那个按钮是重复的；桌面保留（鼠标用户需要它）。
 
 规则与实现要点：
 
@@ -419,6 +423,14 @@ C 保留的细节更多，但缩放产生的过渡色让它显得软；D 说明*
   所以用蓝牙键盘按 `T` 时键面也会同步。
 - **尺寸适配要补一次**：`touch-controls.js` 在 `main.js` 之后执行，首帧 `fit()` 时 `--touch-band` 还没定义，
   所以挂载完再 `dispatchEvent(new Event('resize'))` 让画布重算一次。
+- **显示 / 隐藏虚拟按键**：右上 `#touch-toggle`，收起时给 `#touch-ui` 与 `<html>` 各加一个 class，
+  只藏 `#stick-base` / `#abxy`，**开关自己必须留着**（否则没法再打开）；收起同时 `resetStick()`，
+  否则正拖着摇杆时收起会让角色一直走。
+  收起后 `html.touch-mode.touch-ui-collapsed { --touch-band: 0px }`，竖屏不再预留操作带、场景回整屏居中，
+  并 `dispatchEvent(new Event('resize'))` 让 `fit()` 重算。**状态不写 localStorage**：
+  若被记住，下次进来一片空白会被当成"又坏了"。
+- **`__touch` 与新开关走同一条路径**：`__touch.hide()/show()` 就是 `setCollapsed(true/false)`，
+  `__touch.visible` 表示"摇杆+ABXY 是否可见"，避免 API 与按钮文案各说一套。
 - **排障入口**：URL 加 `?diag=1` 会在左上角显示诊断面板（通道、`input` 是否就绪、
   `coarse`/`maxTouchPoints`、当前 dir/shape、最近 7 个事件），见 `evidence/ios_touch_diag.png`；
   等价数据也可用 `__touch.diag()` 取。**iOS 上如果还有问题，先看这个面板**。
@@ -432,6 +444,10 @@ C 保留的细节更多，但缩放产生的过渡色让它显得软；D 说明*
 | 死区（推 4,3 px） | `dir = null`，不动 |
 | `A` 连按 4 次 | `中 48 → 小 24 → 中 48 → 大 96 → 中 48`（每次一档，到 96 反弹），键面同步 |
 | `B` `X` `Y` | 无任何状态变化 |
+| 收起按键（竖屏） | 摇杆/ABXY `display:none`、`--touch-band 236px → 0px`、画布 `y 196.5 → 314.5`（回整屏居中）、开关仍在原处且文案变「☰ 显示按键」 |
+| 收起后再展开 | 摇杆/ABXY 恢复、`--touch-band` 回 236px、画布回到 `y 196.5`、文案回「⌄ 收起按键」 |
+| 拖拽中收起 | `dir = null`、`moving = false`（不会继续走） |
+| 桌面（无触屏） | 左上角「尺寸 中 48」按钮**保留**、无开关按钮、HUD 正常、画布 826×465 |
 | 触摸 + 同时到来的 `pointerdown(touch)` | 只处理一次；stray pointer 抢不走方向；`pointerup(touch)` 不会提前结束触摸拖动 |
 | 桌面（无触屏，普通 URL） | **不挂载**（`maxTouchPoints=20` 也不误判）、画布 826×465 与改动前一致、HUD 正常 |
 | 桌面 `?touch=1` | 挂载、`path=pointer`、鼠标拖摇杆 `dir=right`、松手 `null` |

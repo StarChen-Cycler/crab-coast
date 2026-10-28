@@ -51,10 +51,15 @@
     /* 只在触屏模式注入，所以可以直接盖掉键盘提示 */
     .hud { display: none !important; }
 
+    /* 触屏下左上角的「尺寸」按钮是多余的：A 键已经负责换形状，键面还显示当前形状 */
+    html.touch-mode #size-btn { display: none !important; }
+
     /* 竖屏：底部留给控件的"操作带"，画布在它上面的区域里居中，
        免得场景贴着摇杆、上面空一大块。横屏画布本来就受限高度，不预留。 */
     html.touch-mode { --touch-band: 236px; }
     @media (orientation: landscape) { html.touch-mode { --touch-band: 0px; } }
+    /* 收起虚拟按键后底部不需要操作带，场景在整屏居中 */
+    html.touch-mode.touch-ui-collapsed { --touch-band: 0px; }
 
     /* iOS：页面本身不要吃手势（橡皮筋 / 捏合缩放 / 双击缩放），
        否则会出现"手指按在摇杆上，页面却在滚"，进而 pointercancel 打断输入 */
@@ -112,6 +117,20 @@
              display: flex; flex-direction: column; align-items: center; justify-content: center; }
     #btn-a .glyph { font: 700 18px/1 "Segoe UI", system-ui, sans-serif; }
 
+    /* ---- 右上：虚拟按键的显示/隐藏开关（样式与右上角「音乐」按钮对齐）---- */
+    #touch-toggle { position: absolute; right: calc(18px + env(safe-area-inset-right, 0px));
+                    top: 58px; padding: 7px 12px; border-radius: 10px;
+                    display: flex; align-items: center; gap: 6px; cursor: pointer;
+                    font: 13px/1 "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+                    color: #f3e7cf; background: rgba(6, 26, 34, 0.62);
+                    border: 1px solid rgba(240, 226, 199, 0.22);
+                    backdrop-filter: blur(4px); pointer-events: auto; touch-action: none;
+                    -webkit-appearance: none; appearance: none; }
+
+    /* 收起状态：只藏摇杆和 ABXY，开关自己必须留着，否则没法再打开 */
+    #touch-ui.collapsed #stick-base,
+    #touch-ui.collapsed #abxy { display: none; }
+
     /* 横屏手机：屏幕矮，控件整体缩一圈，免得把场景全盖住 */
     @media (orientation: landscape) and (max-height: 560px) {
       #abxy { transform: scale(0.78); }
@@ -139,6 +158,7 @@
         <span class="glyph">A</span><span class="sub">中</span>
       </button>
     </div>
+    <button id="touch-toggle" type="button">⌄ 收起按键</button>
   `;
   document.body.appendChild(ui);
 
@@ -319,8 +339,34 @@
     bindPress(el, () => note(id));
   }
 
+  // ---------------- 虚拟按键 显示 / 隐藏 ----------------
+  // 收起时只藏摇杆和 ABXY，开关自己留在右上角，否则没法再打开。
+  // 不写 localStorage：收起状态若被记住，下次进来一片空白会被当成"坏了"。
+  const toggle = document.getElementById('touch-toggle');
+
+  function paintToggle(on) {
+    toggle.textContent = on ? '☰ 显示按键' : '⌄ 收起按键';
+    toggle.title = on ? '显示虚拟按键' : '隐藏虚拟按键';
+  }
+
+  function setCollapsed(v) {
+    const on = !!v;
+    if (on === ui.classList.contains('collapsed')) return;
+    ui.classList.toggle('collapsed', on);
+    document.documentElement.classList.toggle('touch-ui-collapsed', on);
+    paintToggle(on);
+    if (on) resetStick();              // 收起时别让角色继续走
+    note(on ? 'hide' : 'show');
+    // 操作带高度变了（竖屏 236 ↔ 0），让画布重新适配
+    window.dispatchEvent(new Event('resize'));
+  }
+  paintToggle(false);
+  bindPress(toggle, () => setCollapsed(!ui.classList.contains('collapsed')));
+
   window.__touch = {
-    get visible() { return ui.style.display !== 'none'; },
+    // 指「摇杆 + ABXY 是否可见」，与右上角开关同义（开关自己一直可见）
+    get visible() { return !ui.classList.contains('collapsed'); },
+    get collapsed() { return ui.classList.contains('collapsed'); },
     get dir() { const i = getInput(); return i ? i.touchDir : null; },
     get shape() { return sub ? sub.textContent : ''; },
     get path() { return useTouchPath ? 'touch+pointer' : 'pointer'; },
@@ -332,13 +378,15 @@
         hasTouchStart, canTouch, coarse, maxTouchPoints,
         dir: i ? i.touchDir : null,
         shape: i ? i.shape : null,
+        collapsed: ui.classList.contains('collapsed'),
         events: events.slice(),
         viewport: [innerWidth, innerHeight],
         dpr: devicePixelRatio,
       };
     },
-    hide() { ui.style.display = 'none'; },
-    show() { ui.style.display = ''; },
+    // 与右上角开关同一条路径，避免出现"API 说隐藏了但开关文案没变"
+    hide() { setCollapsed(true); },
+    show() { setCollapsed(false); },
   };
 
   // main.js 先于本文件执行，它首帧算尺寸时 --touch-band 还没定义；
