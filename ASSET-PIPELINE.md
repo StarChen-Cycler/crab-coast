@@ -417,8 +417,16 @@ A 键已经负责换形状、键面还显示当前大/中/小，那个按钮是�
 - **横屏改为叠加**：`--touch-band: 0`，控件半透明压在场景左右下角；`(orientation: landscape) and (max-height: 560px)`
   时 `#abxy` 缩 0.78、摇杆缩 0.84，避免矮屏被控件吃掉。
 - **触屏模式隐藏键盘提示条**（`.hud`），因为摇杆/ABXY 已经取代了它。
-- **安全区与手势**：控件位置用 `env(safe-area-inset-*)`；`html.touch-mode` 与 `body` 都设
-  `touch-action: none`，页面不吃捏合/双击缩放与橡皮筋。
+- **安全区与手势**：控件位置用 `env(safe-area-inset-*)`；手势策略是**全页面禁双击放大、但允许双指缩放**：
+  - CSS 用 `touch-action: manipulation`（= `pan-x pan-y pinch-zoom`，浏览器层面就不把双击当放大手势），
+    作用在 `html` / `body` / `#scene`。**不能写 `none`**——祖先的 `none` 会连捏合一起禁掉。
+  - 控件的 `#stick-base` / `.abxy-btn` / `#touch-toggle` 仍然**单独**设 `touch-action: none`，
+    否则拖摇杆会被浏览器当成页面平移。
+  - `<meta name="viewport">` 里**不能写** `maximum-scale=1` / `user-scalable=no`：Android 会照做，
+    双指缩放直接被封死（iOS 从 10 起就忽略它，所以只改 CSS 在安卓上会漏）。
+  - 兜底 JS（`main.js`「页面手势策略」）：记录单指 `touchend`，若 300ms 内 30px 内又来一次，
+    对第二次 `touchend` 调 `preventDefault()` 拦掉双击放大；**一旦出现多指就作废上一次记录**，
+    保证捏合手势永远不被误拦。
 - **A 键面显示当前形状**：`main.js` 的 `setSize()` 派发 `crab:shape` 事件，控件监听后只更新键面文字，
   所以用蓝牙键盘按 `T` 时键面也会同步。
 - **尺寸适配要补一次**：`touch-controls.js` 在 `main.js` 之后执行，首帧 `fit()` 时 `--touch-band` 还没定义，
@@ -451,6 +459,10 @@ A 键已经负责换形状、键面还显示当前大/中/小，那个按钮是�
 | 触摸 + 同时到来的 `pointerdown(touch)` | 只处理一次；stray pointer 抢不走方向；`pointerup(touch)` 不会提前结束触摸拖动 |
 | 桌面（无触屏，普通 URL） | **不挂载**（`maxTouchPoints=20` 也不误判）、画布 826×465 与改动前一致、HUD 正常 |
 | 桌面 `?touch=1` | 挂载、`path=pointer`、鼠标拖摇杆 `dir=right`、松手 `null` |
+| 双击放大拦截（全页面） | 第 1 次 tap `defaultPrevented=false`；80ms 后、30px 内第 2 次 tap `defaultPrevented=true` |
+| 双指缩放不被拦 | 两指 `touchstart / touchmove / touchend` 全部 `defaultPrevented=false`，且 `dir` 保持 `null`（捏合不会误驱动摇杆） |
+| `touch-action` 落点 | `html` / `body` / `#scene` / `#touch-ui` = `manipulation`；`#stick-base` / `#btn-a` / `#touch-toggle` = `none` |
+| meta viewport | `width=device-width, initial-scale=1, viewport-fit=cover`（无 `maximum-scale` / `user-scalable`） |
 
 ---
 

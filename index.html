@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<!-- 允许双指缩放：不能写 maximum-scale / user-scalable=no，否则 Android 上捏合会被直接封死 -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <link rel="icon" href="data:," />
 <title>深圳海岸小世界 · 红树林与螃蟹</title>
 <style>
@@ -21,7 +22,11 @@
     overflow: hidden;
     overscroll-behavior: none;
     -webkit-tap-highlight-color: transparent;
+    /* 全页面：禁双击放大、允许双指缩放（= pan-x pan-y pinch-zoom）。
+       不要写成 none —— 那会把双指缩放一起禁掉。 */
+    touch-action: manipulation;
   }
+  #scene { touch-action: manipulation; }
   #stage {
     position: fixed;
     inset: 0;
@@ -109,9 +114,9 @@
   </div>
 
   <script src="assets/scene.js"></script>
-  <script src="main.js?v=7"></script>
+  <script src="main.js?v=8"></script>
   <!-- v= 用来绕过 GitHub Pages / Safari 的缓存：改动这几个文件后把版本号 +1 -->
-  <script src="touch-controls.js?v=7"></script>
+  <script src="touch-controls.js?v=8"></script>
   <script src="music/bgm.js"></script>
 </body>
 </html>

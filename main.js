@@ -408,6 +408,42 @@
     assetsLoaded() { return Object.keys(assets); },
   };
 
+  // ---------------------------------------------------------------- 页面手势策略
+  // 需求：全页面禁止「双击放大」，但**允许双指缩放**。
+  // 首选靠 CSS `touch-action: manipulation`（= pan-x pan-y pinch-zoom，浏览器层面
+  // 直接不把双击当放大的手势）；这里再补一道 JS 兜底，针对不认 touch-action 的旧 iOS。
+  //
+  // 注意：多指（捏合）全程不拦——一旦拦了，双指缩放就没了。
+  {
+    const DOUBLE_MS = 300;    // 两次点击的最大间隔
+    const DOUBLE_PX = 30;     // 两次点击的最大位移
+    let lastTapAt = 0;
+    let lastTapX = 0;
+    let lastTapY = 0;
+
+    // 一出现多指就作废"上一次点击"，否则捏合结束后的第一下会被误判成双击
+    document.addEventListener('touchstart', (e) => {
+      if (e.touches.length > 1) lastTapAt = 0;
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+      // 还有手指按着（多指手势进行中）→ 不参与双击判定
+      if (e.touches.length > 0) return;
+      if (e.changedTouches.length !== 1) return;
+      const t = e.changedTouches[0];
+      const now = Date.now();
+      const near = Math.hypot(t.clientX - lastTapX, t.clientY - lastTapY) < DOUBLE_PX;
+      if (now - lastTapAt < DOUBLE_MS && near) {
+        if (e.cancelable) e.preventDefault();   // 第二次点击：拦掉浏览器默认的放大
+        lastTapAt = 0;                          // 复位，连三下也只按一次双击算
+        return;
+      }
+      lastTapAt = now;
+      lastTapX = t.clientX;
+      lastTapY = t.clientY;
+    }, { passive: false });
+  }
+
   // ---------------------------------------------------------------- 启动
   (async function boot() {
     try {

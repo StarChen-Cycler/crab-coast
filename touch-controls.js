@@ -61,12 +61,16 @@
     /* 收起虚拟按键后底部不需要操作带，场景在整屏居中 */
     html.touch-mode.touch-ui-collapsed { --touch-band: 0px; }
 
-    /* iOS：页面本身不要吃手势（橡皮筋 / 捏合缩放 / 双击缩放），
-       否则会出现"手指按在摇杆上，页面却在滚"，进而 pointercancel 打断输入 */
-    html.touch-mode, html.touch-mode body { touch-action: none; overscroll-behavior: none; }
+    /* iOS：页面本身不要吃手势（橡皮筋 / 双击缩放），但**保留双指缩放**。
+       所以这里用 manipulation（= pan-x pan-y pinch-zoom），不能用 none ——
+       祖先元素上的 none 会连捏合一起禁掉。控件自己那几个仍然单独设 none。 */
+    html.touch-mode, html.touch-mode body {
+      touch-action: manipulation; overscroll-behavior: none;
+    }
 
     #touch-ui { position: fixed; inset: 0; pointer-events: none; z-index: 12;
-                touch-action: none; user-select: none; -webkit-user-select: none;
+                /* 覆盖层不吞缩放：真正设 none 的是下面的摇杆/按键本身 */
+                touch-action: manipulation; user-select: none; -webkit-user-select: none;
                 -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
                 font: 600 20px/1 "Segoe UI", system-ui, sans-serif; }
 
