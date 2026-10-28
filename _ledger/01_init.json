@@ -1,0 +1,7 @@
+{
+  "operation_id": "init-crabcoast-001",
+  "agent": "octie-agent",
+  "reason": "建立深圳海岸螃蟹小游戏的需求台账",
+  "expected_revision": 0,
+  "data": { "name": "深圳海岸螃蟹小世界" }
+}

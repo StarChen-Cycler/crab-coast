@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="data:," />
+<title>深圳海岸小世界 · 红树林与螃蟹</title>
+<style>
+  :root {
+    --sea-deep: #0c3446;
+    --ink: #f3e7cf;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background:
+      radial-gradient(circle at 50% 18%, #103f52 0%, #071e29 62%, #04121a 100%);
+    color: var(--ink);
+    font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    overflow: hidden;
+  }
+  #stage {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+  }
+  #scene {
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    background: #0c3446;
+    box-shadow: 0 0 0 2px #071e29, 0 18px 50px rgba(0, 0, 0, 0.55);
+  }
+  .hud {
+    position: fixed;
+    left: 18px;
+    top: 16px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: rgba(6, 26, 34, 0.62);
+    border: 1px solid rgba(240, 226, 199, 0.22);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    backdrop-filter: blur(4px);
+    pointer-events: none;
+    user-select: none;
+  }
+  .hud kbd {
+    display: inline-block;
+    min-width: 20px;
+    padding: 1px 5px;
+    margin: 0 1px;
+    border-radius: 4px;
+    background: rgba(243, 231, 207, 0.14);
+    border: 1px solid rgba(243, 231, 207, 0.3);
+    border-bottom-width: 2px;
+    font-family: inherit;
+    font-size: 12px;
+    text-align: center;
+  }
+  #loading {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    gap: 10px;
+    background: #071e29;
+    transition: opacity 0.45s ease;
+    z-index: 10;
+  }
+  #loading.hide { opacity: 0; pointer-events: none; }
+  #loading .bar {
+    width: 220px;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(243, 231, 207, 0.16);
+    overflow: hidden;
+  }
+  #loading .bar i {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #f0a05c, #f5d38c);
+    transition: width 0.2s ease;
+  }
+  #loading p { margin: 0; font-size: 13px; opacity: 0.8; }
+</style>
+</head>
+<body>
+  <div id="stage"><canvas id="scene" width="960" height="540"></canvas></div>
+
+  <div class="hud">
+    <span>移动</span>
+    <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 或 <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span>
+  </div>
+
+  <div id="loading">
+    <p id="loading-text">正在加载海岸场景…</p>
+    <div class="bar"><i id="loading-bar"></i></div>
+  </div>
+
+  <script src="assets/scene.js"></script>
+  <script src="main.js"></script>
+  <script src="music/bgm.js"></script>
+</body>
+</html>

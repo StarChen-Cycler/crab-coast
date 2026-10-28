@@ -1,0 +1,14 @@
+{
+  "operation_id": "source-add-gpt-001",
+  "agent": "octie-agent",
+  "reason": "登记专业建议来源，作为技术规格与参数的依据",
+  "expected_revision": 5,
+  "data": {
+    "kind": "链接",
+    "name": "ChatGPT 咨询：深圳海岸像素小游戏最短可行资产方案",
+    "date_note": "2026-10-28 通过 Edge CDP 在 chatgpt.com 发起的技术咨询",
+    "location": "https://chatgpt.com/c/6ae10247-06f0-83ee-80ae-b56b5c95a4ff",
+    "quote": "推荐技术栈：AI 生图 + Python Pillow + HTML5 Canvas 2D。整体采用三个独立层：固定背景、循环环境特效、角色精灵。不要让 AI 一次生成整张背景和全部角色动作后直接投入使用。游戏逻辑画布 960 × 540 px；背景 960 × 540 PNG；角色逻辑帧 64 × 64 px；四向动画 Down / Left / Right / Up，每方向 4 帧，总帧数 16 帧，最终 Sprite Sheet 256 × 256 PNG；行走动画 8 FPS；游戏渲染 requestAnimationFrame，通常目标 60 FPS；移动速度 110 px/s。推荐先生成一张角色母版（Character Reference），确认角色外观后，再生成四个方向的动作。不要首先要求模型直接输出 256 × 256 的成品 Sheet，更稳妥的方法是生成较大的 4 × 4 等分网格，再用代码裁切。",
+    "summary": "建议采用固定背景层 + 循环环境特效层 + 角色精灵层三层结构，画布 960×540、单帧 64×64、四向各 4 帧共 16 帧、8fps 行走、110px/s 移动；AI 先出角色母版与 4×4 网格大图，再用 Pillow 裁切、抠底、统一对齐得到可用 sprite sheet。"
+  }
+}

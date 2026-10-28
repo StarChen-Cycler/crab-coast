@@ -1,0 +1,15 @@
+{
+  "operation_id": "page-add-scene-001",
+  "agent": "octie-agent",
+  "reason": "登记唯一交付页面及其可视化区域",
+  "expected_revision": 1,
+  "data": {
+    "name": "深圳海岸小世界主页",
+    "location": "crab-coast/index.html 单页应用",
+    "regions": [
+      { "name": "场景画布区", "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色" },
+      { "name": "方向控制提示区", "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字" },
+      { "name": "资源加载提示区", "locator": "页面居中的加载文字与进度，资源就绪后隐藏" }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+node : FATAL: frame.evaluate: TypeError: Cannot read properties of null (reading 'getC
+ontext')
+At line:4 char:9
++ $out = (node "$s\edge.js" evalfile "$root\tools\probe_evidence.js" 2> ...
++         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (FATAL: frame.ev...g 'getContext'):String 
+   ) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+    at eval (eval at evaluate (:370:30), <anonymous>:4:16)
+    at eval (eval at evaluate (:370:30), <anonymous>:129:3)
+    at eval (<anonymous>)
+    at UtilityScript.evaluate (<anonymous>:370:30)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)

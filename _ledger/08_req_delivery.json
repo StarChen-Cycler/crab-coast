@@ -1,0 +1,100 @@
+{
+  "operation_id": "req-add-delivery-001",
+  "agent": "octie-agent",
+  "reason": "登记用户明确要求的单文件夹自包含交付与流畅渲染约束",
+  "expected_revision": 7,
+  "data": {
+    "title": "单文件夹自包含交付并保持流畅渲染",
+    "description": "整站所有文件（页面、脚本、样式、背景图、动作卡、生成脚本、需求台账）只存在于 crab-coast 一个文件夹内，不引用任何外部 CDN、字体或接口；断网状态下双击 index.html 即可运行。渲染使用 requestAnimationFrame 加时间增量推进，画面按 60 帧每秒目标运行，像素素材放大时使用最近邻插值保持锐利。",
+    "purpose": "用户要求所有产物收在一个文件夹里不外流，并且动画要顺滑、看得出是精心做的像素游戏而不是卡顿的贴图滑动。",
+    "necessity": "资产散落在多个目录或依赖外部网络会让这份交付在离线环境下不可用，也无法满足“一个文件夹搞定”的明确约束。",
+    "type": "非功能",
+    "module": "交付与性能",
+    "priority": "P0",
+    "placement": {
+      "kind": "页面",
+      "other": [],
+      "primary": { "page_id": "PAGE-000001", "page_revision": 1, "region_id": "REG-000001-0001-0001" }
+    },
+    "sources": [
+      { "source_id": "SRC-000001", "source_revision": 1 },
+      { "source_id": "SRC-000002", "source_revision": 1 }
+    ],
+    "included": [
+      "全部代码与资产位于 crab-coast 文件夹内",
+      "离线可运行的本地静态页面",
+      "基于时间增量的稳定渲染循环",
+      "像素素材放大时的最近邻插值"
+    ],
+    "excluded": [
+      "后端服务、数据库与账号体系",
+      "外部 CDN 资源与在线字体",
+      "移动端触屏手势（当前迭代不做）"
+    ],
+    "normal_behavior": {
+      "scenario": "用户在本机双击打开页面，且当前没有联网",
+      "behavior": "页面加载本地素材并开始渲染，方向键控制正常，动画连续",
+      "expected": "无任何外部网络请求，画面帧率维持在 60 帧每秒附近"
+    },
+    "boundaries": [
+      {
+        "scenario": "运行在性能较弱的机器上，帧率降到 30 帧每秒",
+        "expected": "角色移动速度与动画节拍保持与时间一致，不出现慢动作",
+        "handling": "位移与帧推进都按真实时间增量计算，不按固定步数"
+      },
+      {
+        "scenario": "浏览器窗口被缩放到很小或很大",
+        "expected": "场景等比缩放，像素边缘保持锐利不模糊",
+        "handling": "canvas 使用 image-rendering: pixelated，并按整数或等比缩放绘制"
+      }
+    ],
+    "acceptance": [
+      {
+        "role": "交付验收者",
+        "scenario": "核对文件夹自包含与离线可运行",
+        "preconditions": "已拿到 crab-coast 文件夹，网络已断开",
+        "input": "无网络",
+        "operation": "断开网络后双击 index.html，并查看开发者工具的 Network 面板",
+        "expected": "页面完整显示场景与角色，Network 面板中没有任何指向本机以外域名的请求，全部请求为 file:// 或 localhost 本地路径",
+        "exception": {
+          "scenario": "出现外部域名请求或页面白屏",
+          "expected": "判定不自包含",
+          "handling": "把所需资源下载到本地目录并改为相对路径后复测"
+        },
+        "method": "断网打开页面并导出 Network 请求列表，逐条检查域名",
+        "evidence": "Network 请求列表截图（含域名列）+ 离线状态下的页面截图"
+      },
+      {
+        "role": "交付验收者",
+        "scenario": "核对渲染帧率",
+        "preconditions": "页面运行在本机 Edge 浏览器",
+        "input": "按住 → 键移动角色 5 秒",
+        "operation": "用浏览器性能面板记录该时段的帧率",
+        "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+        "exception": {
+          "scenario": "平均帧率低于 55 或出现超过 50 毫秒的长帧",
+          "expected": "判定为不流畅",
+          "handling": "减少每帧重绘区域或缓存背景图层后复测"
+        },
+        "method": "录制性能时间线，统计移动期间的帧率均值与最长帧间隔",
+        "evidence": "性能面板截图或帧率统计数值"
+      },
+      {
+        "role": "交付验收者",
+        "scenario": "核对像素清晰度",
+        "preconditions": "页面已打开并显示角色",
+        "input": "无输入",
+        "operation": "放大查看角色与背景边缘",
+        "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+        "exception": {
+          "scenario": "出现模糊或彩色边缘",
+          "expected": "判定像素渲染不合格",
+          "handling": "补充 image-rendering 与关闭图像平滑后复测"
+        },
+        "method": "对角色局部区域截图并放大观察边缘像素",
+        "evidence": "角色局部放大截图"
+      }
+    ],
+    "questions": []
+  }
+}

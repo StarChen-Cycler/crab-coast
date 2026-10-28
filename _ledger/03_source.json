@@ -1,0 +1,14 @@
+{
+  "operation_id": "source-add-user-001",
+  "agent": "octie-agent",
+  "reason": "登记需求原始出处（用户本人口述需求）",
+  "expected_revision": 2,
+  "data": {
+    "kind": "用户消息",
+    "name": "用户口述需求：深圳海岸螃蟹小世界",
+    "date_note": "2026-10-28 用户在会话中的原始消息",
+    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+  }
+}

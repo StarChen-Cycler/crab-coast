@@ -1,0 +1,12 @@
+# reqledger 的进程锁/临时文件
+.requirements.md.lock
+*.lock
+
+# Python
+__pycache__/
+*.py[cod]
+
+# 系统
+.DS_Store
+Thumbs.db
+desktop.ini
