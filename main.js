@@ -350,19 +350,57 @@
   }
 
   // ---------------------------------------------------------------- 自适应尺寸
+  // 手机隐藏/展开浏览器工具栏时，很多浏览器**不发 window.resize**（iOS 尤其常见），
+  // 于是画面会一直保持旧尺寸，要等别的事件（例如点「收起按键」触发的那次 resize）才重排。
+  // 所以这里：① 以 visualViewport 为准取真实可见区域；② 多source监听；
+  //          ③ 触屏上铺满（自动放到最大），桌面仍留一点边距好看。
+  function viewBox() {
+    const vv = window.visualViewport;
+    // 双指放大时（scale > 1）不跟：那是用户在放大看细节，重新排版反而会跳
+    if (vv && Math.abs((vv.scale || 1) - 1) < 0.01) {
+      return { w: vv.width, h: vv.height };
+    }
+    return { w: window.innerWidth, h: window.innerHeight };
+  }
+
+  let fitCount = 0;                 // 验收用：证明各条事件通道真的触发了重排
   function fit() {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
+    fitCount += 1;
+    const { w: vw, h: vh } = viewBox();
     // 触屏竖屏会把底部一条让给摇杆/ABXY（CSS 变量 --touch-band），这里跟着扣掉
     const band = parseFloat(
       getComputedStyle(document.documentElement).getPropertyValue('--touch-band')
     ) || 0;
-    let scale = Math.min((vw * 0.98) / W, ((vh - band) * 0.94) / H);
+    const touch = document.documentElement.classList.contains('touch-mode');
+    // 触屏：铺满可见区域（不再留 2% / 6% 的边）；桌面：维持原来的留白
+    const usableW = touch ? vw : vw * 0.98;
+    const usableH = touch ? (vh - band) : (vh - band) * 0.94;
+    let scale = Math.min(usableW / W, usableH / H);
     if (scale >= 1) scale = Math.floor(scale * 4) / 4;
     canvas.style.width = Math.round(W * scale) + 'px';
     canvas.style.height = Math.round(H * scale) + 'px';
   }
+
   window.addEventListener('resize', fit);
+  window.addEventListener('pageshow', fit);
+  // 转屏后有些浏览器给的尺寸是"旧值"，晚一点再算一次
+  window.addEventListener('orientationchange', () => { setTimeout(fit, 120); });
+  if (window.visualViewport) {
+    // 工具栏收起/展开在 iOS 上常常只发 visualViewport 的事件
+    window.visualViewport.addEventListener('resize', fit);
+    window.visualViewport.addEventListener('scroll', fit);
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) fit(); });
+
+  // 兜底：万一某个浏览器什么事件都不发，用极轻量的轮询发现尺寸变化后再重排
+  let lastBox = viewBox();
+  setInterval(() => {
+    const b = viewBox();
+    if (Math.abs(b.w - lastBox.w) > 0.5 || Math.abs(b.h - lastBox.h) > 0.5) {
+      lastBox = b;
+      fit();
+    }
+  }, 400);
 
   // ---------------------------------------------------------------- 探针
   // 触屏控件用的输入接口（摇杆 / ABXY）
@@ -406,6 +444,8 @@
       return { x: r.x, y: r.y, w: Math.round(r.width), h: Math.round(r.height) };
     },
     assetsLoaded() { return Object.keys(assets); },
+    fitCount() { return fitCount; },
+    viewBox() { return viewBox(); },
   };
 
   // ---------------------------------------------------------------- 页面手势策略

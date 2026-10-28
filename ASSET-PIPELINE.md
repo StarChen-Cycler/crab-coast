@@ -334,7 +334,7 @@ C 保留的细节更多，但缩放产生的过渡色让它显得软；D 说明*
 | --- | --- |
 | 速度 | 110 px/s，按真实时间增量计算；单帧超过 50 ms 时按 50 ms 封顶（防止切后台回来瞬移），所以只有**连续严重掉帧**时才会略微变慢 |
 | 行走帧率 | 8 fps，4 帧循环 |
-| 逻辑画布 | 960 × 540，等比缩放到窗口（取宽高比中较小的那个） |
+| 逻辑画布 | 960 × 540，等比缩放到可见区域（取宽高比中较小的那个）：**触屏铺满**、桌面留 2% / 6% 边距，详见 2.7 |
 | 显示 | 最近邻缩放（放大缩小都关插值：`image-rendering: pixelated`、`imageSmoothingEnabled = false`） |
 
 ### 2.4 能走 / 不能走
@@ -468,6 +468,33 @@ A 键已经负责换形状、键面还显示当前大/中/小，那个按钮是�
 | `touch-action` 落点 | `html` / `body` / `#scene` / `#touch-ui` = `manipulation`；`#stick-base` / `#btn-a` / `#touch-toggle` = `none` |
 | meta viewport | `width=device-width, initial-scale=1, viewport-fit=cover`（无 `maximum-scale` / `user-scalable`） |
 | 开关定位（多尺寸） | 844×390 / 844×260 / 844×240 / 667×375 横屏均 `(18,16)-(106,44)` 左上，与 Y/X/B/A、音乐、摇杆**零重叠**、不出屏；390×844 竖屏仍 `(284,58)-(372,86)` 音乐下方 |
+
+### 2.7 画面自适应（手机工具栏收起/展开）
+
+**问题**：一开始只监听 `window.resize`。手机上隐藏浏览器工具栏时可见区域变大，但**很多浏览器不发
+`window.resize`**（iOS 尤其常见），于是画面一直保持旧尺寸——要等到别的事件（例如点「收起按键」触发的那次
+resize）才重排。表现就是"画面不会自动放大，点了才放大"。
+
+**做法**（`main.js` 的 `viewBox()` + `fit()`）：
+
+| 项 | 处理 |
+| --- | --- |
+| 尺寸来源 | `visualViewport.width/height`（工具栏变化时只有它反映真实可见区域）；`visualViewport.scale > 1`（用户双指放大中）时退回 `innerWidth/innerHeight`，避免放大过程中反复重排 |
+| 事件监听 | `resize` · `visualViewport.resize` · `visualViewport.scroll` · `orientationchange`（延迟 120ms，转屏尺寸常是旧值）· `pageshow` · `visibilitychange`（可见时） |
+| 兜底 | 400ms 轮询比对 `viewBox()`，尺寸变了才调 `fit()`（空闲时 0 次重排，实测不空转） |
+| 缩放策略 | **触屏铺满可见区域**（不再留 2% / 6% 边距，即"自动放到最大"）；桌面仍按 `0.98 / 0.94` 留边距 |
+| 验收探针 | `__probe.fitCount()`（重排次数）、`__probe.viewBox()`（当前取到的可见区域） |
+
+实测（Playwright 移动模拟，通过覆写 `visualViewport.height` 模拟"工具栏消失且不发事件"）：
+
+| 场景 | 画布 |
+| --- | --- |
+| 844×390 横屏（工具栏在） | 693×390（改动前是 652×367，现在铺满高度） |
+| 可见高度 390 → 460，**不发任何事件** | 400ms 内自动变 818×460（`fitCount` +1） |
+| 可见高度 460 → 390，同样不发事件 | 自动回到 693×390（`fitCount` +1） |
+| 390×844 竖屏 | 390×219（宽度铺满，改动前 382×215） |
+| 桌面 947×972（`touch-mode` 不存在） | 928×522，与 `0.98 / 0.94` 公式逐像素一致（无回归） |
+| 事件通道 | `visualViewport.resize` / `window.resize` / `pageshow` 各触发 1 次；空闲 900ms 触发 0 次 |
 
 ---
 

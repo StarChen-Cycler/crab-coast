@@ -5,7 +5,8 @@
  *         键面下方实时显示当前形状（大/中/小）
  * - B / X / Y：先占位，禁用态（虚线描边、点了没反应），后续再接功能
  *
- * 挂载条件：触屏设备（pointer:coarse 或 ontouchstart/maxTouchPoints）或 URL 带 ?touch=1。
+ * 挂载条件：触屏设备（pointer:coarse 或 有 touch 事件）或 URL 带 ?touch=1。
+ *           ⚠️ 不看 navigator.maxTouchPoints（无触摸屏的 Windows Edge 也返回 20）。
  * 桌面键鼠不受影响。
  *
  * ⚠️ 输入通道（iOS 踩坑后改成双通道，二选一绑定，不叠加）：
