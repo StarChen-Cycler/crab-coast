@@ -389,10 +389,23 @@ C 保留的细节更多，但缩放产生的过渡色让它显得软；D 说明*
 
 规则与实现要点：
 
-- **挂载条件**：`matchMedia('(pointer: coarse)')` 为真，或 URL 带 `?touch=1`（桌面预览用）。
+- **挂载条件**：`matchMedia('(pointer: coarse)')` 为真，或 `'ontouchstart' in window`，或 URL 带 `?touch=1`（桌面预览用）。
+- ⚠️ **不要用 `navigator.maxTouchPoints` 判断触摸能力**：实测 Windows Edge（无触摸屏）返回 **20**，
+  用它会导致桌面也挂载触屏 UI、而且走 touch 通道 → 鼠标拖摇杆完全没反应。
+- **双输入通道，二选一为主**（iOS 踩坑后重构）：
+  - `'ontouchstart' in window` → 绑 `touchstart / touchmove / touchend`（iOS/Android 全支持，
+    不受 Pointer Events 版本差异影响）。iOS 上 Pointer Events / `setPointerCapture` 只是
+    「2020-07 起广泛可用」，早期 Safari 行为不齐，不能作为唯一通道。
+  - 同时**始终**绑 pointer 通道给鼠标/触控笔（带触摸屏的笔记本可用鼠标拖）。
+    同一次触摸手势浏览器会同时发 `touchstart` 与 `pointerdown(pointerType==='touch')`，
+    这种 pointer 事件必须 `return` 掉，否则一次拖动被处理两遍。
+  - `touchmove` 里 `preventDefault()`（`{ passive: false }`）自己接管手势；否则 iOS 会把手指
+    当成页面滚动/橡皮筋，随后 `pointercancel` 打断输入。
+  - `touchmove / touchend` 绑在 `document` 上，手指拖出摇杆范围仍收得到（替代指针捕获）。
 - **四向、不做斜向**：按主导轴判定（`|dx| >= |dy|` 取水平），与键盘行为一致；死区 10px，摇杆头最大位移 44px。
-- **不会断触**：`pointerdown` 时 `setPointerCapture`，手指拖出圆外仍继续收到 `pointermove`；
-  `pointerup / pointercancel / lostpointercapture` 三处都复位。
+- **不要在挂载时缓存 `window.__input`**：原来写成 `const input = window.__input` + `if (input) ...`，
+  一旦取不到（脚本出错/顺序变化），摇杆和 A 键会**一起静默失效、控制台不报错**。改成每次现取。
+- **脚本防重复执行**：`if (window.__touch) return;`，否则二次求值会让监听器翻倍（一个手势触发两次）。
 - **方向由 `__input.setTouchDir` 并入键盘的同一套状态机**（`touchDir` 与 `pressed` 取最后者），
   所以转身、碰撞、动画全都自动复用，没有第二份移动逻辑。
 - **竖屏预留操作带**：`html.touch-mode { --touch-band: 236px }`，`#stage` 的 `bottom` 跟着抬，
@@ -400,22 +413,28 @@ C 保留的细节更多，但缩放产生的过渡色让它显得软；D 说明*
 - **横屏改为叠加**：`--touch-band: 0`，控件半透明压在场景左右下角；`(orientation: landscape) and (max-height: 560px)`
   时 `#abxy` 缩 0.78、摇杆缩 0.84，避免矮屏被控件吃掉。
 - **触屏模式隐藏键盘提示条**（`.hud`），因为摇杆/ABXY 已经取代了它。
-- **安全区与手势**：控件位置用 `env(safe-area-inset-*)`，页面禁用双击缩放、下拉刷新与文本选中。
+- **安全区与手势**：控件位置用 `env(safe-area-inset-*)`；`html.touch-mode` 与 `body` 都设
+  `touch-action: none`，页面不吃捏合/双击缩放与橡皮筋。
 - **A 键面显示当前形状**：`main.js` 的 `setSize()` 派发 `crab:shape` 事件，控件监听后只更新键面文字，
   所以用蓝牙键盘按 `T` 时键面也会同步。
 - **尺寸适配要补一次**：`touch-controls.js` 在 `main.js` 之后执行，首帧 `fit()` 时 `--touch-band` 还没定义，
   所以挂载完再 `dispatchEvent(new Event('resize'))` 让画布重算一次。
-- **验收探针**：`__touch.visible / dir / shape`，加 `__input.setTouchDir('right')`、`__input.cycleShape()`。
+- **排障入口**：URL 加 `?diag=1` 会在左上角显示诊断面板（通道、`input` 是否就绪、
+  `coarse`/`maxTouchPoints`、当前 dir/shape、最近 7 个事件），见 `evidence/ios_touch_diag.png`；
+  等价数据也可用 `__touch.diag()` 取。**iOS 上如果还有问题，先看这个面板**。
 
-已验证（844×390 横屏 / 390×844 竖屏，Playwright 真机 UA + `hasTouch`）：
+已验证（844×390 横屏 / 390×844 竖屏，Playwright 真机 UA + `hasTouch`；合成 TouchEvent 走 touch 通道）：
 
 | 检查 | 结果 |
 | --- | --- |
-| 四向位移（各 420 ms） | `right +54 / down +54 / left -53.3 / up -53.3` px，方向切换时 `face` 按圆弧规则变 |
+| 四向位移（各 380 ms） | `right +48 / down +48 / left -48 / up -48` px，方向切换时 `face` 按圆弧规则变 |
 | 松手 | `dir = null`、`moving = false` |
 | 死区（推 4,3 px） | `dir = null`，不动 |
-| `A` 连按 4 次 | `小 24 → 中 48 → 大 96 → 中 48`（到 96 反弹），键面文字同步 |
-| 桌面（无触屏） | 不挂载、`--touch-band` 未定义、画布 826×465 与改动前一致、HUD 正常 |
+| `A` 连按 4 次 | `中 48 → 小 24 → 中 48 → 大 96 → 中 48`（每次一档，到 96 反弹），键面同步 |
+| `B` `X` `Y` | 无任何状态变化 |
+| 触摸 + 同时到来的 `pointerdown(touch)` | 只处理一次；stray pointer 抢不走方向；`pointerup(touch)` 不会提前结束触摸拖动 |
+| 桌面（无触屏，普通 URL） | **不挂载**（`maxTouchPoints=20` 也不误判）、画布 826×465 与改动前一致、HUD 正常 |
+| 桌面 `?touch=1` | 挂载、`path=pointer`、鼠标拖摇杆 `dir=right`、松手 `null` |
 
 ---
 
