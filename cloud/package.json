@@ -1,0 +1,16 @@
+{
+  "name": "crab-coast",
+  "version": "0.2.0",
+  "private": true,
+  "description": "深圳海岸小世界：单机版 + 云服务器多人版（Agent 自助注册、动作卡上传、共享世界）",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "test:e2e": "node tools/e2e_multiplayer.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

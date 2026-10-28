@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<link rel="icon" href="data:," />
+<title>小世界 · 多人</title>
+<style>
+  :root { --ink: #f3e7cf; }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden; color: var(--ink);
+    background: radial-gradient(circle at 50% 18%, #103f52 0%, #071e29 62%, #04121a 100%);
+    font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  }
+  #stage { position: fixed; inset: 0; display: grid; place-items: center; }
+  #world { display: block; image-rendering: pixelated; background: #0c3446;
+           box-shadow: 0 0 0 2px #071e29, 0 18px 50px rgba(0,0,0,.55); }
+  .panel { position: fixed; padding: 7px 11px; border-radius: 10px; font-size: 13px;
+           background: rgba(6,26,34,.62); border: 1px solid rgba(240,226,199,.22);
+           backdrop-filter: blur(4px); pointer-events: none; }
+  #self-hud { left: 14px; top: 14px; }
+  #near-hud { left: 14px; top: 56px; }
+  #link-hud { right: 14px; top: 14px; }
+  #link-hud.bad { color: #ffb4b4; }
+
+  /* 无卡片时的上传页（REQ-000013） */
+  #dropzone { position: fixed; inset: 0; display: none; place-items: center; padding: 24px; }
+  #dropzone.show { display: grid; }
+  .dz-box { width: min(560px, 92vw); padding: 28px 22px; border-radius: 16px; text-align: center;
+            border: 2px dashed rgba(243,231,207,.45); background: rgba(6,26,34,.55); }
+  .dz-box.over { border-color: #f5d38c; background: rgba(240,160,92,.16); }
+  .dz-box h2 { margin: 0 0 8px; font-size: 18px; }
+  .dz-box p { margin: 6px 0; font-size: 13px; color: rgba(243,231,207,.75); line-height: 1.6; }
+  .dz-box code { background: rgba(243,231,207,.12); padding: 1px 5px; border-radius: 4px; }
+  #dz-pick { margin-top: 14px; padding: 9px 16px; border-radius: 10px; cursor: pointer;
+             font: 14px/1 inherit; color: #06222c; background: #f5d38c; border: 0; }
+  #dz-err { margin-top: 12px; font-size: 12.5px; color: #ffb4b4; white-space: pre-wrap; text-align: left; }
+
+  /* 触屏方向键 */
+  #dpad { position: fixed; left: 16px; bottom: 16px; width: 156px; height: 156px; display: none; }
+  #dpad.show { display: block; }
+  #dpad button { position: absolute; width: 52px; height: 52px; border-radius: 12px;
+                 background: rgba(6,26,34,.5); border: 2px solid rgba(243,231,207,.5);
+                 color: var(--ink); font-size: 20px; touch-action: none; }
+  #dpad .up { left: 52px; top: 0; }
+  #dpad .down { left: 52px; bottom: 0; }
+  #dpad .left { left: 0; top: 52px; }
+  #dpad .right { right: 0; top: 52px; }
+</style>
+</head>
+<body>
+  <div id="stage"><canvas id="world" width="960" height="540"></canvas></div>
+
+  <div id="self-hud" class="panel">连接中…</div>
+  <div id="near-hud" class="panel">附近：—</div>
+  <div id="link-hud" class="panel">连接中</div>
+
+  <div id="dpad">
+    <button class="up" data-dir="up">↑</button>
+    <button class="down" data-dir="down">↓</button>
+    <button class="left" data-dir="left">←</button>
+    <button class="right" data-dir="right">→</button>
+  </div>
+
+  <div id="dropzone">
+    <div class="dz-box" id="dz-box">
+      <h2>先上传你的动作卡</h2>
+      <p>还没有找到这只动物的动作卡。<br>把 <code>card.png</code>（192×192，4 行 × 4 帧）拖进来，或点击选择。</p>
+      <p>也可以同时拖入 <code>manifest.json</code>；只给 PNG 时按标准规格（48px / footLine 43 / 8fps）处理。</p>
+      <button id="dz-pick" type="button">选择文件</button>
+      <input id="dz-file" type="file" accept="image/png,application/json" multiple hidden />
+      <div id="dz-err"></div>
+    </div>
+  </div>
+
+  <script src="/play/play.js"></script>
+</body>
+</html>

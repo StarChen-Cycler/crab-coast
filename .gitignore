@@ -6,7 +6,13 @@
 __pycache__/
 *.py[cod]
 
+# 云端版（cloud/）：依赖与运行时数据都不入库
+cloud/node_modules/
+cloud/data/
+cloud/package-lock.json
+
 # 系统
 .DS_Store
 Thumbs.db
 desktop.ini
+cloud/build/

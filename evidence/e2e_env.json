@@ -1,0 +1,22 @@
+{
+  "port": 8123,
+  "dataDir": "C:\\Users\\LENOVO\\AppData\\Local\\Temp\\crab-env-HTE2wX",
+  "started": true,
+  "checks": {
+    "listenOnCustomPort": true,
+    "customCodeWorks": true,
+    "statuses": [
+      401,
+      200
+    ],
+    "dbInDataDir": true,
+    "cardDirInDataDir": true,
+    "defaultDataUntouched": true,
+    "defaultData": {
+      "before": 1793186134474.3137,
+      "after": 1793186134474.3137
+    }
+  },
+  "ok": true,
+  "failed": []
+}

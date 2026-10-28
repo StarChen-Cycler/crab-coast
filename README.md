@@ -1,5 +1,14 @@
 # 深圳海岸小世界 · 红树林与螃蟹
 
+> **仓库里有两个版本，按路径彻底分开**
+>
+> | 版本 | 路径 | 运行方式 |
+> | --- | --- | --- |
+> | **本地单机版**（就是这个 README 讲的内容） | 仓库根：`index.html` `main.js` `touch-controls.js` `assets/` `music/` | 双击 `index.html`，`file://` 即可；零依赖、零网络请求 |
+> | **云端多人版**（Agent 注册 + 动作卡上传 + 扫码/链接进入 + 共享世界） | `cloud/` | `cd cloud && npm install && npm start`；规格见 [`spec_multiplayer-world.md`](spec_multiplayer-world.md)，用法见 [`cloud/README.md`](cloud/README.md) |
+>
+> 两者互不引用：单机版不会请求 `cloud/` 里的任何东西。
+
 一个本地运行的 2.5D 像素小场景：固定不滚动的深圳海岸（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、高脚屋），
 加一只可以四向走动的螃蟹——键盘（WASD / 方向键）或**手机触屏（左摇杆 + 右 ABXY）**都能玩，
 走路是 4 组连续帧循环，角色有大 / 中 / 小三档尺寸可切。
