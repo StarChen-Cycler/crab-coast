@@ -131,6 +131,13 @@
                     backdrop-filter: blur(4px); pointer-events: auto; touch-action: none;
                     -webkit-appearance: none; appearance: none; }
 
+    /* 横屏：垂直空间紧，顶部只放得下一行。开关移到左上角与右上角音乐按钮对称——
+       留在右上会随着屏幕变矮被右下角 ABXY 顶住（844×260 实测已经贴到 Y 键头顶）。 */
+    @media (orientation: landscape) {
+      #touch-toggle { left: calc(18px + env(safe-area-inset-left, 0px));
+                      right: auto; top: 16px; }
+    }
+
     /* 收起状态：只藏摇杆和 ABXY，开关自己必须留着，否则没法再打开 */
     #touch-ui.collapsed #stick-base,
     #touch-ui.collapsed #abxy { display: none; }

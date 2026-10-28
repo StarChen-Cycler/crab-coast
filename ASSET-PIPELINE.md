@@ -386,7 +386,7 @@ C 保留的细节更多，但缩放产生的过渡色让它显得软；D 说明*
 | 半透明摇杆 `#stick-base` + `#stick-knob` | 左下，132px 圆 | 拖动 → `__input.setTouchDir(dir)`，松手 → `null` |
 | `A` | 右下，74px（比其它键大） | `__input.cycleShape()`，等同键盘 `T` |
 | `B` `X` `Y` | 右下，62px | 占位，虚线描边 + `pointerdown` 被 `preventDefault` |
-| `⌄ 收起按键` / `☰ 显示按键` `#touch-toggle` | 右上，音乐按钮下方 | 隐藏 / 恢复整套虚拟按键（见下） |
+| `⌄ 收起按键` / `☰ 显示按键` `#touch-toggle` | 竖屏：右上（音乐按钮下方）<br>横屏：左上（与右上音乐对称） | 隐藏 / 恢复整套虚拟按键（见下） |
 
 **左上角「尺寸」按钮在触屏下隐藏**：`html.touch-mode #size-btn { display: none !important; }`。
 A 键已经负责换形状、键面还显示当前大/中/小，那个按钮是重复的；桌面保留（鼠标用户需要它）。
@@ -431,12 +431,16 @@ A 键已经负责换形状、键面还显示当前大/中/小，那个按钮是�
   所以用蓝牙键盘按 `T` 时键面也会同步。
 - **尺寸适配要补一次**：`touch-controls.js` 在 `main.js` 之后执行，首帧 `fit()` 时 `--touch-band` 还没定义，
   所以挂载完再 `dispatchEvent(new Event('resize'))` 让画布重算一次。
-- **显示 / 隐藏虚拟按键**：右上 `#touch-toggle`，收起时给 `#touch-ui` 与 `<html>` 各加一个 class，
+- **显示 / 隐藏虚拟按键**：`#touch-toggle`，收起时给 `#touch-ui` 与 `<html>` 各加一个 class，
   只藏 `#stick-base` / `#abxy`，**开关自己必须留着**（否则没法再打开）；收起同时 `resetStick()`，
   否则正拖着摇杆时收起会让角色一直走。
   收起后 `html.touch-mode.touch-ui-collapsed { --touch-band: 0px }`，竖屏不再预留操作带、场景回整屏居中，
   并 `dispatchEvent(new Event('resize'))` 让 `fit()` 重算。**状态不写 localStorage**：
   若被记住，下次进来一片空白会被当成"又坏了"。
+- **开关的位置随方向变**：竖屏右上（`top: 58px`，音乐按钮下方）；横屏移到**左上**、与右上音乐对称
+  （`@media (orientation: landscape) { left: 18px; right: auto; top: 16px }`）。
+  原因：横屏垂直空间紧，右下 ABXY 固定在底部、屏幕一变矮就整体上移，
+  844×260 实测「收起按键」会被顶到 Y 键头顶（几乎贴住）。横屏顶部只放得下一行，所以左右各一个。
 - **`__touch` 与新开关走同一条路径**：`__touch.hide()/show()` 就是 `setCollapsed(true/false)`，
   `__touch.visible` 表示"摇杆+ABXY 是否可见"，避免 API 与按钮文案各说一套。
 - **排障入口**：URL 加 `?diag=1` 会在左上角显示诊断面板（通道、`input` 是否就绪、
@@ -463,6 +467,7 @@ A 键已经负责换形状、键面还显示当前大/中/小，那个按钮是�
 | 双指缩放不被拦 | 两指 `touchstart / touchmove / touchend` 全部 `defaultPrevented=false`，且 `dir` 保持 `null`（捏合不会误驱动摇杆） |
 | `touch-action` 落点 | `html` / `body` / `#scene` / `#touch-ui` = `manipulation`；`#stick-base` / `#btn-a` / `#touch-toggle` = `none` |
 | meta viewport | `width=device-width, initial-scale=1, viewport-fit=cover`（无 `maximum-scale` / `user-scalable`） |
+| 开关定位（多尺寸） | 844×390 / 844×260 / 844×240 / 667×375 横屏均 `(18,16)-(106,44)` 左上，与 Y/X/B/A、音乐、摇杆**零重叠**、不出屏；390×844 竖屏仍 `(284,58)-(372,86)` 音乐下方 |
 
 ---
 
