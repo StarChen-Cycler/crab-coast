@@ -1,0 +1,11 @@
+{
+  "operation_id": "crab-base6-activate",
+  "agent": "octie-agent",
+  "reason": "候选基线已审核通过，激活为当前有效基线",
+  "expected_revision": 159,
+  "data": {
+    "id": "BASE-000006",
+    "revision": 1,
+    "digest": "29ff1fe352b768deddffe0178f94864d266b72557fd5189b4a5ed6ce218ff046"
+  }
+}

@@ -2,13 +2,13 @@
 
 项目：深圳海岸螃蟹小世界
 
-台账身份：LED-19d840367862455889aebf797805ea48；格式版本：1；文档修订：148。
+台账身份：LED-19d840367862455889aebf797805ea48；格式版本：1；文档修订：175。
 
 本正文由唯一机器记录确定性生成。声明Agent仅作操作归因，不证明身份或审核独立性。
 
 ## 当前状态
 
-当前有效基线：BASE-000005 / V1.4。施工范围取该基线的纳入成员及精确内容修订。
+当前有效基线：BASE-000006 / V1.5。施工范围取该基线的纳入成员及精确内容修订。
 
 当前工作视图展示最新提议及派生状态；施工依据使用上列有效基线指针，最新提议不自动替换基线。
 
@@ -32,7 +32,7 @@
 
 此内容修订开发状态：已实现；开发轮次：2。
 
-历史发布标记（不占用开发状态）：REL-000001 / BASE-000001 / 轮次1 / crab\-coast\-v1；REL-000002 / BASE-000002 / 轮次2 / crab\-coast\-v2。
+历史发布标记（不占用开发状态）：REL-000001 / BASE-000001 / 轮次1 / crab\-coast\-v1；REL-000002 / BASE-000002 / 轮次2 / crab\-coast\-v2；REL-000006 / BASE-000006 / 轮次2 / crab\-coast\-v6。
 
 已确认范围：纳入；原因：纳入决定由确认事件明确记录；固定采用审核：REV-000001。
 
@@ -209,7 +209,7 @@
 
 此内容修订开发状态：已实现；开发轮次：2。
 
-历史发布标记（不占用开发状态）：REL-000001 / BASE-000001 / 轮次1 / crab\-coast\-v1；REL-000002 / BASE-000002 / 轮次2 / crab\-coast\-v2。
+历史发布标记（不占用开发状态）：REL-000001 / BASE-000001 / 轮次1 / crab\-coast\-v1；REL-000002 / BASE-000002 / 轮次2 / crab\-coast\-v2；REL-000006 / BASE-000006 / 轮次2 / crab\-coast\-v6。
 
 已确认范围：纳入；原因：纳入决定由确认事件明确记录；固定采用审核：REV-000004。
 
@@ -409,6 +409,54 @@
 
 依赖：空集合；标签：空集合。
 
+### REQ-000007 / 内容修订1：手机隐藏浏览器工具栏后画面自动放大到最大
+
+最新提议；当前状态：已确认，不作为施工基线。
+
+类型：功能；模块：画面自适应（可见区域适配）；优先级：P1；声明Agent：octie\-agent；时间：2026-10-28T10:24:35.811740+00:00。
+
+手机浏览器的工具栏（地址栏、底部导航）收起或展开会改变页面可见高度，但部分浏览器在此时不派发 window\.resize（iOS Safari 尤其常见）。当前实现只监听 window\.resize，所以可见区域变大后画布仍保持旧尺寸，必须等其它事件（例如点击「收起按键」触发的那一次 resize）才会重排。本需求要求以真实可见区域（visualViewport）为准，在可见区域变化后自动重算画布尺寸，把它放大到当前可见区域内能放下的最大值，并在触屏设备上去掉原来预留的 2% / 6% 边距。
+
+目的：让手机玩家收起浏览器工具栏后立刻得到更大的画面，不需要手动触发任何按钮。
+
+必要性及删除影响：去掉本项，画面会在工具栏收起后长期偏小：横屏实测少用约 6% 的高度（693×390 而非应有的 818×460），竖屏少用 8px 宽度；且表现为“点了某个按钮才放大”的怪异时序，用户会以为页面卡住。
+
+包含范围：以 visualViewport 的宽高作为可见区域，在工具栏收起或展开后自动重算画布尺寸；触屏设备上画布铺满可见区域，不再保留原来的 2% 宽度与 6% 高度边距；同时监听 window resize、visualViewport resize、visualViewport scroll、orientationchange、pageshow、visibilitychange 六条来源；增加 400ms 的可见区域尺寸比对兜底，应对浏览器完全不发事件的情况。
+
+不包含范围：双指放大（visualViewport\.scale 大于 1）过程中的重新排版；桌面端留边距策略的变更，桌面仍保持 0\.98 / 0\.94；虚拟按键的位置、显隐与输入通道逻辑。
+
+此内容修订开发状态：已实现；开发轮次：1。
+
+历史发布标记（不占用开发状态）：REL-000006 / BASE-000006 / 轮次1 / crab\-coast\-v6。
+
+已确认范围：纳入；原因：纳入决定由确认事件明确记录；固定采用审核：REV-000023。
+
+当前最新审核：REV-000023；结论：通过。后续审核不改写已经完成的历史确认。
+
+当前有效基线绑定：REQ-000007 r1；范围：纳入。此段正文内容修订为r1，按各自修订标识追溯。
+
+正常行为：在手机横屏下收起浏览器工具栏，可见高度由 390 变为 460，浏览器没有派发 resize时，页面以 visualViewport 为准重新计算画布缩放，应观察到画布在一个 400ms 轮询周期内由 693×390 自动变为 818×460，全程无需用户点击任何按钮。
+
+- 边界：用户正在双指放大（visualViewport\.scale 大于 1）；处理：viewBox\(\) 退回 innerWidth / innerHeight，跳过本次重排，避免放大过程中画面跳动；可观察结果：画布的 CSS 尺寸保持不变。
+
+主页面：PAGE-000001 r1，区域REG-000001-0001-0001。
+
+来源：SRC-000003 r1。
+
+- 验收编号及关联需求修订：AC\-000027 / REQ\-000007 r1：当移动端验收者在工具栏收起后可见高度变大且浏览器不派发任何事件、前置条件为页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390下，使用把可见高度由 390 改为 460，不派发任何事件执行静置 700ms 后读取画布尺寸与 \_\_probe\.fitCount\(\)时，应观察到画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击；若静置超过 1 秒画布尺寸仍未变化，则检查 400ms 轮询定时器是否被中断，以及 \_\_probe\.viewBox\(\) 是否已返回 460，并应观察到判定不通过并记录 fitCount 未增长，由执行时声明的验证Agent通过在移动模拟环境下覆写 visualViewport\.height 模拟工具栏收起，对比前后 \_\_probe\.canvasRect\(\) 与 \_\_probe\.fitCount\(\)核对并保存前后画布尺寸数值、fitCount 变化、以及该状态的截图。
+- 验收编号及关联需求修订：AC\-000028 / REQ\-000007 r1：当移动端验收者在工具栏重新出现，可见高度由 460 回到 390，同样不发事件、前置条件为承接上一条，画布当前为 818×460下，使用把可见高度由 460 改回 390，不派发任何事件执行静置 700ms 后读取画布尺寸与 \_\_probe\.fitCount\(\)时，应观察到画布自动回到 693×390，fitCount 再增加 1；若画布没有缩回，仍显示 818×460 并把下半部分裁掉，则检查 viewBox\(\) 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向，并应观察到判定不通过，由执行时声明的验证Agent通过与上一条同一套模拟手段，反向修改高度核对并保存前后画布尺寸数值与 fitCount 变化。
+- 验收编号及关联需求修订：AC\-000029 / REQ\-000007 r1：当移动端验收者在核对各事件通道与空闲开销、前置条件为页面稳定，画布尺寸已确定下，使用依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms执行每派发一个事件读取一次 \_\_probe\.fitCount\(\)，静置后再读一次时，应观察到三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长；若静置期间 fitCount 持续增长，则检查轮询是否在尺寸未变时仍调用 fit\(\)，并应观察到判定不通过，说明存在空转，由执行时声明的验证Agent通过派发合成事件并读取 \_\_probe\.fitCount\(\) 的增量核对并保存三次事件与静置期的 fitCount 数值。
+- 验收编号及关联需求修订：AC\-000030 / REQ\-000007 r1：当移动端验收者在触屏设备上画布铺满可见区域、前置条件为触屏模式已挂载（html 带 touch\-mode）下，使用分别在 390×844 竖屏与 844×390 横屏下打开页面执行读取画布尺寸与可见区域尺寸时，应观察到竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367；若画布仍保留 2% / 6% 边距，则检查 fit\(\) 中触屏分支是否真的取到了 touch\-mode 类名，并应观察到判定不通过，由执行时声明的验证Agent通过在两个移动视口下读取 \_\_probe\.canvasRect\(\) 与 innerWidth/innerHeight核对并保存两个视口下的画布尺寸与视口尺寸数值、截图。
+- 验收编号及关联需求修订：AC\-000031 / REQ\-000007 r1：当桌面验收者在桌面端不出现铺满带来的回归、前置条件为普通桌面浏览器打开页面，html 不带 touch\-mode下，使用视口 947×972执行读取画布尺寸并与 0\.98 / 0\.94 公式对比时，应观察到画布为 928×522，与公式逐像素一致，未被铺满逻辑影响；若桌面画布被拉伸到 929 以上或出现裁剪，则检查 fit\(\) 的触屏判断是否误把桌面当成触屏，并应观察到判定不通过，由执行时声明的验证Agent通过在桌面视口读取 \_\_probe\.canvasRect\(\) 并与公式计算值比较核对并保存视口尺寸、画布尺寸与公式计算值。
+
+开放问题：显式为空。
+
+依赖：空集合；标签：空集合。
+
+#### 技术补充
+
+实现位于 main\.js：viewBox\(\) 在 visualViewport\.scale 约等于 1 时取 visualViewport 的宽高，否则退回 innerWidth/innerHeight；fit\(\) 依据 html\.touch\-mode 决定铺满还是保留边距；事件监听与 400ms 轮询兜底同在 fit\(\) 附近注册；另暴露 \_\_probe\.fitCount\(\) 与 \_\_probe\.viewBox\(\) 供验收读取。
+
 ## 变更提议与评估
 
 ### CHG-000001 / 修订1：已关闭
@@ -513,6 +561,39 @@
 - 义务关闭：REQ-000006 / AC-000025：有效执行闭合；依据：\{"executions":\[\{"delivery\_id":"crab\-coast\-v5","execution\_id":"EXE\-000039"\}\],"type":"执行"\}。
 - 义务关闭：REQ-000006 / AC-000026：有效执行闭合；依据：\{"executions":\[\{"delivery\_id":"crab\-coast\-v5","execution\_id":"EXE\-000040"\}\],"type":"执行"\}。
 
+### CHG-000005 / 修订1：已关闭
+
+前驱：BASE-000005；当前差异及评估摘要：ea172f2a692d679024b59f612fd1241d308fc7ff08614b04a4ffe7e7cfe228b5。
+
+影响对象：REQ\-000001、REQ\-000004、REQ\-000007。
+
+- 新增：REQ-000007；旧端点：空；新端点：1。
+
+影响分析：本次变更只新增一条需求（REQ\-000007 手机隐藏工具栏后画面自动放大到最大），落地改动集中在 main\.js 的画布尺寸计算：新增 viewBox\(\) 取 visualViewport、fit\(\) 增加触屏铺满分支、注册 resize / visualViewport\.resize / visualViewport\.scroll / orientationchange / pageshow / visibilitychange 六条监听与 400ms 轮询兜底。不涉及场景贴图、角色精灵、朝向状态机、碰撞网格、帧序与音频，因此这些既有需求的内容不需要修改。仍然受影响的点有三类：一是画布缩放比例发生变化后，场景是否仍完整呈现且不变形（REQ\-000001）；二是触屏上画布被放大到铺满后，帧率与像素硬边是否仍然达标（REQ\-000004）；三是新需求自身的五条验收条件需要逐条实测（REQ\-000007）。已排除的虚拟按键显隐与输入通道、双指放大过程中的重排，均不在本次差异内。
+
+- 重验义务：CHG-000005 r1 / REQ-000001 r1 / AC-000001，尚不表示已经执行。
+- 重验义务：CHG-000005 r1 / REQ-000004 r1 / AC-000013，尚不表示已经执行。
+- 重验义务：CHG-000005 r1 / REQ-000004 r1 / AC-000014，尚不表示已经执行。
+- 重验义务：CHG-000005 r1 / REQ-000007 r1 / AC-000027，尚不表示已经执行。
+- 重验义务：CHG-000005 r1 / REQ-000007 r1 / AC-000028，尚不表示已经执行。
+- 重验义务：CHG-000005 r1 / REQ-000007 r1 / AC-000029，尚不表示已经执行。
+- 重验义务：CHG-000005 r1 / REQ-000007 r1 / AC-000030，尚不表示已经执行。
+- 重验义务：CHG-000005 r1 / REQ-000007 r1 / AC-000031，尚不表示已经执行。
+
+应用生成候选：BASE-000006；是否已生效以顶端有效基线指针为准。
+
+关闭事件：EVT-000175；逐动作及逐义务关闭；原因：变更已应用、基线已激活、已随 REL\-000006 发布，逐动作与逐义务关闭。
+
+- 动作关闭：REQ-000007 / 新增：已交付；依据：\{"release\_id":"REL\-000006","type":"发布"\}。
+- 义务关闭：REQ-000001 / AC-000001：有效执行闭合；依据：\{"executions":\[\{"delivery\_id":"crab\-coast\-v6","execution\_id":"EXE\-000046"\}\],"type":"执行"\}。
+- 义务关闭：REQ-000004 / AC-000013：有效执行闭合；依据：\{"executions":\[\{"delivery\_id":"crab\-coast\-v6","execution\_id":"EXE\-000050"\}\],"type":"执行"\}。
+- 义务关闭：REQ-000004 / AC-000014：有效执行闭合；依据：\{"executions":\[\{"delivery\_id":"crab\-coast\-v6","execution\_id":"EXE\-000051"\}\],"type":"执行"\}。
+- 义务关闭：REQ-000007 / AC-000027：有效执行闭合；依据：\{"executions":\[\{"delivery\_id":"crab\-coast\-v6","execution\_id":"EXE\-000041"\}\],"type":"执行"\}。
+- 义务关闭：REQ-000007 / AC-000028：有效执行闭合；依据：\{"executions":\[\{"delivery\_id":"crab\-coast\-v6","execution\_id":"EXE\-000042"\}\],"type":"执行"\}。
+- 义务关闭：REQ-000007 / AC-000029：有效执行闭合；依据：\{"executions":\[\{"delivery\_id":"crab\-coast\-v6","execution\_id":"EXE\-000043"\}\],"type":"执行"\}。
+- 义务关闭：REQ-000007 / AC-000030：有效执行闭合；依据：\{"executions":\[\{"delivery\_id":"crab\-coast\-v6","execution\_id":"EXE\-000044"\}\],"type":"执行"\}。
+- 义务关闭：REQ-000007 / AC-000031：有效执行闭合；依据：\{"executions":\[\{"delivery\_id":"crab\-coast\-v6","execution\_id":"EXE\-000045"\}\],"type":"执行"\}。
+
 ## 基线快照
 
 ### BASE-000001 / V1.0：历史已激活
@@ -556,7 +637,7 @@
 - REQ-000005 r1：纳入；页面/来源均为该内容修订所绑定的精确快照。
 - REQ-000006 r2：纳入；页面/来源均为该内容修订所绑定的精确快照。
 
-### BASE-000005 / V1.4：有效
+### BASE-000005 / V1.4：历史已激活
 
 前驱：BASE-000004；冻结摘要：bc4a23e67b9a7b7280f291a7678551c8d7dc2b138a24e533635c07eb1c89cefa。
 
@@ -566,6 +647,18 @@
 - REQ-000004 r1：纳入；页面/来源均为该内容修订所绑定的精确快照。
 - REQ-000005 r1：纳入；页面/来源均为该内容修订所绑定的精确快照。
 - REQ-000006 r3：纳入；页面/来源均为该内容修订所绑定的精确快照。
+
+### BASE-000006 / V1.5：有效
+
+前驱：BASE-000005；冻结摘要：29ff1fe352b768deddffe0178f94864d266b72557fd5189b4a5ed6ce218ff046。
+
+- REQ-000001 r1：纳入；页面/来源均为该内容修订所绑定的精确快照。
+- REQ-000002 r1：纳入；页面/来源均为该内容修订所绑定的精确快照。
+- REQ-000003 r2：纳入；页面/来源均为该内容修订所绑定的精确快照。
+- REQ-000004 r1：纳入；页面/来源均为该内容修订所绑定的精确快照。
+- REQ-000005 r1：纳入；页面/来源均为该内容修订所绑定的精确快照。
+- REQ-000006 r3：纳入；页面/来源均为该内容修订所绑定的精确快照。
+- REQ-000007 r1：纳入；页面/来源均为该内容修订所绑定的精确快照。
 
 ## 页面及区域
 
@@ -600,6 +693,16 @@
 原话摘录：推荐技术栈：AI 生图 \+ Python Pillow \+ HTML5 Canvas 2D。整体采用三个独立层：固定背景、循环环境特效、角色精灵。不要让 AI 一次生成整张背景和全部角色动作后直接投入使用。游戏逻辑画布 960 × 540 px；背景 960 × 540 PNG；角色逻辑帧 64 × 64 px；四向动画 Down / Left / Right / Up，每方向 4 帧，总帧数 16 帧，最终 Sprite Sheet 256 × 256 PNG；行走动画 8 FPS；游戏渲染 requestAnimationFrame，通常目标 60 FPS；移动速度 110 px/s。推荐先生成一张角色母版（Character Reference），确认角色外观后，再生成四个方向的动作。不要首先要求模型直接输出 256 × 256 的成品 Sheet，更稳妥的方法是生成较大的 4 × 4 等分网格，再用代码裁切。
 
 整理说明：建议采用固定背景层 \+ 循环环境特效层 \+ 角色精灵层三层结构，画布 960×540、单帧 64×64、四向各 4 帧共 16 帧、8fps 行走、110px/s 移动；AI 先出角色母版与 4×4 网格大图，再用 Pillow 裁切、抠底、统一对齐得到可用 sprite sheet。
+
+### SRC-000003 / 修订1：用户提出画面自适应需求（手机隐藏工具栏后自动放大）
+
+最新位置/口径；声明Agent：octie\-agent；时间：2026-10-28T10:24:10.851262+00:00。
+
+来源类型：用户消息；定位/人工记录：用户在本次会话中以文字直接提出的原始需求，未经整理；日期说明：2026\-10\-28 用户消息。
+
+原话摘录：手机浏览器有一个问题就是，刚开始的时候如果游戏页面小，我隐藏工具栏之后页面不会自动放大，而是点收起按钮的时候才会自适应放大，让页面自动放大最大，新需求创建修改
+
+整理说明：用户指出：手机隐藏浏览器工具栏后可见区域变大，画面却不会自动放大，要点「收起按键」才重排；要求画面自动放大到最大。
 
 ## 逐条件验收
 
@@ -1005,6 +1108,116 @@
 
 判定：通过；实际：三档基线 86/43/21 不变，脚底仍贴地；朝向仍为右→正面行、上→侧视行。；实际方法：读取角色坐标与各档基线核对绘制偏移。；独立免验确认：无需免验。
 
+### EXE-000041：条件执行
+
+基线：BASE-000006；需求：REQ-000007 r1；开发轮次：1；条件：AC-000027；交付标识：crab\-coast\-v6；已实现事件：EVT-000162。
+
+冻结预期：画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击；证据定位：evidence/req7\_landscape\.json 步骤 1→2；另于本地 8099 与线上 ?v=10 各复测一次，结果一致。
+
+声明Agent：octie\-agent；时间：2026-10-28T10:29:20.102849+00:00；原因：按实测数据登记该条件的验收结果。
+
+判定：通过；实际：把 visualViewport\.height 由 390 覆写为 460（模拟浏览器工具栏收起，全程不派发任何事件）后静置 700ms：\_\_probe\.viewBox\(\) 变为 \{w:844,h:460\}，画布由 693×390 自动变为 818×460，\_\_probe\.fitCount\(\) 由 3 增至 4，期间没有任何用户点击。；实际方法：移动模拟（844×390、hasTouch）下用 Object\.defineProperty 覆写 visualViewport\.height，读取 \_\_probe\.canvasRect\(\) / viewBox\(\) / fitCount\(\)。；独立免验确认：无需免验。
+
+### EXE-000042：条件执行
+
+基线：BASE-000006；需求：REQ-000007 r1；开发轮次：1；条件：AC-000028；交付标识：crab\-coast\-v6；已实现事件：EVT-000162。
+
+冻结预期：画布自动回到 693×390，fitCount 再增加 1；证据定位：evidence/req7\_landscape\.json 步骤 2→3。
+
+声明Agent：octie\-agent；时间：2026-10-28T10:29:22.644825+00:00；原因：按实测数据登记该条件的验收结果。
+
+判定：通过；实际：把 visualViewport\.height 由 460 改回 390（同样不发事件）后静置 700ms：画布自动由 818×460 回到 693×390，fitCount 由 4 增至 5。；实际方法：与上一条同一套覆写手段，反向修改高度后读取画布尺寸与 fitCount。；独立免验确认：无需免验。
+
+### EXE-000043：条件执行
+
+基线：BASE-000006；需求：REQ-000007 r1；开发轮次：1；条件：AC-000029；交付标识：crab\-coast\-v6；已实现事件：EVT-000162。
+
+冻结预期：三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长；证据定位：evidence/req7\_landscape\.json 的 events 字段：\{vvResize:1, windowResize:1, pageshow:1, idle900ms:0\}。
+
+声明Agent：octie\-agent；时间：2026-10-28T10:29:25.058760+00:00；原因：按实测数据登记该条件的验收结果。
+
+判定：通过；实际：依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow：fitCount 分别 \+1、\+1、\+1；随后静置 900ms，fitCount 增量为 0（不空转）。；实际方法：派发合成事件并在每步后读取 \_\_probe\.fitCount\(\) 的增量。；独立免验确认：无需免验。
+
+### EXE-000044：条件执行
+
+基线：BASE-000006；需求：REQ-000007 r1；开发轮次：1；条件：AC-000030；交付标识：crab\-coast\-v6；已实现事件：EVT-000162。
+
+冻结预期：竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367；证据定位：evidence/req7\_portrait\.json（竖屏与收起/恢复）、evidence/req7\_landscape\.json（横屏）。
+
+声明Agent：octie\-agent；时间：2026-10-28T10:29:27.546277+00:00；原因：按实测数据登记该条件的验收结果。
+
+判定：通过；实际：竖屏 390×844 下画布为 390×219（宽度完全铺满，改动前为 382×215）；横屏 844×390 下画布为 693×390（高度完全铺满，改动前为 652×367）。收起虚拟按键后操作带由 236px 归零、场景重新居中，再展开恢复原状。；实际方法：在两个移动视口下读取 \_\_probe\.canvasRect\(\) 与 innerWidth/innerHeight，并调用 \_\_touch\.hide\(\)/show\(\) 观察居中变化。；独立免验确认：无需免验。
+
+### EXE-000045：条件执行
+
+基线：BASE-000006；需求：REQ-000007 r1；开发轮次：1；条件：AC-000031；交付标识：crab\-coast\-v6；已实现事件：EVT-000162。
+
+冻结预期：画布为 928×522，与公式逐像素一致，未被铺满逻辑影响；证据定位：evidence/req7\_desktop\.json。
+
+声明Agent：octie\-agent；时间：2026-10-28T10:29:30.109385+00:00；原因：按实测数据登记该条件的验收结果。
+
+判定：通过；实际：桌面 852×875 视口（未做触屏模拟，html 无 touch\-mode、无触屏覆盖层）下画布为 835×470，与 0\.98/0\.94 公式计算值 835×470 逐像素一致，铺满逻辑未误用在桌面。；实际方法：在未模拟触屏的桌面页读取 \_\_probe\.canvasRect\(\) 与 \_\_probe\.viewBox\(\)，并用同一公式计算期望值比较。；独立免验确认：无需免验。
+
+### EXE-000046：条件执行
+
+基线：BASE-000006；需求：REQ-000001 r1；开发轮次：2；条件：AC-000001；交付标识：crab\-coast\-v6；已实现事件：EVT-000064。
+
+冻结预期：画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素；证据定位：evidence/req7\_scene\_seven\.png（线上 ?v=10 全屏截图，七类元素均可见）。
+
+声明Agent：octie\-agent；时间：2026-10-28T10:31:16.434824+00:00；原因：CHG\-000005 重验义务：按实测数据登记本交付的执行结果。
+
+判定：通过；实际：线上 ?v=10 画面可逐一指出海水（上方整片）、沙滩（中部大片沙地）、红树林（左上与中部气根树丛）、海藻床（水中成片海草）、珊瑚礁（浅水区礁石）、台阶（左侧木台阶）、高脚屋（右侧木屋）共 7 类元素，无缺失。；实际方法：截取整页画面，按七类元素清单逐项勾选并标注位置；同时在画布上确认元素分布区域。；独立免验确认：无需免验。
+
+### EXE-000047：条件执行
+
+基线：BASE-000006；需求：REQ-000001 r1；开发轮次：2；条件：AC-000002；交付标识：crab\-coast\-v6；已实现事件：EVT-000064。
+
+冻结预期：除角色精灵所在区域外，背景像素与移动前一致，背景位移为 0 像素；证据定位：本次测量的返回值 \{bgDiffPixels: 0, regionPixels: 15000\}，执行记录见本表。
+
+声明Agent：octie\-agent；时间：2026-10-28T10:31:19.026677+00:00；原因：CHG\-000005 重验义务：按实测数据登记本交付的执行结果。
+
+判定：通过；实际：冻结环境动画后，对沙地区域 \(150,350\)\-\(300,450\) 取值，按住右键移动 800ms 前后比较：该区域 15000 个像素中变化 0 个，背景位移为 0。；实际方法：调用 \_\_probe\.freeze\(true\) 冻结海浪等环境动画，用 canvas getImageData 取同一块沙地像素，移动角色后再取一次做逐像素比较。；独立免验确认：无需免验。
+
+### EXE-000048：条件执行
+
+基线：BASE-000006；需求：REQ-000001 r1；开发轮次：2；条件：AC-000003；交付标识：crab\-coast\-v6；已实现事件：EVT-000064。
+
+冻结预期：三帧海浪纹理位置不同，循环周期内无整幅跳动或闪烁；证据定位：本次测量的返回值 \{diff\_1v2: 272, diff\_2v3: 269, waterRegion: 30000\}。
+
+声明Agent：octie\-agent；时间：2026-10-28T10:31:21.811374+00:00；原因：CHG\-000005 重验义务：按实测数据登记本交付的执行结果。
+
+判定：通过；实际：解冻后对水面区域 \(100,60\)\-\(400,160\) 连续取值三次（间隔 1 秒）：相邻两帧分别有 272 / 269 个像素发生变化（占 30000 的约 0\.9%），变化集中在波浪纹理上，没有整幅跳动或闪烁。；实际方法：用 canvas getImageData 对同一水面区域间隔 1 秒连续取样三次，统计相邻帧差异像素数量并观察其占比。；独立免验确认：无需免验。
+
+### EXE-000049：条件执行
+
+基线：BASE-000006；需求：REQ-000004 r1；开发轮次：2；条件：AC-000012；交付标识：crab\-coast\-v6；已实现事件：EVT-000070。
+
+冻结预期：页面完整显示场景与角色，Network 面板中没有任何指向本机以外域名的请求，全部请求为 file:// 或 localhost 本地路径；证据定位：本次测量的返回值 \{totalRequests: 10, external: \[\], sameOriginOnly: true\}。
+
+声明Agent：octie\-agent；时间：2026-10-28T10:31:24.653785+00:00；原因：CHG\-000005 重验义务：按实测数据登记本交付的执行结果。
+
+判定：通过；实际：线上页面共 10 个资源请求，来源全部为页面自身 origin（starchen\-cycler\.github\.io 下的相对路径），外部域名请求 0 个。；实际方法：读取 performance\.getEntriesByType\('resource'\)，逐条比对是否属于 location\.origin。；独立免验确认：无需免验。
+
+### EXE-000050：条件执行
+
+基线：BASE-000006；需求：REQ-000004 r1；开发轮次：2；条件：AC-000013；交付标识：crab\-coast\-v6；已实现事件：EVT-000070。
+
+冻结预期：平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒；证据定位：本次测量返回值 \{runs:\[\{fps:82\.5,longFrames:0\},\{fps:82\.5,longFrames:0\},\{fps:82\.5,longFrames:0\}\]\}。
+
+声明Agent：octie\-agent；时间：2026-10-28T10:31:27.595106+00:00；原因：CHG\-000005 重验义务：按实测数据登记本交付的执行结果。
+
+判定：通过；实际：按住右键移动，连续三轮各 5 秒：平均帧率均为 82\.5 fps，&gt;50ms 长帧均为 0 次。；实际方法：每轮先 \_\_probe\.resetStats\(\)，按住右键 5 秒后读 \_\_probe\.fps\(\) 与 \_\_probe\.longFrames\(\)，共三轮。；独立免验确认：无需免验。
+
+### EXE-000051：条件执行
+
+基线：BASE-000006；需求：REQ-000004 r1；开发轮次：2；条件：AC-000014；交付标识：crab\-coast\-v6；已实现事件：EVT-000070。
+
+冻结预期：像素边缘为硬边，无平滑模糊的插值过渡；证据定位：本次测量返回值 \{imageSmoothingEnabled: false, imageRendering: 'crisp\-edges'\}；另见 evidence/req7\_scene\_seven\.png 中的硬边像素。
+
+声明Agent：octie\-agent；时间：2026-10-28T10:31:30.475121+00:00；原因：CHG\-000005 重验义务：按实测数据登记本交付的执行结果。
+
+判定：通过；实际：画布 2D 上下文 imageSmoothingEnabled = false，CSS image\-rendering = crisp\-edges，且绘制使用最近邻放大，像素边缘为硬边。；实际方法：读取 canvas\.getContext\('2d'\)\.imageSmoothingEnabled 与 getComputedStyle\(canvas\)\.imageRendering。；独立免验确认：无需免验。
+
 - BASE-000001 / REQ-000001 r1 / 轮次1 / crab\-coast\-v1：最新汇总通过；FR10验收允许登记发布：否；有效执行ID：EXE-000001, EXE-000002, EXE-000003。
 - BASE-000001 / REQ-000002 r1 / 轮次1 / crab\-coast\-v1：最新汇总通过；FR10验收允许登记发布：否；有效执行ID：EXE-000004, EXE-000005, EXE-000006, EXE-000007。
 - BASE-000001 / REQ-000003 r1 / 轮次1 / crab\-coast\-v1：最新汇总通过；FR10验收允许登记发布：否；有效执行ID：EXE-000008, EXE-000009, EXE-000010, EXE-000011。
@@ -1016,7 +1229,10 @@
 - BASE-000002 / REQ-000005 r1 / 轮次1 / crab\-coast\-v2：最新汇总通过；FR10验收允许登记发布：否；有效执行ID：EXE-000029, EXE-000030, EXE-000031。
 - BASE-000003 / REQ-000006 r1 / 轮次1 / crab\-coast\-v3：最新汇总通过；FR10验收允许登记发布：否；有效执行ID：EXE-000032, EXE-000033, EXE-000034。
 - BASE-000004 / REQ-000006 r2 / 轮次1 / crab\-coast\-v4：最新汇总通过；FR10验收允许登记发布：否；有效执行ID：EXE-000035, EXE-000036, EXE-000037。
-- BASE-000005 / REQ-000006 r3 / 轮次1 / crab\-coast\-v5：最新汇总通过；FR10验收允许登记发布：是；有效执行ID：EXE-000038, EXE-000039, EXE-000040。
+- BASE-000005 / REQ-000006 r3 / 轮次1 / crab\-coast\-v5：最新汇总通过；FR10验收允许登记发布：否；有效执行ID：EXE-000038, EXE-000039, EXE-000040。
+- BASE-000006 / REQ-000007 r1 / 轮次1 / crab\-coast\-v6：最新汇总通过；FR10验收允许登记发布：是；有效执行ID：EXE-000041, EXE-000042, EXE-000043, EXE-000044, EXE-000045。
+- BASE-000006 / REQ-000001 r1 / 轮次2 / crab\-coast\-v6：最新汇总通过；FR10验收允许登记发布：是；有效执行ID：EXE-000046, EXE-000047, EXE-000048。
+- BASE-000006 / REQ-000004 r1 / 轮次2 / crab\-coast\-v6：最新汇总通过；FR10验收允许登记发布：是；有效执行ID：EXE-000049, EXE-000050, EXE-000051。
 
 ## 发布清单
 
@@ -1074,6 +1290,22 @@
 - 重验依据：\{"change\_id":"CHG\-000004","change\_revision":1,"condition\_id":"AC\-000024","requirement\_id":"REQ\-000006","revision":3\}；通过；\{"delivery\_id":"crab\-coast\-v5","execution\_id":"EXE\-000038","type":"执行"\}。
 - 重验依据：\{"change\_id":"CHG\-000004","change\_revision":1,"condition\_id":"AC\-000025","requirement\_id":"REQ\-000006","revision":3\}；通过；\{"delivery\_id":"crab\-coast\-v5","execution\_id":"EXE\-000039","type":"执行"\}。
 - 重验依据：\{"change\_id":"CHG\-000004","change\_revision":1,"condition\_id":"AC\-000026","requirement\_id":"REQ\-000006","revision":3\}；通过；\{"delivery\_id":"crab\-coast\-v5","execution\_id":"EXE\-000040","type":"执行"\}。
+
+### REL-000006：crab\-coast\-v6
+
+基线：BASE-000006；事件：EVT-000174；声明Agent：octie\-agent；时间：2026-10-28T10:31:42.628728+00:00。
+
+- 本次发布成员：REQ-000001 r1 / 轮次2；条件执行：EXE-000046, EXE-000047, EXE-000048。
+- 本次发布成员：REQ-000004 r1 / 轮次2；条件执行：EXE-000049, EXE-000050, EXE-000051。
+- 本次发布成员：REQ-000007 r1 / 轮次1；条件执行：EXE-000041, EXE-000042, EXE-000043, EXE-000044, EXE-000045。
+- 重验依据：\{"change\_id":"CHG\-000005","change\_revision":1,"condition\_id":"AC\-000001","requirement\_id":"REQ\-000001","revision":1\}；通过；\{"delivery\_id":"crab\-coast\-v6","execution\_id":"EXE\-000046","type":"执行"\}。
+- 重验依据：\{"change\_id":"CHG\-000005","change\_revision":1,"condition\_id":"AC\-000013","requirement\_id":"REQ\-000004","revision":1\}；通过；\{"delivery\_id":"crab\-coast\-v6","execution\_id":"EXE\-000050","type":"执行"\}。
+- 重验依据：\{"change\_id":"CHG\-000005","change\_revision":1,"condition\_id":"AC\-000014","requirement\_id":"REQ\-000004","revision":1\}；通过；\{"delivery\_id":"crab\-coast\-v6","execution\_id":"EXE\-000051","type":"执行"\}。
+- 重验依据：\{"change\_id":"CHG\-000005","change\_revision":1,"condition\_id":"AC\-000027","requirement\_id":"REQ\-000007","revision":1\}；通过；\{"delivery\_id":"crab\-coast\-v6","execution\_id":"EXE\-000041","type":"执行"\}。
+- 重验依据：\{"change\_id":"CHG\-000005","change\_revision":1,"condition\_id":"AC\-000028","requirement\_id":"REQ\-000007","revision":1\}；通过；\{"delivery\_id":"crab\-coast\-v6","execution\_id":"EXE\-000042","type":"执行"\}。
+- 重验依据：\{"change\_id":"CHG\-000005","change\_revision":1,"condition\_id":"AC\-000029","requirement\_id":"REQ\-000007","revision":1\}；通过；\{"delivery\_id":"crab\-coast\-v6","execution\_id":"EXE\-000043","type":"执行"\}。
+- 重验依据：\{"change\_id":"CHG\-000005","change\_revision":1,"condition\_id":"AC\-000030","requirement\_id":"REQ\-000007","revision":1\}；通过；\{"delivery\_id":"crab\-coast\-v6","execution\_id":"EXE\-000044","type":"执行"\}。
+- 重验依据：\{"change\_id":"CHG\-000005","change\_revision":1,"condition\_id":"AC\-000031","requirement\_id":"REQ\-000007","revision":1\}；通过；\{"delivery\_id":"crab\-coast\-v6","execution\_id":"EXE\-000045","type":"执行"\}。
 
 ## 退役记录
 
@@ -1232,13 +1464,40 @@
 - EVT-000146：acceptance record；声明Agent：octie\-agent；时间：2026-10-28T09:12:47.864956+00:00；原因：按实测登记。
 - EVT-000147：release add；声明Agent：octie\-agent；时间：2026-10-28T09:12:49.944957+00:00；原因：反弹切换实测通过，登记交付 crab\-coast\-v5。
 - EVT-000148：change close；声明Agent：octie\-agent；时间：2026-10-28T09:12:54.291511+00:00；原因：成员已随 v5 发布，3 条义务均有本交付执行记录。
+- EVT-000149：source add；声明Agent：octie\-agent；时间：2026-10-28T10:24:10.851262+00:00；原因：登记用户本次提出的画面自适应原始需求。
+- EVT-000150：req add；声明Agent：octie\-agent；时间：2026-10-28T10:24:35.811740+00:00；原因：提交画面自适应需求的完整可审阅草稿。
+- EVT-000151：req submit；声明Agent：octie\-agent；时间：2026-10-28T10:24:46.110066+00:00；原因：把已完成的完整草稿转入待审核。
+- EVT-000152：review add；声明Agent：review\-agent；时间：2026-10-28T10:24:59.327083+00:00；原因：对 REQ\-000007 第 1 修订做逐字段语义审核。
+- EVT-000153：req confirm；声明Agent：octie\-agent；时间：2026-10-28T10:25:08.580419+00:00；原因：审核通过且无开放问题，确认纳入范围为后续变更加入基线。
+- EVT-000154：change propose；声明Agent：octie\-agent；时间：2026-10-28T10:25:50.883955+00:00；原因：把已确认的 REQ\-000007 新增进基线，走变更而不是直接封基线。
+- EVT-000155：change evaluate；声明Agent：octie\-agent；时间：2026-10-28T10:26:12.645568+00:00；原因：补齐变更影响评估与精确重验清单。
+- EVT-000156：review add；声明Agent：review\-agent；时间：2026-10-28T10:26:36.861548+00:00；原因：对 CHG\-000005 当前修订（已评估）做变更审核。
+- EVT-000157：change approve；声明Agent：octie\-agent；时间：2026-10-28T10:26:47.084697+00:00；原因：变更已获当前最新通过审核，予以批准并生成候选。
+- EVT-000158：change apply；声明Agent：octie\-agent；时间：2026-10-28T10:26:58.491736+00:00；原因：按批准差异生成候选基线（不自动激活）。
+- EVT-000159：review add；声明Agent：review\-agent；时间：2026-10-28T10:27:19.179482+00:00；原因：对候选基线 BASE\-000006 做封存审核。
+- EVT-000160：baseline activate；声明Agent：octie\-agent；时间：2026-10-28T10:27:27.278915+00:00；原因：候选基线已审核通过，激活为当前有效基线。
+- EVT-000161：dev start；声明Agent：octie\-agent；时间：2026-10-28T10:27:41.920418+00:00；原因：在有效基线 BASE\-000006 下开始 REQ\-000007 的开发轮次。
+- EVT-000162：dev complete；声明Agent：octie\-agent；时间：2026-10-28T10:27:51.579079+00:00；原因：代码已实现并部署（提交 e4212ab），开发轮次完成。
+- EVT-000163：acceptance record；声明Agent：octie\-agent；时间：2026-10-28T10:29:20.102849+00:00；原因：按实测数据登记该条件的验收结果。
+- EVT-000164：acceptance record；声明Agent：octie\-agent；时间：2026-10-28T10:29:22.644825+00:00；原因：按实测数据登记该条件的验收结果。
+- EVT-000165：acceptance record；声明Agent：octie\-agent；时间：2026-10-28T10:29:25.058760+00:00；原因：按实测数据登记该条件的验收结果。
+- EVT-000166：acceptance record；声明Agent：octie\-agent；时间：2026-10-28T10:29:27.546277+00:00；原因：按实测数据登记该条件的验收结果。
+- EVT-000167：acceptance record；声明Agent：octie\-agent；时间：2026-10-28T10:29:30.109385+00:00；原因：按实测数据登记该条件的验收结果。
+- EVT-000168：acceptance record；声明Agent：octie\-agent；时间：2026-10-28T10:31:16.434824+00:00；原因：CHG\-000005 重验义务：按实测数据登记本交付的执行结果。
+- EVT-000169：acceptance record；声明Agent：octie\-agent；时间：2026-10-28T10:31:19.026677+00:00；原因：CHG\-000005 重验义务：按实测数据登记本交付的执行结果。
+- EVT-000170：acceptance record；声明Agent：octie\-agent；时间：2026-10-28T10:31:21.811374+00:00；原因：CHG\-000005 重验义务：按实测数据登记本交付的执行结果。
+- EVT-000171：acceptance record；声明Agent：octie\-agent；时间：2026-10-28T10:31:24.653785+00:00；原因：CHG\-000005 重验义务：按实测数据登记本交付的执行结果。
+- EVT-000172：acceptance record；声明Agent：octie\-agent；时间：2026-10-28T10:31:27.595106+00:00；原因：CHG\-000005 重验义务：按实测数据登记本交付的执行结果。
+- EVT-000173：acceptance record；声明Agent：octie\-agent；时间：2026-10-28T10:31:30.475121+00:00；原因：CHG\-000005 重验义务：按实测数据登记本交付的执行结果。
+- EVT-000174：release add；声明Agent：octie\-agent；时间：2026-10-28T10:31:42.628728+00:00；原因：在基线 BASE\-000006 下发布 crab\-coast\-v6：新增 REQ\-000007，并重发本次重验的 REQ\-000001 / REQ\-000004。
+- EVT-000175：change close；声明Agent：octie\-agent；时间：2026-10-28T10:32:16.330435+00:00；原因：变更已应用、基线已激活、已随 REL\-000006 发布，逐动作与逐义务关闭。
 
 ## 权威机器记录
 
 <!-- REQUIREMENTS-CLI:BEGIN -->
 ```json
 {
-  "active_baseline": "BASE-000005",
+  "active_baseline": "BASE-000006",
   "baselines": [
     {
       "change": null,
@@ -7328,6 +7587,1702 @@
       "predecessor": "BASE-000004",
       "revision": 1,
       "version": "V1.4"
+    },
+    {
+      "change": {
+        "actions": [
+          {
+            "new_revision": 1,
+            "old_revision": null,
+            "requirement_id": "REQ-000007",
+            "type": "新增"
+          }
+        ],
+        "application_event_id": "EVT-000158",
+        "approval_event_id": "EVT-000157",
+        "digest": "ea172f2a692d679024b59f612fd1241d308fc7ff08614b04a4ffe7e7cfe228b5",
+        "evaluation": {
+          "affected_members": [
+            {
+              "requirement_id": "REQ-000001",
+              "revision": 1
+            },
+            {
+              "requirement_id": "REQ-000004",
+              "revision": 1
+            },
+            {
+              "requirement_id": "REQ-000007",
+              "revision": 1
+            }
+          ],
+          "empty_retests_reason": null,
+          "impact_analysis": "本次变更只新增一条需求（REQ-000007 手机隐藏工具栏后画面自动放大到最大），落地改动集中在 main.js 的画布尺寸计算：新增 viewBox() 取 visualViewport、fit() 增加触屏铺满分支、注册 resize / visualViewport.resize / visualViewport.scroll / orientationchange / pageshow / visibilitychange 六条监听与 400ms 轮询兜底。不涉及场景贴图、角色精灵、朝向状态机、碰撞网格、帧序与音频，因此这些既有需求的内容不需要修改。仍然受影响的点有三类：一是画布缩放比例发生变化后，场景是否仍完整呈现且不变形（REQ-000001）；二是触屏上画布被放大到铺满后，帧率与像素硬边是否仍然达标（REQ-000004）；三是新需求自身的五条验收条件需要逐条实测（REQ-000007）。已排除的虚拟按键显隐与输入通道、双指放大过程中的重排，均不在本次差异内。",
+          "obligations": [
+            {
+              "change_id": "CHG-000005",
+              "change_revision": 1,
+              "condition": {
+                "allow_na": false,
+                "evidence": "初始画面截图 + 七类元素勾选清单（含各自大致坐标）",
+                "exception": {
+                  "expected": "某类元素缺失或颜色与同类无法区分",
+                  "handling": "记为不通过，补画该类元素后重新截图核对",
+                  "scenario": "某类元素缺失或与同类无法区分"
+                },
+                "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+                "id": "AC-000001",
+                "input": "无输入，仅观察初始画面",
+                "method": "对初始画面截图，按七类元素清单逐项勾选并标注位置",
+                "operation": "打开 index.html 并等待加载提示消失",
+                "preconditions": "资源已加载完成，页面处于初始状态",
+                "role": "场景验收者",
+                "scenario": "核对七类海岸元素是否齐全"
+              },
+              "condition_id": "AC-000001",
+              "requirement_id": "REQ-000001",
+              "revision": 1
+            },
+            {
+              "change_id": "CHG-000005",
+              "change_revision": 1,
+              "condition": {
+                "allow_na": false,
+                "evidence": "性能面板截图或帧率统计数值",
+                "exception": {
+                  "expected": "判定为不流畅",
+                  "handling": "减少每帧重绘区域或缓存背景图层后复测",
+                  "scenario": "平均帧率低于 55 或出现超过 50 毫秒的长帧"
+                },
+                "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+                "id": "AC-000013",
+                "input": "按住 → 键移动角色 5 秒",
+                "method": "录制性能时间线，统计移动期间的帧率均值与最长帧间隔",
+                "operation": "用浏览器性能面板记录该时段的帧率",
+                "preconditions": "页面运行在本机 Edge 浏览器",
+                "role": "交付验收者",
+                "scenario": "核对渲染帧率"
+              },
+              "condition_id": "AC-000013",
+              "requirement_id": "REQ-000004",
+              "revision": 1
+            },
+            {
+              "change_id": "CHG-000005",
+              "change_revision": 1,
+              "condition": {
+                "allow_na": false,
+                "evidence": "角色局部放大截图",
+                "exception": {
+                  "expected": "判定像素渲染不合格",
+                  "handling": "补充 image-rendering 与关闭图像平滑后复测",
+                  "scenario": "出现模糊或彩色边缘"
+                },
+                "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+                "id": "AC-000014",
+                "input": "无输入",
+                "method": "对角色局部区域截图并放大观察边缘像素",
+                "operation": "放大查看角色与背景边缘",
+                "preconditions": "页面已打开并显示角色",
+                "role": "交付验收者",
+                "scenario": "核对像素清晰度"
+              },
+              "condition_id": "AC-000014",
+              "requirement_id": "REQ-000004",
+              "revision": 1
+            },
+            {
+              "change_id": "CHG-000005",
+              "change_revision": 1,
+              "condition": {
+                "allow_na": false,
+                "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图",
+                "exception": {
+                  "expected": "判定不通过并记录 fitCount 未增长",
+                  "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460",
+                  "scenario": "静置超过 1 秒画布尺寸仍未变化"
+                },
+                "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+                "id": "AC-000027",
+                "input": "把可见高度由 390 改为 460，不派发任何事件",
+                "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+                "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+                "role": "移动端验收者",
+                "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件"
+              },
+              "condition_id": "AC-000027",
+              "requirement_id": "REQ-000007",
+              "revision": 1
+            },
+            {
+              "change_id": "CHG-000005",
+              "change_revision": 1,
+              "condition": {
+                "allow_na": false,
+                "evidence": "前后画布尺寸数值与 fitCount 变化",
+                "exception": {
+                  "expected": "判定不通过",
+                  "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向",
+                  "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉"
+                },
+                "expected": "画布自动回到 693×390，fitCount 再增加 1",
+                "id": "AC-000028",
+                "input": "把可见高度由 460 改回 390，不派发任何事件",
+                "method": "与上一条同一套模拟手段，反向修改高度",
+                "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                "preconditions": "承接上一条，画布当前为 818×460",
+                "role": "移动端验收者",
+                "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件"
+              },
+              "condition_id": "AC-000028",
+              "requirement_id": "REQ-000007",
+              "revision": 1
+            },
+            {
+              "change_id": "CHG-000005",
+              "change_revision": 1,
+              "condition": {
+                "allow_na": false,
+                "evidence": "三次事件与静置期的 fitCount 数值",
+                "exception": {
+                  "expected": "判定不通过，说明存在空转",
+                  "handling": "检查轮询是否在尺寸未变时仍调用 fit()",
+                  "scenario": "静置期间 fitCount 持续增长"
+                },
+                "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+                "id": "AC-000029",
+                "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+                "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+                "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+                "preconditions": "页面稳定，画布尺寸已确定",
+                "role": "移动端验收者",
+                "scenario": "核对各事件通道与空闲开销"
+              },
+              "condition_id": "AC-000029",
+              "requirement_id": "REQ-000007",
+              "revision": 1
+            },
+            {
+              "change_id": "CHG-000005",
+              "change_revision": 1,
+              "condition": {
+                "allow_na": false,
+                "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图",
+                "exception": {
+                  "expected": "判定不通过",
+                  "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名",
+                  "scenario": "画布仍保留 2% / 6% 边距"
+                },
+                "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+                "id": "AC-000030",
+                "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+                "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+                "operation": "读取画布尺寸与可见区域尺寸",
+                "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+                "role": "移动端验收者",
+                "scenario": "触屏设备上画布铺满可见区域"
+              },
+              "condition_id": "AC-000030",
+              "requirement_id": "REQ-000007",
+              "revision": 1
+            },
+            {
+              "change_id": "CHG-000005",
+              "change_revision": 1,
+              "condition": {
+                "allow_na": false,
+                "evidence": "视口尺寸、画布尺寸与公式计算值",
+                "exception": {
+                  "expected": "判定不通过",
+                  "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏",
+                  "scenario": "桌面画布被拉伸到 929 以上或出现裁剪"
+                },
+                "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+                "id": "AC-000031",
+                "input": "视口 947×972",
+                "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+                "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+                "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+                "role": "桌面验收者",
+                "scenario": "桌面端不出现铺满带来的回归"
+              },
+              "condition_id": "AC-000031",
+              "requirement_id": "REQ-000007",
+              "revision": 1
+            }
+          ],
+          "retests": [
+            {
+              "condition_id": "AC-000001",
+              "requirement_id": "REQ-000001",
+              "revision": 1
+            },
+            {
+              "condition_id": "AC-000013",
+              "requirement_id": "REQ-000004",
+              "revision": 1
+            },
+            {
+              "condition_id": "AC-000014",
+              "requirement_id": "REQ-000004",
+              "revision": 1
+            },
+            {
+              "condition_id": "AC-000027",
+              "requirement_id": "REQ-000007",
+              "revision": 1
+            },
+            {
+              "condition_id": "AC-000028",
+              "requirement_id": "REQ-000007",
+              "revision": 1
+            },
+            {
+              "condition_id": "AC-000029",
+              "requirement_id": "REQ-000007",
+              "revision": 1
+            },
+            {
+              "condition_id": "AC-000030",
+              "requirement_id": "REQ-000007",
+              "revision": 1
+            },
+            {
+              "condition_id": "AC-000031",
+              "requirement_id": "REQ-000007",
+              "revision": 1
+            }
+          ],
+          "supersessions": []
+        },
+        "id": "CHG-000005",
+        "revision": 1
+      },
+      "created_at": "2026-10-28T10:26:58.491736+00:00",
+      "created_by": "octie-agent",
+      "digest": "29ff1fe352b768deddffe0178f94864d266b72557fd5189b4a5ed6ce218ff046",
+      "event_id": "EVT-000158",
+      "id": "BASE-000006",
+      "ledger_id": "LED-19d840367862455889aebf797805ea48",
+      "members": {
+        "REQ-000001": {
+          "confirmation": {
+            "agent": "octie-agent",
+            "event_id": "EVT-000011",
+            "review_id": "REV-000001",
+            "time": "2026-10-27T20:19:33.136841+00:00"
+          },
+          "content": {
+            "acceptance": [
+              {
+                "allow_na": false,
+                "evidence": "初始画面截图 + 七类元素勾选清单（含各自大致坐标）",
+                "exception": {
+                  "expected": "某类元素缺失或颜色与同类无法区分",
+                  "handling": "记为不通过，补画该类元素后重新截图核对",
+                  "scenario": "某类元素缺失或与同类无法区分"
+                },
+                "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+                "id": "AC-000001",
+                "input": "无输入，仅观察初始画面",
+                "method": "对初始画面截图，按七类元素清单逐项勾选并标注位置",
+                "operation": "打开 index.html 并等待加载提示消失",
+                "preconditions": "资源已加载完成，页面处于初始状态",
+                "role": "场景验收者",
+                "scenario": "核对七类海岸元素是否齐全"
+              },
+              {
+                "allow_na": false,
+                "evidence": "移动前后两张截图 + 背景区域差异率数值",
+                "exception": {
+                  "expected": "背景出现任何平移或缩放跳动",
+                  "handling": "判定为不通过，移除背景位移逻辑",
+                  "scenario": "角色移动过程中背景发生位移"
+                },
+                "expected": "除角色精灵所在区域外，背景像素与移动前一致，背景位移为 0 像素",
+                "id": "AC-000002",
+                "input": "按住右方向键持续 3 秒，再按住左方向键持续 3 秒",
+                "method": "移动前后各截一张图，用像素差分统计背景区域差异率",
+                "operation": "移动角色后回到起始位置附近，比较背景像素",
+                "preconditions": "页面已进入且背景渲染完成",
+                "role": "场景验收者",
+                "scenario": "验证背景不随角色移动"
+              },
+              {
+                "allow_na": false,
+                "evidence": "连续 3 帧截图",
+                "exception": {
+                  "expected": "海面完全静止或每帧出现大面积跳变",
+                  "handling": "记为不通过，调整波浪相位与循环周期后复测",
+                  "scenario": "海面静止或帧间跳变过大"
+                },
+                "expected": "三帧海浪纹理位置不同，循环周期内无整幅跳动或闪烁",
+                "id": "AC-000003",
+                "input": "无输入",
+                "method": "间隔 1 秒连续截 3 帧，比对海浪纹理位移",
+                "operation": "静置观察海面 3 秒并连续截取 3 帧",
+                "preconditions": "页面静止无角色输入",
+                "role": "场景验收者",
+                "scenario": "验证海面循环动画存在且连贯"
+              }
+            ],
+            "boundaries": [
+              {
+                "expected": "场景等比缩放并居中，四周留出底色，不拉伸不变形",
+                "handling": "按 min(宽比, 高比) 等比缩放后居中绘制，留边填深色",
+                "scenario": "浏览器窗口宽高比与场景原始比例不一致"
+              },
+              {
+                "expected": "仍能看完整幅场景与角色，元素不变形",
+                "handling": "继续等比缩放至适配宽度，允许整体变小但不裁切",
+                "scenario": "窗口宽度小于 480px 的窄屏"
+              }
+            ],
+            "created_at": "2026-10-27T19:58:51.627651+00:00",
+            "created_by": "octie-agent",
+            "dependencies": [],
+            "description": "页面打开后在画布上绘制一幅完整的深圳海岸场景：海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋。背景是一整张固定的 2.5D 平面图，角色在其上方行走时背景像素位置保持不变，不做相机跟随与地图滚动。海水部分带持续的循环动画（波浪流动），让画面不是死图。",
+            "digest": "2310b3e8c298e8c9a0645878ccae71b3e32c822529ee1675b0ddce9d973bbed4",
+            "event_id": "EVT-000004",
+            "excluded": [
+              "视差滚动、相机跟随与地图平移",
+              "多场景或关卡切换",
+              "玩家侧的场景缩放与旋转"
+            ],
+            "id": "REQ-000001",
+            "included": [
+              "海水区与沙滩区上固定绘制的一整幅海岸背景",
+              "红树林、海藻床、珊瑚礁三类深圳典型海岸元素的可见呈现",
+              "台阶与房屋等场景道具的可见呈现",
+              "海面波浪的循环动画"
+            ],
+            "module": "场景渲染",
+            "necessity": "没有背景就没有场景可言：用户明确要求网站带海洋、沙滩与深圳典型海岸元素，且背景必须固定不动，否则就不是他要的“大地图一站到底”的观感。",
+            "normal_behavior": {
+              "behavior": "画布按场景原始比例等比绘制完整海岸背景，海面开始循环波浪动画",
+              "expected": "画面同时可见海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋共七类元素，且背景在角色移动前后像素位置不变",
+              "scenario": "用户打开本地页面且资产已就绪"
+            },
+            "placement": {
+              "kind": "页面",
+              "other": [],
+              "primary": {
+                "page_id": "PAGE-000001",
+                "page_revision": 1,
+                "region_id": "REG-000001-0001-0001"
+              }
+            },
+            "priority": "P0",
+            "purpose": "给螃蟹角色提供一个可辨认的深圳海岸小世界作为舞台，让用户一眼看出这是海藻床、红树林、珊瑚礁构成的真实海岸场景。",
+            "questions": [],
+            "revision": 1,
+            "sources": [
+              {
+                "source_id": "SRC-000001",
+                "source_revision": 1
+              }
+            ],
+            "tags": [],
+            "technical": null,
+            "title": "呈现固定不滚动的深圳海岸 2.5D 场景背景",
+            "type": "功能"
+          },
+          "pages": [
+            {
+              "page_id": "PAGE-000001",
+              "page_revision": 1,
+              "region_id": "REG-000001-0001-0001",
+              "snapshot": {
+                "created_at": "2026-10-27T19:58:11.769250+00:00",
+                "created_by": "octie-agent",
+                "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                "event_id": "EVT-000002",
+                "id": "PAGE-000001",
+                "location": "crab-coast/index.html 单页应用",
+                "name": "深圳海岸小世界主页",
+                "regions": [
+                  {
+                    "id": "REG-000001-0001-0001",
+                    "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                    "name": "场景画布区"
+                  },
+                  {
+                    "id": "REG-000001-0001-0002",
+                    "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                    "name": "方向控制提示区"
+                  },
+                  {
+                    "id": "REG-000001-0001-0003",
+                    "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                    "name": "资源加载提示区"
+                  }
+                ],
+                "revision": 1
+              }
+            }
+          ],
+          "revision": 1,
+          "scope": {
+            "decision": "纳入",
+            "reason": null
+          },
+          "sources": [
+            {
+              "snapshot": {
+                "created_at": "2026-10-27T19:58:28.507590+00:00",
+                "created_by": "octie-agent",
+                "date_note": "2026-10-28 用户在会话中的原始消息",
+                "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                "event_id": "EVT-000003",
+                "id": "SRC-000001",
+                "kind": "用户消息",
+                "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                "manual_note": null,
+                "name": "用户口述需求：深圳海岸螃蟹小世界",
+                "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                "revision": 1,
+                "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+              },
+              "source_id": "SRC-000001",
+              "source_revision": 1
+            }
+          ]
+        },
+        "REQ-000002": {
+          "confirmation": {
+            "agent": "octie-agent",
+            "event_id": "EVT-000014",
+            "review_id": "REV-000002",
+            "time": "2026-10-27T20:19:33.931717+00:00"
+          },
+          "content": {
+            "acceptance": [
+              {
+                "allow_na": false,
+                "evidence": "四次按键的起点终点坐标记录表（含 dx、dy 数值）",
+                "exception": {
+                  "expected": "该方向判定不通过",
+                  "handling": "修正该方向的输入映射后复测",
+                  "scenario": "某个方向位移方向相反或出现斜向偏移"
+                },
+                "expected": "↑ 的 y 减小且 x 不变，↓ 的 y 增大且 x 不变，← 的 x 减小且 y 不变，→ 的 x 增大且 y 不变，四次的垂直轴偏移均为 0 像素",
+                "id": "AC-000004",
+                "input": "依次单独按住 ↑、↓、←、→ 各 1 秒",
+                "method": "在页面中暴露角色坐标并逐次记录，比对 dx 与 dy 的正负和零值",
+                "operation": "每次按键后记录角色起点与终点坐标",
+                "preconditions": "角色位于场景中央，四个方向均有足够空间",
+                "role": "操作验收者",
+                "scenario": "逐个方向核对移动方向正确"
+              },
+              {
+                "allow_na": false,
+                "evidence": "三组位移量原始数值与相对差计算结果",
+                "exception": {
+                  "expected": "判定速度不稳定",
+                  "handling": "改为按时间增量累加位移后复测",
+                  "scenario": "三次位移差异超过 10% 或位移接近 0"
+                },
+                "expected": "三次位移量的最大值与最小值相对差不超过 10%",
+                "id": "AC-000005",
+                "input": "连续 3 次按住 → 各 1 秒后松开",
+                "method": "同一方向的 3 组位移量做极差与均值比值计算",
+                "operation": "记录每次 1 秒内的水平位移量",
+                "preconditions": "角色位于场景中央",
+                "role": "操作验收者",
+                "scenario": "核对移动速度稳定"
+              },
+              {
+                "allow_na": false,
+                "evidence": "最终坐标数值 + 贴边截图",
+                "exception": {
+                  "expected": "判定边界处理不通过",
+                  "handling": "修正钳制范围并复测",
+                  "scenario": "角色移出画面或贴在边缘抖动"
+                },
+                "expected": "角色整体仍在可视区域内，其右边缘不超过场景右内边距，坐标被钳制在允许范围",
+                "id": "AC-000006",
+                "input": "持续按住 → 5 秒",
+                "method": "持续按键后读取角色最终坐标与场景边界值做比较",
+                "operation": "观察角色最终位置与画面右边缘的关系",
+                "preconditions": "角色靠近右侧边界",
+                "role": "操作验收者",
+                "scenario": "核对边界限制"
+              },
+              {
+                "allow_na": false,
+                "evidence": "松键时刻与最后一帧位移的时间差记录",
+                "exception": {
+                  "expected": "判定为未立即停止",
+                  "handling": "移除速度衰减逻辑，改为松键直接归零",
+                  "scenario": "松键后角色继续滑行超过 100 毫秒"
+                },
+                "expected": "松键后 100 毫秒内水平位移归零，角色不再移动",
+                "id": "AC-000007",
+                "input": "松开 → 键",
+                "method": "松键后按帧记录坐标，找出最后一次位移的帧号与时间差",
+                "operation": "松键后连续观察 0.5 秒",
+                "preconditions": "角色正在向右移动",
+                "role": "操作验收者",
+                "scenario": "核对松键立即停止"
+              }
+            ],
+            "boundaries": [
+              {
+                "expected": "角色只沿最后按下的那个方向移动，不同时产生斜向位移",
+                "handling": "以最后一次按下的方向键为准，忽略先前仍按住的轴",
+                "scenario": "同时按住两个方向键（例如右键与上键）"
+              },
+              {
+                "expected": "角色停在边界内侧，不越出画面",
+                "handling": "对坐标做上下限钳制，越界时保留在允许范围内",
+                "scenario": "角色持续朝同一个方向移动到场景边缘"
+              },
+              {
+                "expected": "角色停止移动，不出现卡住持续漂移",
+                "handling": "监听失焦事件清空按键状态",
+                "scenario": "按住方向键时浏览器窗口失去焦点"
+              }
+            ],
+            "created_at": "2026-10-27T19:59:07.557201+00:00",
+            "created_by": "octie-agent",
+            "dependencies": [],
+            "description": "用户按下 W/A/S/D 或键盘方向键时，螃蟹角色在固定场景内沿对应方向匀速移动；松开按键立即停止。移动只在上下左右四个轴方向发生，不产生斜向位移，角色始终被限制在场景可视范围内。",
+            "digest": "433c05bb460b38b24a3f7879d6b4fe2d1231808c67f52164bd721002d7614d6a",
+            "event_id": "EVT-000005",
+            "excluded": [
+              "斜向八方向自由移动",
+              "跳跃、攻击、拾取等额外动作",
+              "身体惯性、摩擦滑行与加速缓冲"
+            ],
+            "id": "REQ-000002",
+            "included": [
+              "W 与 ↑ 向上移动，S 与 ↓ 向下移动，A 与 ← 向左移动，D 与 → 向右移动",
+              "恒定速度的水平与垂直位移",
+              "角色位置限制在场景可视区域内",
+              "松开按键后立即停止"
+            ],
+            "module": "角色控制",
+            "necessity": "没有四向移动就没有交互，整个场景退化为一张静止图片；用户原话明确这是当前唯一必须实现的功能。",
+            "normal_behavior": {
+              "behavior": "按住某一个方向键，角色沿该轴方向持续移动并播放行走动画，松开按键后停住",
+              "expected": "位移方向与按键方向一致，单位时间位移量保持稳定",
+              "scenario": "角色位于场景中央且没有触达边界"
+            },
+            "placement": {
+              "kind": "页面",
+              "other": [],
+              "primary": {
+                "page_id": "PAGE-000001",
+                "page_revision": 1,
+                "region_id": "REG-000001-0001-0001"
+              }
+            },
+            "priority": "P0",
+            "purpose": "这是用户唯一要求现在必须完成的操作能力：用四个方向键驱动小螃蟹在海岸场景里走动。",
+            "questions": [],
+            "revision": 1,
+            "sources": [
+              {
+                "source_id": "SRC-000001",
+                "source_revision": 1
+              }
+            ],
+            "tags": [],
+            "technical": null,
+            "title": "支持键盘四向移动螃蟹角色",
+            "type": "功能"
+          },
+          "pages": [
+            {
+              "page_id": "PAGE-000001",
+              "page_revision": 1,
+              "region_id": "REG-000001-0001-0001",
+              "snapshot": {
+                "created_at": "2026-10-27T19:58:11.769250+00:00",
+                "created_by": "octie-agent",
+                "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                "event_id": "EVT-000002",
+                "id": "PAGE-000001",
+                "location": "crab-coast/index.html 单页应用",
+                "name": "深圳海岸小世界主页",
+                "regions": [
+                  {
+                    "id": "REG-000001-0001-0001",
+                    "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                    "name": "场景画布区"
+                  },
+                  {
+                    "id": "REG-000001-0001-0002",
+                    "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                    "name": "方向控制提示区"
+                  },
+                  {
+                    "id": "REG-000001-0001-0003",
+                    "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                    "name": "资源加载提示区"
+                  }
+                ],
+                "revision": 1
+              }
+            }
+          ],
+          "revision": 1,
+          "scope": {
+            "decision": "纳入",
+            "reason": null
+          },
+          "sources": [
+            {
+              "snapshot": {
+                "created_at": "2026-10-27T19:58:28.507590+00:00",
+                "created_by": "octie-agent",
+                "date_note": "2026-10-28 用户在会话中的原始消息",
+                "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                "event_id": "EVT-000003",
+                "id": "SRC-000001",
+                "kind": "用户消息",
+                "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                "manual_note": null,
+                "name": "用户口述需求：深圳海岸螃蟹小世界",
+                "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                "revision": 1,
+                "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+              },
+              "source_id": "SRC-000001",
+              "source_revision": 1
+            }
+          ]
+        },
+        "REQ-000003": {
+          "confirmation": {
+            "agent": "octie-agent",
+            "event_id": "EVT-000050",
+            "review_id": "REV-000006",
+            "time": "2026-10-28T08:54:11.706903+00:00"
+          },
+          "content": {
+            "acceptance": [
+              {
+                "allow_na": false,
+                "evidence": "帧索引序列日志 + 行走中截图 evidence/03~06",
+                "exception": {
+                  "expected": "判定动画不连通",
+                  "handling": "修正帧推进逻辑与计时基准后复测",
+                  "scenario": "帧序出现跳跃、倒退或长时间停在同帧"
+                },
+                "expected": "帧索引按 0、1、2、3 循环推进，无跳帧与倒序",
+                "id": "AC-000008",
+                "input": "按住右方向键持续 1 秒",
+                "method": "在渲染循环中记录每次帧切换的时间戳与索引，导出序列后检查连续性",
+                "operation": "记录这 1 秒内实际绘制的帧索引序列",
+                "preconditions": "角色在可行走沙地上，四个方向的帧组已加载",
+                "role": "动画验收者",
+                "scenario": "核对单一方向的帧循环连通"
+              },
+              {
+                "allow_na": false,
+                "evidence": "切向前后帧组标识日志 + 切向瞬间截图",
+                "exception": {
+                  "expected": "判定动作组切换失败",
+                  "handling": "修正方向到帧组的映射后复测",
+                  "scenario": "切向后仍显示向右的帧或出现空白帧"
+                },
+                "expected": "切向后绘制的是向上动作组的帧，切换发生在 1 个渲染帧之内",
+                "id": "AC-000009",
+                "input": "按住右方向键后改为按住上方向键",
+                "method": "记录切向前后各 5 帧的帧组标识与索引",
+                "operation": "观察切向瞬间的画面并记录所用帧组",
+                "preconditions": "角色正在向右行走",
+                "role": "动画验收者",
+                "scenario": "核对方向切换动作组"
+              },
+              {
+                "allow_na": false,
+                "evidence": "松键后 1 秒内的帧索引记录",
+                "exception": {
+                  "expected": "判定为动画未停止",
+                  "handling": "静止态改为只绘制第 0 帧后复测",
+                  "scenario": "松键后仍在空转播放行走帧"
+                },
+                "expected": "帧索引保持不变并停在 0，画面稳定显示该方向的待机帧",
+                "id": "AC-000010",
+                "input": "松开所有方向键",
+                "method": "松键后连续记录帧索引，确认数值不再变化",
+                "operation": "松键后观察 1 秒",
+                "preconditions": "角色正在移动",
+                "role": "动画验收者",
+                "scenario": "核对静止时停止推进"
+              },
+              {
+                "allow_na": false,
+                "evidence": "python tools/check_sheet.py 输出 + evidence/33_side_scale_preview.png",
+                "exception": {
+                  "expected": "判定资产不合格",
+                  "handling": "重新跑切帧与对齐脚本后复检",
+                  "scenario": "存在尺寸不一致、底色残留或帧间跳动"
+                },
+                "expected": "16 帧全部 48×48，四角 alpha 为 0，同方向帧间横向漂移不超过 2 像素，脚底基线一致",
+                "id": "AC-000011",
+                "input": "无输入",
+                "method": "用脚本遍历 16 帧，统计尺寸、透明角落与包围盒中心偏移；帧尺寸从 scene.json 读取",
+                "operation": "运行自检脚本检查 16 帧的尺寸、透明角、帧间漂移与脚底基线",
+                "preconditions": "动作卡已生成在 assets/crab_sheet.png",
+                "role": "动画验收者",
+                "scenario": "核对动作卡资产一致性与尺寸"
+              }
+            ],
+            "boundaries": [
+              {
+                "expected": "帧序号重置到新方向动作组的第 0 帧，不出现两个方向帧混用的错位画面",
+                "handling": "方向变化即重置动画计时器与帧索引",
+                "scenario": "移动过程中快速改变方向"
+              },
+              {
+                "expected": "保持在当前面向方向的第 0 帧，不继续推进动画",
+                "handling": "无输入时冻结帧索引",
+                "scenario": "角色静止不动"
+              },
+              {
+                "expected": "侧身行的显示尺寸比正面小约 10%，切换瞬间不出现明显的“变大”跳变",
+                "handling": "切片阶段按行缩放，并把缩放后的脚底回拉到同一基线",
+                "scenario": "从正面切到侧身"
+              }
+            ],
+            "created_at": "2026-10-28T08:54:10.386122+00:00",
+            "created_by": "octie-agent",
+            "dependencies": [],
+            "description": "螃蟹为四个方向（下、左、右、上）各准备一组走路帧，方向切换时立即切换动作组，移动过程中按固定帧率循环播放，静止时停在该方向的待机帧。动作卡由图片生成模型直接产出 4×4 卡片（绿幕），再由代码完成：等分切格 → 软阈值抠绿 → 按包围盒归一化（脚底对齐同一基线）→ 整表统一调色板量化。当前成品为半尺寸：单帧 48×48、整表 192×192、32 色；其中左侧与右侧两行额外缩放到 90%，避免侧身时视觉上比正面显大。",
+            "digest": "9eb3d2fa058fc7d4588a0382fce3f699fabf2129c3badef805ae216396ebdcf3",
+            "event_id": "EVT-000047",
+            "excluded": [
+              "斜向与八方向的独立动作组",
+              "攻击、跳跃、死亡等战斗动作",
+              "帧间插值生成的补间画面",
+              "静止时的呼吸/眨眼等二次动作（试做过，已移除）"
+            ],
+            "id": "REQ-000003",
+            "included": [
+              "上、下、左、右四个方向的独立走路帧组，每组 4 帧",
+              "按 8 帧每秒循环推进帧序号",
+              "方向切换时同步切换动作组",
+              "松开方向键后停在该方向待机帧（第 0 帧）",
+              "16 帧统一 48×48 尺寸、透明背景、同一套 32 色调色板",
+              "侧视两行按行缩放到 90%，脚底与正面行保持同一基线"
+            ],
+            "module": "角色动画",
+            "necessity": "只有位移没有帧动画，角色会表现为贴图滑动，用户会直接判定不合格；动作卡是该需求的核心交付物。",
+            "normal_behavior": {
+              "behavior": "每经过 125 毫秒切换到该方向动作组的下一个帧，四帧结束后回到第一帧继续循环",
+              "expected": "画面中的螃蟹腿部姿态逐帧变化，形成持续步行动作",
+              "scenario": "角色正在向右移动"
+            },
+            "placement": {
+              "kind": "页面",
+              "other": [],
+              "primary": {
+                "page_id": "PAGE-000001",
+                "page_revision": 1,
+                "region_id": "REG-000001-0001-0001"
+              }
+            },
+            "priority": "P0",
+            "purpose": "让螃蟹的移动看起来是一只活物在走，而不是一张贴图在平移；这也是用户反复强调的“动作卡连续播放”。",
+            "questions": [],
+            "revision": 2,
+            "sources": [
+              {
+                "source_id": "SRC-000001",
+                "source_revision": 1
+              },
+              {
+                "source_id": "SRC-000002",
+                "source_revision": 1
+              }
+            ],
+            "tags": [],
+            "technical": null,
+            "title": "播放四向走路动作卡的连续帧动画",
+            "type": "功能"
+          },
+          "pages": [
+            {
+              "page_id": "PAGE-000001",
+              "page_revision": 1,
+              "region_id": "REG-000001-0001-0001",
+              "snapshot": {
+                "created_at": "2026-10-27T19:58:11.769250+00:00",
+                "created_by": "octie-agent",
+                "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                "event_id": "EVT-000002",
+                "id": "PAGE-000001",
+                "location": "crab-coast/index.html 单页应用",
+                "name": "深圳海岸小世界主页",
+                "regions": [
+                  {
+                    "id": "REG-000001-0001-0001",
+                    "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                    "name": "场景画布区"
+                  },
+                  {
+                    "id": "REG-000001-0001-0002",
+                    "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                    "name": "方向控制提示区"
+                  },
+                  {
+                    "id": "REG-000001-0001-0003",
+                    "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                    "name": "资源加载提示区"
+                  }
+                ],
+                "revision": 1
+              }
+            }
+          ],
+          "revision": 2,
+          "scope": {
+            "decision": "纳入",
+            "reason": null
+          },
+          "sources": [
+            {
+              "snapshot": {
+                "created_at": "2026-10-27T19:58:28.507590+00:00",
+                "created_by": "octie-agent",
+                "date_note": "2026-10-28 用户在会话中的原始消息",
+                "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                "event_id": "EVT-000003",
+                "id": "SRC-000001",
+                "kind": "用户消息",
+                "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                "manual_note": null,
+                "name": "用户口述需求：深圳海岸螃蟹小世界",
+                "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                "revision": 1,
+                "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+              },
+              "source_id": "SRC-000001",
+              "source_revision": 1
+            },
+            {
+              "snapshot": {
+                "created_at": "2026-10-27T19:59:22.515291+00:00",
+                "created_by": "octie-agent",
+                "date_note": "2026-10-28 通过 Edge CDP 在 chatgpt.com 发起的技术咨询",
+                "digest": "526cf481c8592bf102dac7430092a1f929638f4a83987b5b8e77e65d0a36e982",
+                "event_id": "EVT-000006",
+                "id": "SRC-000002",
+                "kind": "链接",
+                "location": "https://chatgpt.com/c/6ae10247-06f0-83ee-80ae-b56b5c95a4ff",
+                "manual_note": null,
+                "name": "ChatGPT 咨询：深圳海岸像素小游戏最短可行资产方案",
+                "quote": "推荐技术栈：AI 生图 + Python Pillow + HTML5 Canvas 2D。整体采用三个独立层：固定背景、循环环境特效、角色精灵。不要让 AI 一次生成整张背景和全部角色动作后直接投入使用。游戏逻辑画布 960 × 540 px；背景 960 × 540 PNG；角色逻辑帧 64 × 64 px；四向动画 Down / Left / Right / Up，每方向 4 帧，总帧数 16 帧，最终 Sprite Sheet 256 × 256 PNG；行走动画 8 FPS；游戏渲染 requestAnimationFrame，通常目标 60 FPS；移动速度 110 px/s。推荐先生成一张角色母版（Character Reference），确认角色外观后，再生成四个方向的动作。不要首先要求模型直接输出 256 × 256 的成品 Sheet，更稳妥的方法是生成较大的 4 × 4 等分网格，再用代码裁切。",
+                "revision": 1,
+                "summary": "建议采用固定背景层 + 循环环境特效层 + 角色精灵层三层结构，画布 960×540、单帧 64×64、四向各 4 帧共 16 帧、8fps 行走、110px/s 移动；AI 先出角色母版与 4×4 网格大图，再用 Pillow 裁切、抠底、统一对齐得到可用 sprite sheet。"
+              },
+              "source_id": "SRC-000002",
+              "source_revision": 1
+            }
+          ]
+        },
+        "REQ-000004": {
+          "confirmation": {
+            "agent": "octie-agent",
+            "event_id": "EVT-000020",
+            "review_id": "REV-000004",
+            "time": "2026-10-27T20:19:35.854973+00:00"
+          },
+          "content": {
+            "acceptance": [
+              {
+                "allow_na": false,
+                "evidence": "Network 请求列表截图（含域名列）+ 离线状态下的页面截图",
+                "exception": {
+                  "expected": "判定不自包含",
+                  "handling": "把所需资源下载到本地目录并改为相对路径后复测",
+                  "scenario": "出现外部域名请求或页面白屏"
+                },
+                "expected": "页面完整显示场景与角色，Network 面板中没有任何指向本机以外域名的请求，全部请求为 file:// 或 localhost 本地路径",
+                "id": "AC-000012",
+                "input": "无网络",
+                "method": "断网打开页面并导出 Network 请求列表，逐条检查域名",
+                "operation": "断开网络后双击 index.html，并查看开发者工具的 Network 面板",
+                "preconditions": "已拿到 crab-coast 文件夹，网络已断开",
+                "role": "交付验收者",
+                "scenario": "核对文件夹自包含与离线可运行"
+              },
+              {
+                "allow_na": false,
+                "evidence": "性能面板截图或帧率统计数值",
+                "exception": {
+                  "expected": "判定为不流畅",
+                  "handling": "减少每帧重绘区域或缓存背景图层后复测",
+                  "scenario": "平均帧率低于 55 或出现超过 50 毫秒的长帧"
+                },
+                "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+                "id": "AC-000013",
+                "input": "按住 → 键移动角色 5 秒",
+                "method": "录制性能时间线，统计移动期间的帧率均值与最长帧间隔",
+                "operation": "用浏览器性能面板记录该时段的帧率",
+                "preconditions": "页面运行在本机 Edge 浏览器",
+                "role": "交付验收者",
+                "scenario": "核对渲染帧率"
+              },
+              {
+                "allow_na": false,
+                "evidence": "角色局部放大截图",
+                "exception": {
+                  "expected": "判定像素渲染不合格",
+                  "handling": "补充 image-rendering 与关闭图像平滑后复测",
+                  "scenario": "出现模糊或彩色边缘"
+                },
+                "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+                "id": "AC-000014",
+                "input": "无输入",
+                "method": "对角色局部区域截图并放大观察边缘像素",
+                "operation": "放大查看角色与背景边缘",
+                "preconditions": "页面已打开并显示角色",
+                "role": "交付验收者",
+                "scenario": "核对像素清晰度"
+              }
+            ],
+            "boundaries": [
+              {
+                "expected": "角色移动速度与动画节拍保持与时间一致，不出现慢动作",
+                "handling": "位移与帧推进都按真实时间增量计算，不按固定步数",
+                "scenario": "运行在性能较弱的机器上，帧率降到 30 帧每秒"
+              },
+              {
+                "expected": "场景等比缩放，像素边缘保持锐利不模糊",
+                "handling": "canvas 使用 image-rendering: pixelated，并按整数或等比缩放绘制",
+                "scenario": "浏览器窗口被缩放到很小或很大"
+              }
+            ],
+            "created_at": "2026-10-27T19:59:41.739698+00:00",
+            "created_by": "octie-agent",
+            "dependencies": [],
+            "description": "整站所有文件（页面、脚本、样式、背景图、动作卡、生成脚本、需求台账）只存在于 crab-coast 一个文件夹内，不引用任何外部 CDN、字体或接口；断网状态下双击 index.html 即可运行。渲染使用 requestAnimationFrame 加时间增量推进，画面按 60 帧每秒目标运行，像素素材放大时使用最近邻插值保持锐利。",
+            "digest": "ebe38c666d0ea584981c3f07bf4467a6f41bd9664d7b76fece4d2e3c81292687",
+            "event_id": "EVT-000008",
+            "excluded": [
+              "后端服务、数据库与账号体系",
+              "外部 CDN 资源与在线字体",
+              "移动端触屏手势（当前迭代不做）"
+            ],
+            "id": "REQ-000004",
+            "included": [
+              "全部代码与资产位于 crab-coast 文件夹内",
+              "离线可运行的本地静态页面",
+              "基于时间增量的稳定渲染循环",
+              "像素素材放大时的最近邻插值"
+            ],
+            "module": "交付与性能",
+            "necessity": "资产散落在多个目录或依赖外部网络会让这份交付在离线环境下不可用，也无法满足“一个文件夹搞定”的明确约束。",
+            "normal_behavior": {
+              "behavior": "页面加载本地素材并开始渲染，方向键控制正常，动画连续",
+              "expected": "无任何外部网络请求，画面帧率维持在 60 帧每秒附近",
+              "scenario": "用户在本机双击打开页面，且当前没有联网"
+            },
+            "placement": {
+              "kind": "页面",
+              "other": [],
+              "primary": {
+                "page_id": "PAGE-000001",
+                "page_revision": 1,
+                "region_id": "REG-000001-0001-0001"
+              }
+            },
+            "priority": "P0",
+            "purpose": "用户要求所有产物收在一个文件夹里不外流，并且动画要顺滑、看得出是精心做的像素游戏而不是卡顿的贴图滑动。",
+            "questions": [],
+            "revision": 1,
+            "sources": [
+              {
+                "source_id": "SRC-000001",
+                "source_revision": 1
+              },
+              {
+                "source_id": "SRC-000002",
+                "source_revision": 1
+              }
+            ],
+            "tags": [],
+            "technical": null,
+            "title": "单文件夹自包含交付并保持流畅渲染",
+            "type": "非功能"
+          },
+          "pages": [
+            {
+              "page_id": "PAGE-000001",
+              "page_revision": 1,
+              "region_id": "REG-000001-0001-0001",
+              "snapshot": {
+                "created_at": "2026-10-27T19:58:11.769250+00:00",
+                "created_by": "octie-agent",
+                "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                "event_id": "EVT-000002",
+                "id": "PAGE-000001",
+                "location": "crab-coast/index.html 单页应用",
+                "name": "深圳海岸小世界主页",
+                "regions": [
+                  {
+                    "id": "REG-000001-0001-0001",
+                    "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                    "name": "场景画布区"
+                  },
+                  {
+                    "id": "REG-000001-0001-0002",
+                    "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                    "name": "方向控制提示区"
+                  },
+                  {
+                    "id": "REG-000001-0001-0003",
+                    "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                    "name": "资源加载提示区"
+                  }
+                ],
+                "revision": 1
+              }
+            }
+          ],
+          "revision": 1,
+          "scope": {
+            "decision": "纳入",
+            "reason": null
+          },
+          "sources": [
+            {
+              "snapshot": {
+                "created_at": "2026-10-27T19:58:28.507590+00:00",
+                "created_by": "octie-agent",
+                "date_note": "2026-10-28 用户在会话中的原始消息",
+                "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                "event_id": "EVT-000003",
+                "id": "SRC-000001",
+                "kind": "用户消息",
+                "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                "manual_note": null,
+                "name": "用户口述需求：深圳海岸螃蟹小世界",
+                "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                "revision": 1,
+                "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+              },
+              "source_id": "SRC-000001",
+              "source_revision": 1
+            },
+            {
+              "snapshot": {
+                "created_at": "2026-10-27T19:59:22.515291+00:00",
+                "created_by": "octie-agent",
+                "date_note": "2026-10-28 通过 Edge CDP 在 chatgpt.com 发起的技术咨询",
+                "digest": "526cf481c8592bf102dac7430092a1f929638f4a83987b5b8e77e65d0a36e982",
+                "event_id": "EVT-000006",
+                "id": "SRC-000002",
+                "kind": "链接",
+                "location": "https://chatgpt.com/c/6ae10247-06f0-83ee-80ae-b56b5c95a4ff",
+                "manual_note": null,
+                "name": "ChatGPT 咨询：深圳海岸像素小游戏最短可行资产方案",
+                "quote": "推荐技术栈：AI 生图 + Python Pillow + HTML5 Canvas 2D。整体采用三个独立层：固定背景、循环环境特效、角色精灵。不要让 AI 一次生成整张背景和全部角色动作后直接投入使用。游戏逻辑画布 960 × 540 px；背景 960 × 540 PNG；角色逻辑帧 64 × 64 px；四向动画 Down / Left / Right / Up，每方向 4 帧，总帧数 16 帧，最终 Sprite Sheet 256 × 256 PNG；行走动画 8 FPS；游戏渲染 requestAnimationFrame，通常目标 60 FPS；移动速度 110 px/s。推荐先生成一张角色母版（Character Reference），确认角色外观后，再生成四个方向的动作。不要首先要求模型直接输出 256 × 256 的成品 Sheet，更稳妥的方法是生成较大的 4 × 4 等分网格，再用代码裁切。",
+                "revision": 1,
+                "summary": "建议采用固定背景层 + 循环环境特效层 + 角色精灵层三层结构，画布 960×540、单帧 64×64、四向各 4 帧共 16 帧、8fps 行走、110px/s 移动；AI 先出角色母版与 4×4 网格大图，再用 Pillow 裁切、抠底、统一对齐得到可用 sprite sheet。"
+              },
+              "source_id": "SRC-000002",
+              "source_revision": 1
+            }
+          ]
+        },
+        "REQ-000005": {
+          "confirmation": {
+            "agent": "octie-agent",
+            "event_id": "EVT-000054",
+            "review_id": "REV-000007",
+            "time": "2026-10-28T08:54:13.922021+00:00"
+          },
+          "content": {
+            "acceptance": [
+              {
+                "allow_na": false,
+                "evidence": "实测输出：duration=40, loop=true",
+                "exception": {
+                  "expected": "判定播放配置不合格",
+                  "handling": "检查音频文件与 bgm.js 设置后复测",
+                  "scenario": "时长不符或未开启循环"
+                },
+                "expected": "duration 为 40（±0.05 秒），loop 属性为 true",
+                "id": "AC-000015",
+                "input": "无输入",
+                "method": "在浏览器控制台读取 window.__bgm.audio.duration 与 loop",
+                "operation": "读取音频元素的时长与 loop 属性",
+                "preconditions": "页面已打开且音乐资源加载完成",
+                "role": "音频验收者",
+                "scenario": "核对时长与循环设置"
+              },
+              {
+                "allow_na": false,
+                "evidence": "实测 0.0019 / 0.413 = 0.005",
+                "exception": {
+                  "expected": "判定会爆音",
+                  "handling": "重新做无缝处理或改用取模合成",
+                  "scenario": "接缝处跳变接近最大值"
+                },
+                "expected": "首尾跳变远小于普通相邻差值（比值 \u003c 0.1），听感上无咔哒",
+                "id": "AC-000016",
+                "input": "无输入",
+                "method": "用脚本读取 PCM，计算 |x[0]-x[-1]| 与相邻差值分布的 p99.9 之比",
+                "operation": "比较首尾采样跳变与整体相邻采样差值",
+                "preconditions": "已拿到音频文件",
+                "role": "音频验收者",
+                "scenario": "核对接缝无断音爆音"
+              },
+              {
+                "allow_na": false,
+                "evidence": "操作前后 muted 状态记录",
+                "exception": {
+                  "expected": "判定静音功能不合格",
+                  "handling": "修正 localStorage 读写与 muted 绑定后复测",
+                  "scenario": "点击无效或刷新后自动恢复播放"
+                },
+                "expected": "点击后立即静音且按钮变为静音态；刷新后仍为静音",
+                "id": "AC-000017",
+                "input": "点击右上角音乐按钮，然后刷新页面",
+                "method": "读取 window.__bgm.muted 与按钮文案，刷新后再读一次",
+                "operation": "观察按钮文案、音频 muted 状态与刷新后的状态",
+                "preconditions": "音乐正在播放",
+                "role": "音频验收者",
+                "scenario": "核对静音开关与记忆"
+              }
+            ],
+            "boundaries": [
+              {
+                "expected": "页面不报错，音乐保持静默直到用户第一次按键或点击",
+                "handling": "监听首次交互事件后再调用播放，被拒绝时不清除监听",
+                "scenario": "浏览器拦截自动播放"
+              },
+              {
+                "expected": "游戏画面正常，音乐开关按钮自动隐藏",
+                "handling": "监听音频错误事件，隐藏按钮并继续运行",
+                "scenario": "音频文件缺失或路径错误"
+              },
+              {
+                "expected": "刷新后仍保持静音",
+                "handling": "静音状态写入 localStorage 并在初始化时读取",
+                "scenario": "用户静音后刷新页面"
+              }
+            ],
+            "created_at": "2026-10-28T08:54:12.200904+00:00",
+            "created_by": "octie-agent",
+            "dependencies": [],
+            "description": "页面加载后提供一段 40 秒整、能够无缝循环的海边休闲风格背景音乐。受浏览器自动播放策略限制，首次按键或点击后开始播放；播放中不出现接缝断音或爆音。右上角提供音乐开关，键盘 M 键也可切换，静音状态记在本地，刷新后保持。音乐文件与页面同在一个文件夹内，断网可用；切换到 mp3 版本时行为不变。",
+            "digest": "a5f9a8c76d9e09e77cc22bded06a02ca129928d59b5dcbd0416f6f5c51a1282a",
+            "event_id": "EVT-000051",
+            "excluded": [
+              "脚步、水声等环境音效",
+              "多曲目切换与音量滑动条",
+              "在线流媒体或版权音乐接入"
+            ],
+            "id": "REQ-000005",
+            "included": [
+              "40.000 秒、首尾无缝衔接的循环音频",
+              "首次按键或点击后自动开始播放",
+              "右上角按钮与 M 键切换静音，状态写入 localStorage",
+              "音乐文件随页面同目录存放，离线可用"
+            ],
+            "module": "音频",
+            "necessity": "没有背景音乐时场景偏“静”，用户明确要求补一段海边悠闲向、可循环的电子音乐。",
+            "normal_behavior": {
+              "behavior": "背景音乐从当前循环位置开始播放，音量淡入到设定值",
+              "expected": "能听到连续不断的音乐；走到 40 秒末尾时直接接回开头，没有静音空档或爆音",
+              "scenario": "用户打开页面并按下任意方向键"
+            },
+            "placement": {
+              "kind": "页面",
+              "other": [],
+              "primary": {
+                "page_id": "PAGE-000001",
+                "page_revision": 1,
+                "region_id": "REG-000001-0001-0002"
+              }
+            },
+            "priority": "P1",
+            "purpose": "给静止或行走中的场景提供持续的氛围声，让页面像一个完整的小游戏而不是一张会动的图。",
+            "questions": [],
+            "revision": 1,
+            "sources": [
+              {
+                "source_id": "SRC-000001",
+                "source_revision": 1
+              }
+            ],
+            "tags": [],
+            "technical": null,
+            "title": "播放可无缝循环的海岸背景音乐并支持静音",
+            "type": "功能"
+          },
+          "pages": [
+            {
+              "page_id": "PAGE-000001",
+              "page_revision": 1,
+              "region_id": "REG-000001-0001-0002",
+              "snapshot": {
+                "created_at": "2026-10-27T19:58:11.769250+00:00",
+                "created_by": "octie-agent",
+                "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                "event_id": "EVT-000002",
+                "id": "PAGE-000001",
+                "location": "crab-coast/index.html 单页应用",
+                "name": "深圳海岸小世界主页",
+                "regions": [
+                  {
+                    "id": "REG-000001-0001-0001",
+                    "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                    "name": "场景画布区"
+                  },
+                  {
+                    "id": "REG-000001-0001-0002",
+                    "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                    "name": "方向控制提示区"
+                  },
+                  {
+                    "id": "REG-000001-0001-0003",
+                    "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                    "name": "资源加载提示区"
+                  }
+                ],
+                "revision": 1
+              }
+            }
+          ],
+          "revision": 1,
+          "scope": {
+            "decision": "纳入",
+            "reason": null
+          },
+          "sources": [
+            {
+              "snapshot": {
+                "created_at": "2026-10-27T19:58:28.507590+00:00",
+                "created_by": "octie-agent",
+                "date_note": "2026-10-28 用户在会话中的原始消息",
+                "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                "event_id": "EVT-000003",
+                "id": "SRC-000001",
+                "kind": "用户消息",
+                "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                "manual_note": null,
+                "name": "用户口述需求：深圳海岸螃蟹小世界",
+                "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                "revision": 1,
+                "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+              },
+              "source_id": "SRC-000001",
+              "source_revision": 1
+            }
+          ]
+        },
+        "REQ-000006": {
+          "confirmation": {
+            "agent": "octie-agent",
+            "event_id": "EVT-000133",
+            "review_id": "REV-000019",
+            "time": "2026-10-28T09:12:14.221013+00:00"
+          },
+          "content": {
+            "acceptance": [
+              {
+                "allow_na": false,
+                "evidence": "实测 7 次序列：24,48,96,48,24,48,96（含 小/中/大 标签）",
+                "exception": {
+                  "expected": "判定反弹逻辑或标签绑定有误",
+                  "handling": "修正方向翻转与文案刷新后复测",
+                  "scenario": "出现 96 直接跳到 24、或文案与尺寸不符"
+                },
+                "expected": "序列为 48(中)→24(小)→48(中)→96(大)→48(中)→24(小)→48(中)；按钮依次显示「尺寸 小 24 / 中 48 / 大 96 …」",
+                "id": "AC-000024",
+                "input": "连续按 T 键 7 次",
+                "method": "点击按钮并读取 window.__probe.state().size 与按钮 textContent",
+                "operation": "记录每次的尺寸与按钮文案",
+                "preconditions": "页面已加载三套表，默认中档",
+                "role": "尺寸验收者",
+                "scenario": "核对反弹序列与标签"
+              },
+              {
+                "allow_na": false,
+                "evidence": "实测 24 → 48、96 → 48",
+                "exception": {
+                  "expected": "判定仍在绕回",
+                  "handling": "检查方向变量是否在越界时翻转",
+                  "scenario": "24 跳到 96 或 96 跳到 24"
+                },
+                "expected": "24 的下一档是 48；96 的下一档也是 48",
+                "id": "AC-000025",
+                "input": "在端点再按一次 T",
+                "method": "把档位切到端点后按一次 T，读取结果",
+                "operation": "观察下一档",
+                "preconditions": "已停在最小档 24 或最大档 96",
+                "role": "尺寸验收者",
+                "scenario": "核对两端不互跳"
+              },
+              {
+                "allow_na": false,
+                "evidence": "三档基线 86/43/21，朝向行一致",
+                "exception": {
+                  "expected": "判定该档基线或行映射有问题",
+                  "handling": "修正后复测",
+                  "scenario": "某档悬空或朝向错乱"
+                },
+                "expected": "三档脚底分别落在 86/43/21 基线上，朝向仍为右→正面行、上→侧视行",
+                "id": "AC-000026",
+                "input": "每档按住右键后改按上键",
+                "method": "读取角色坐标与该档基线核对偏移",
+                "operation": "核对脚底贴地与朝向行",
+                "preconditions": "分别切到三档",
+                "role": "尺寸验收者",
+                "scenario": "核对三档脚底与朝向不受切换逻辑影响"
+              }
+            ],
+            "boundaries": [
+              {
+                "expected": "回到中档（而不是跳到大档）",
+                "handling": "索引越界时翻转方向再前进一步",
+                "scenario": "在最小档继续按 T"
+              },
+              {
+                "expected": "回到中档（而不是跳到小档）",
+                "handling": "同上",
+                "scenario": "在最大档继续按 T"
+              },
+              {
+                "expected": "位置、碰撞与帧序都不受影响",
+                "handling": "切换只改绘制用的表与基线",
+                "scenario": "角色移动过程中切换"
+              }
+            ],
+            "created_at": "2026-10-28T09:12:07.880416+00:00",
+            "created_by": "octie-agent",
+            "dependencies": [],
+            "description": "螃蟹保留 96（大）、48（中）、24（小）三套精灵表，由同一张动作卡逐级派生，共用朝向状态机、行走帧序与脚底对齐规则；三档都做了侧视按行缩放 90%。T 键或左上角按钮采用**反弹式**切换：从中档出发先变小，到最小档后掉头变大，到最大档后再掉头变小，形成 中→小→中→大→中→小… 的往复，而不是跳回另一端。按钮显示当前档位的中文标签与像素尺寸（如「尺寸 中 48」）。",
+            "digest": "73343bc0b56bfe6235c12b2c0a1c7b735f114b2ca045861226dab93197d893d8",
+            "event_id": "EVT-000130",
+            "excluded": [
+              "绕回式（一端的下一档直接跳到另一端）切换",
+              "尺寸滑块或自定义尺寸",
+              "按距离自动切换尺寸"
+            ],
+            "id": "REQ-000006",
+            "included": [
+              "96/48/24 三套精灵表同时存在且都可加载",
+              "T 键与按钮按反弹方式切换：中→小→中→大→中…",
+              "按钮显示「尺寸 大/中/小 + 像素值」",
+              "三档共用朝向状态机与行走帧序，侧视均缩 90%"
+            ],
+            "module": "角色渲染",
+            "necessity": "用户明确要求把绕回式切换改成反弹式，并要求用 小/中/大 表达档位。",
+            "normal_behavior": {
+              "behavior": "每按一次 T 或点一次按钮，档位沿当前方向走一格；走到端点则反向",
+              "expected": "序列为 中→小→中→大→中→小…，按钮文案随之更新，且不会出现两端直接互跳",
+              "scenario": "页面加载完成，默认停在中档 48"
+            },
+            "placement": {
+              "kind": "页面",
+              "other": [],
+              "primary": {
+                "page_id": "PAGE-000001",
+                "page_revision": 1,
+                "region_id": "REG-000001-0001-0001"
+              }
+            },
+            "priority": "P1",
+            "purpose": "让调节尺寸的过程连续、可预期：越按越接近想要的大小，不会在两端之间突然跳变。",
+            "questions": [],
+            "revision": 3,
+            "sources": [
+              {
+                "source_id": "SRC-000001",
+                "source_revision": 1
+              }
+            ],
+            "tags": [],
+            "technical": null,
+            "title": "同一角色三档尺寸按 T 键反弹切换（小↔中↔大）",
+            "type": "功能"
+          },
+          "pages": [
+            {
+              "page_id": "PAGE-000001",
+              "page_revision": 1,
+              "region_id": "REG-000001-0001-0001",
+              "snapshot": {
+                "created_at": "2026-10-27T19:58:11.769250+00:00",
+                "created_by": "octie-agent",
+                "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                "event_id": "EVT-000002",
+                "id": "PAGE-000001",
+                "location": "crab-coast/index.html 单页应用",
+                "name": "深圳海岸小世界主页",
+                "regions": [
+                  {
+                    "id": "REG-000001-0001-0001",
+                    "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                    "name": "场景画布区"
+                  },
+                  {
+                    "id": "REG-000001-0001-0002",
+                    "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                    "name": "方向控制提示区"
+                  },
+                  {
+                    "id": "REG-000001-0001-0003",
+                    "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                    "name": "资源加载提示区"
+                  }
+                ],
+                "revision": 1
+              }
+            }
+          ],
+          "revision": 3,
+          "scope": {
+            "decision": "纳入",
+            "reason": null
+          },
+          "sources": [
+            {
+              "snapshot": {
+                "created_at": "2026-10-27T19:58:28.507590+00:00",
+                "created_by": "octie-agent",
+                "date_note": "2026-10-28 用户在会话中的原始消息",
+                "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                "event_id": "EVT-000003",
+                "id": "SRC-000001",
+                "kind": "用户消息",
+                "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                "manual_note": null,
+                "name": "用户口述需求：深圳海岸螃蟹小世界",
+                "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                "revision": 1,
+                "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+              },
+              "source_id": "SRC-000001",
+              "source_revision": 1
+            }
+          ]
+        },
+        "REQ-000007": {
+          "confirmation": {
+            "agent": "octie-agent",
+            "event_id": "EVT-000153",
+            "review_id": "REV-000023",
+            "time": "2026-10-28T10:25:08.580419+00:00"
+          },
+          "content": {
+            "acceptance": [
+              {
+                "allow_na": false,
+                "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图",
+                "exception": {
+                  "expected": "判定不通过并记录 fitCount 未增长",
+                  "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460",
+                  "scenario": "静置超过 1 秒画布尺寸仍未变化"
+                },
+                "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+                "id": "AC-000027",
+                "input": "把可见高度由 390 改为 460，不派发任何事件",
+                "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+                "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+                "role": "移动端验收者",
+                "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件"
+              },
+              {
+                "allow_na": false,
+                "evidence": "前后画布尺寸数值与 fitCount 变化",
+                "exception": {
+                  "expected": "判定不通过",
+                  "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向",
+                  "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉"
+                },
+                "expected": "画布自动回到 693×390，fitCount 再增加 1",
+                "id": "AC-000028",
+                "input": "把可见高度由 460 改回 390，不派发任何事件",
+                "method": "与上一条同一套模拟手段，反向修改高度",
+                "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                "preconditions": "承接上一条，画布当前为 818×460",
+                "role": "移动端验收者",
+                "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件"
+              },
+              {
+                "allow_na": false,
+                "evidence": "三次事件与静置期的 fitCount 数值",
+                "exception": {
+                  "expected": "判定不通过，说明存在空转",
+                  "handling": "检查轮询是否在尺寸未变时仍调用 fit()",
+                  "scenario": "静置期间 fitCount 持续增长"
+                },
+                "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+                "id": "AC-000029",
+                "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+                "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+                "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+                "preconditions": "页面稳定，画布尺寸已确定",
+                "role": "移动端验收者",
+                "scenario": "核对各事件通道与空闲开销"
+              },
+              {
+                "allow_na": false,
+                "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图",
+                "exception": {
+                  "expected": "判定不通过",
+                  "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名",
+                  "scenario": "画布仍保留 2% / 6% 边距"
+                },
+                "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+                "id": "AC-000030",
+                "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+                "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+                "operation": "读取画布尺寸与可见区域尺寸",
+                "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+                "role": "移动端验收者",
+                "scenario": "触屏设备上画布铺满可见区域"
+              },
+              {
+                "allow_na": false,
+                "evidence": "视口尺寸、画布尺寸与公式计算值",
+                "exception": {
+                  "expected": "判定不通过",
+                  "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏",
+                  "scenario": "桌面画布被拉伸到 929 以上或出现裁剪"
+                },
+                "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+                "id": "AC-000031",
+                "input": "视口 947×972",
+                "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+                "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+                "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+                "role": "桌面验收者",
+                "scenario": "桌面端不出现铺满带来的回归"
+              }
+            ],
+            "boundaries": [
+              {
+                "expected": "画布的 CSS 尺寸保持不变",
+                "handling": "viewBox() 退回 innerWidth / innerHeight，跳过本次重排，避免放大过程中画面跳动",
+                "scenario": "用户正在双指放大（visualViewport.scale 大于 1）"
+              }
+            ],
+            "created_at": "2026-10-28T10:24:35.811740+00:00",
+            "created_by": "octie-agent",
+            "dependencies": [],
+            "description": "手机浏览器的工具栏（地址栏、底部导航）收起或展开会改变页面可见高度，但部分浏览器在此时不派发 window.resize（iOS Safari 尤其常见）。当前实现只监听 window.resize，所以可见区域变大后画布仍保持旧尺寸，必须等其它事件（例如点击「收起按键」触发的那一次 resize）才会重排。本需求要求以真实可见区域（visualViewport）为准，在可见区域变化后自动重算画布尺寸，把它放大到当前可见区域内能放下的最大值，并在触屏设备上去掉原来预留的 2% / 6% 边距。",
+            "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+            "event_id": "EVT-000150",
+            "excluded": [
+              "双指放大（visualViewport.scale 大于 1）过程中的重新排版",
+              "桌面端留边距策略的变更，桌面仍保持 0.98 / 0.94",
+              "虚拟按键的位置、显隐与输入通道逻辑"
+            ],
+            "id": "REQ-000007",
+            "included": [
+              "以 visualViewport 的宽高作为可见区域，在工具栏收起或展开后自动重算画布尺寸",
+              "触屏设备上画布铺满可见区域，不再保留原来的 2% 宽度与 6% 高度边距",
+              "同时监听 window resize、visualViewport resize、visualViewport scroll、orientationchange、pageshow、visibilitychange 六条来源",
+              "增加 400ms 的可见区域尺寸比对兜底，应对浏览器完全不发事件的情况"
+            ],
+            "module": "画面自适应（可见区域适配）",
+            "necessity": "去掉本项，画面会在工具栏收起后长期偏小：横屏实测少用约 6% 的高度（693×390 而非应有的 818×460），竖屏少用 8px 宽度；且表现为“点了某个按钮才放大”的怪异时序，用户会以为页面卡住。",
+            "normal_behavior": {
+              "behavior": "页面以 visualViewport 为准重新计算画布缩放",
+              "expected": "画布在一个 400ms 轮询周期内由 693×390 自动变为 818×460，全程无需用户点击任何按钮",
+              "scenario": "手机横屏下收起浏览器工具栏，可见高度由 390 变为 460，浏览器没有派发 resize"
+            },
+            "placement": {
+              "kind": "页面",
+              "other": [],
+              "primary": {
+                "page_id": "PAGE-000001",
+                "page_revision": 1,
+                "region_id": "REG-000001-0001-0001"
+              }
+            },
+            "priority": "P1",
+            "purpose": "让手机玩家收起浏览器工具栏后立刻得到更大的画面，不需要手动触发任何按钮。",
+            "questions": [],
+            "revision": 1,
+            "sources": [
+              {
+                "source_id": "SRC-000003",
+                "source_revision": 1
+              }
+            ],
+            "tags": [],
+            "technical": "实现位于 main.js：viewBox() 在 visualViewport.scale 约等于 1 时取 visualViewport 的宽高，否则退回 innerWidth/innerHeight；fit() 依据 html.touch-mode 决定铺满还是保留边距；事件监听与 400ms 轮询兜底同在 fit() 附近注册；另暴露 __probe.fitCount() 与 __probe.viewBox() 供验收读取。",
+            "title": "手机隐藏浏览器工具栏后画面自动放大到最大",
+            "type": "功能"
+          },
+          "pages": [
+            {
+              "page_id": "PAGE-000001",
+              "page_revision": 1,
+              "region_id": "REG-000001-0001-0001",
+              "snapshot": {
+                "created_at": "2026-10-27T19:58:11.769250+00:00",
+                "created_by": "octie-agent",
+                "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                "event_id": "EVT-000002",
+                "id": "PAGE-000001",
+                "location": "crab-coast/index.html 单页应用",
+                "name": "深圳海岸小世界主页",
+                "regions": [
+                  {
+                    "id": "REG-000001-0001-0001",
+                    "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                    "name": "场景画布区"
+                  },
+                  {
+                    "id": "REG-000001-0001-0002",
+                    "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                    "name": "方向控制提示区"
+                  },
+                  {
+                    "id": "REG-000001-0001-0003",
+                    "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                    "name": "资源加载提示区"
+                  }
+                ],
+                "revision": 1
+              }
+            }
+          ],
+          "revision": 1,
+          "scope": {
+            "decision": "纳入",
+            "reason": null
+          },
+          "sources": [
+            {
+              "snapshot": {
+                "created_at": "2026-10-28T10:24:10.851262+00:00",
+                "created_by": "octie-agent",
+                "date_note": "2026-10-28 用户消息",
+                "digest": "ddf640df9e4d1bbd434e4ab85bd1e7ac6d19794064dd9c94565faa4675a8fbd2",
+                "event_id": "EVT-000149",
+                "id": "SRC-000003",
+                "kind": "用户消息",
+                "location": null,
+                "manual_note": "用户在本次会话中以文字直接提出的原始需求，未经整理",
+                "name": "用户提出画面自适应需求（手机隐藏工具栏后自动放大）",
+                "quote": "手机浏览器有一个问题就是，刚开始的时候如果游戏页面小，我隐藏工具栏之后页面不会自动放大，而是点收起按钮的时候才会自适应放大，让页面自动放大最大，新需求创建修改",
+                "revision": 1,
+                "summary": "用户指出：手机隐藏浏览器工具栏后可见区域变大，画面却不会自动放大，要点「收起按键」才重排；要求画面自动放大到最大。"
+              },
+              "source_id": "SRC-000003",
+              "source_revision": 1
+            }
+          ]
+        }
+      },
+      "predecessor": "BASE-000005",
+      "revision": 1,
+      "version": "V1.5"
     }
   ],
   "changes": [
@@ -12068,19 +14023,1464 @@
           "status": "已提出"
         }
       ]
+    },
+    {
+      "id": "CHG-000005",
+      "revisions": [
+        {
+          "actions": [
+            {
+              "new_revision": 1,
+              "old_revision": null,
+              "requirement_id": "REQ-000007",
+              "type": "新增"
+            }
+          ],
+          "candidate_members": {
+            "REQ-000001": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000011",
+                "review_id": "REV-000001",
+                "time": "2026-10-27T20:19:33.136841+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "初始画面截图 + 七类元素勾选清单（含各自大致坐标）",
+                    "exception": {
+                      "expected": "某类元素缺失或颜色与同类无法区分",
+                      "handling": "记为不通过，补画该类元素后重新截图核对",
+                      "scenario": "某类元素缺失或与同类无法区分"
+                    },
+                    "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+                    "id": "AC-000001",
+                    "input": "无输入，仅观察初始画面",
+                    "method": "对初始画面截图，按七类元素清单逐项勾选并标注位置",
+                    "operation": "打开 index.html 并等待加载提示消失",
+                    "preconditions": "资源已加载完成，页面处于初始状态",
+                    "role": "场景验收者",
+                    "scenario": "核对七类海岸元素是否齐全"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "移动前后两张截图 + 背景区域差异率数值",
+                    "exception": {
+                      "expected": "背景出现任何平移或缩放跳动",
+                      "handling": "判定为不通过，移除背景位移逻辑",
+                      "scenario": "角色移动过程中背景发生位移"
+                    },
+                    "expected": "除角色精灵所在区域外，背景像素与移动前一致，背景位移为 0 像素",
+                    "id": "AC-000002",
+                    "input": "按住右方向键持续 3 秒，再按住左方向键持续 3 秒",
+                    "method": "移动前后各截一张图，用像素差分统计背景区域差异率",
+                    "operation": "移动角色后回到起始位置附近，比较背景像素",
+                    "preconditions": "页面已进入且背景渲染完成",
+                    "role": "场景验收者",
+                    "scenario": "验证背景不随角色移动"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "连续 3 帧截图",
+                    "exception": {
+                      "expected": "海面完全静止或每帧出现大面积跳变",
+                      "handling": "记为不通过，调整波浪相位与循环周期后复测",
+                      "scenario": "海面静止或帧间跳变过大"
+                    },
+                    "expected": "三帧海浪纹理位置不同，循环周期内无整幅跳动或闪烁",
+                    "id": "AC-000003",
+                    "input": "无输入",
+                    "method": "间隔 1 秒连续截 3 帧，比对海浪纹理位移",
+                    "operation": "静置观察海面 3 秒并连续截取 3 帧",
+                    "preconditions": "页面静止无角色输入",
+                    "role": "场景验收者",
+                    "scenario": "验证海面循环动画存在且连贯"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "场景等比缩放并居中，四周留出底色，不拉伸不变形",
+                    "handling": "按 min(宽比, 高比) 等比缩放后居中绘制，留边填深色",
+                    "scenario": "浏览器窗口宽高比与场景原始比例不一致"
+                  },
+                  {
+                    "expected": "仍能看完整幅场景与角色，元素不变形",
+                    "handling": "继续等比缩放至适配宽度，允许整体变小但不裁切",
+                    "scenario": "窗口宽度小于 480px 的窄屏"
+                  }
+                ],
+                "created_at": "2026-10-27T19:58:51.627651+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "页面打开后在画布上绘制一幅完整的深圳海岸场景：海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋。背景是一整张固定的 2.5D 平面图，角色在其上方行走时背景像素位置保持不变，不做相机跟随与地图滚动。海水部分带持续的循环动画（波浪流动），让画面不是死图。",
+                "digest": "2310b3e8c298e8c9a0645878ccae71b3e32c822529ee1675b0ddce9d973bbed4",
+                "event_id": "EVT-000004",
+                "excluded": [
+                  "视差滚动、相机跟随与地图平移",
+                  "多场景或关卡切换",
+                  "玩家侧的场景缩放与旋转"
+                ],
+                "id": "REQ-000001",
+                "included": [
+                  "海水区与沙滩区上固定绘制的一整幅海岸背景",
+                  "红树林、海藻床、珊瑚礁三类深圳典型海岸元素的可见呈现",
+                  "台阶与房屋等场景道具的可见呈现",
+                  "海面波浪的循环动画"
+                ],
+                "module": "场景渲染",
+                "necessity": "没有背景就没有场景可言：用户明确要求网站带海洋、沙滩与深圳典型海岸元素，且背景必须固定不动，否则就不是他要的“大地图一站到底”的观感。",
+                "normal_behavior": {
+                  "behavior": "画布按场景原始比例等比绘制完整海岸背景，海面开始循环波浪动画",
+                  "expected": "画面同时可见海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋共七类元素，且背景在角色移动前后像素位置不变",
+                  "scenario": "用户打开本地页面且资产已就绪"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "给螃蟹角色提供一个可辨认的深圳海岸小世界作为舞台，让用户一眼看出这是海藻床、红树林、珊瑚礁构成的真实海岸场景。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "呈现固定不滚动的深圳海岸 2.5D 场景背景",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000002": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000014",
+                "review_id": "REV-000002",
+                "time": "2026-10-27T20:19:33.931717+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "四次按键的起点终点坐标记录表（含 dx、dy 数值）",
+                    "exception": {
+                      "expected": "该方向判定不通过",
+                      "handling": "修正该方向的输入映射后复测",
+                      "scenario": "某个方向位移方向相反或出现斜向偏移"
+                    },
+                    "expected": "↑ 的 y 减小且 x 不变，↓ 的 y 增大且 x 不变，← 的 x 减小且 y 不变，→ 的 x 增大且 y 不变，四次的垂直轴偏移均为 0 像素",
+                    "id": "AC-000004",
+                    "input": "依次单独按住 ↑、↓、←、→ 各 1 秒",
+                    "method": "在页面中暴露角色坐标并逐次记录，比对 dx 与 dy 的正负和零值",
+                    "operation": "每次按键后记录角色起点与终点坐标",
+                    "preconditions": "角色位于场景中央，四个方向均有足够空间",
+                    "role": "操作验收者",
+                    "scenario": "逐个方向核对移动方向正确"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "三组位移量原始数值与相对差计算结果",
+                    "exception": {
+                      "expected": "判定速度不稳定",
+                      "handling": "改为按时间增量累加位移后复测",
+                      "scenario": "三次位移差异超过 10% 或位移接近 0"
+                    },
+                    "expected": "三次位移量的最大值与最小值相对差不超过 10%",
+                    "id": "AC-000005",
+                    "input": "连续 3 次按住 → 各 1 秒后松开",
+                    "method": "同一方向的 3 组位移量做极差与均值比值计算",
+                    "operation": "记录每次 1 秒内的水平位移量",
+                    "preconditions": "角色位于场景中央",
+                    "role": "操作验收者",
+                    "scenario": "核对移动速度稳定"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "最终坐标数值 + 贴边截图",
+                    "exception": {
+                      "expected": "判定边界处理不通过",
+                      "handling": "修正钳制范围并复测",
+                      "scenario": "角色移出画面或贴在边缘抖动"
+                    },
+                    "expected": "角色整体仍在可视区域内，其右边缘不超过场景右内边距，坐标被钳制在允许范围",
+                    "id": "AC-000006",
+                    "input": "持续按住 → 5 秒",
+                    "method": "持续按键后读取角色最终坐标与场景边界值做比较",
+                    "operation": "观察角色最终位置与画面右边缘的关系",
+                    "preconditions": "角色靠近右侧边界",
+                    "role": "操作验收者",
+                    "scenario": "核对边界限制"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "松键时刻与最后一帧位移的时间差记录",
+                    "exception": {
+                      "expected": "判定为未立即停止",
+                      "handling": "移除速度衰减逻辑，改为松键直接归零",
+                      "scenario": "松键后角色继续滑行超过 100 毫秒"
+                    },
+                    "expected": "松键后 100 毫秒内水平位移归零，角色不再移动",
+                    "id": "AC-000007",
+                    "input": "松开 → 键",
+                    "method": "松键后按帧记录坐标，找出最后一次位移的帧号与时间差",
+                    "operation": "松键后连续观察 0.5 秒",
+                    "preconditions": "角色正在向右移动",
+                    "role": "操作验收者",
+                    "scenario": "核对松键立即停止"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "角色只沿最后按下的那个方向移动，不同时产生斜向位移",
+                    "handling": "以最后一次按下的方向键为准，忽略先前仍按住的轴",
+                    "scenario": "同时按住两个方向键（例如右键与上键）"
+                  },
+                  {
+                    "expected": "角色停在边界内侧，不越出画面",
+                    "handling": "对坐标做上下限钳制，越界时保留在允许范围内",
+                    "scenario": "角色持续朝同一个方向移动到场景边缘"
+                  },
+                  {
+                    "expected": "角色停止移动，不出现卡住持续漂移",
+                    "handling": "监听失焦事件清空按键状态",
+                    "scenario": "按住方向键时浏览器窗口失去焦点"
+                  }
+                ],
+                "created_at": "2026-10-27T19:59:07.557201+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "用户按下 W/A/S/D 或键盘方向键时，螃蟹角色在固定场景内沿对应方向匀速移动；松开按键立即停止。移动只在上下左右四个轴方向发生，不产生斜向位移，角色始终被限制在场景可视范围内。",
+                "digest": "433c05bb460b38b24a3f7879d6b4fe2d1231808c67f52164bd721002d7614d6a",
+                "event_id": "EVT-000005",
+                "excluded": [
+                  "斜向八方向自由移动",
+                  "跳跃、攻击、拾取等额外动作",
+                  "身体惯性、摩擦滑行与加速缓冲"
+                ],
+                "id": "REQ-000002",
+                "included": [
+                  "W 与 ↑ 向上移动，S 与 ↓ 向下移动，A 与 ← 向左移动，D 与 → 向右移动",
+                  "恒定速度的水平与垂直位移",
+                  "角色位置限制在场景可视区域内",
+                  "松开按键后立即停止"
+                ],
+                "module": "角色控制",
+                "necessity": "没有四向移动就没有交互，整个场景退化为一张静止图片；用户原话明确这是当前唯一必须实现的功能。",
+                "normal_behavior": {
+                  "behavior": "按住某一个方向键，角色沿该轴方向持续移动并播放行走动画，松开按键后停住",
+                  "expected": "位移方向与按键方向一致，单位时间位移量保持稳定",
+                  "scenario": "角色位于场景中央且没有触达边界"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "这是用户唯一要求现在必须完成的操作能力：用四个方向键驱动小螃蟹在海岸场景里走动。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "支持键盘四向移动螃蟹角色",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000003": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000050",
+                "review_id": "REV-000006",
+                "time": "2026-10-28T08:54:11.706903+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "帧索引序列日志 + 行走中截图 evidence/03~06",
+                    "exception": {
+                      "expected": "判定动画不连通",
+                      "handling": "修正帧推进逻辑与计时基准后复测",
+                      "scenario": "帧序出现跳跃、倒退或长时间停在同帧"
+                    },
+                    "expected": "帧索引按 0、1、2、3 循环推进，无跳帧与倒序",
+                    "id": "AC-000008",
+                    "input": "按住右方向键持续 1 秒",
+                    "method": "在渲染循环中记录每次帧切换的时间戳与索引，导出序列后检查连续性",
+                    "operation": "记录这 1 秒内实际绘制的帧索引序列",
+                    "preconditions": "角色在可行走沙地上，四个方向的帧组已加载",
+                    "role": "动画验收者",
+                    "scenario": "核对单一方向的帧循环连通"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "切向前后帧组标识日志 + 切向瞬间截图",
+                    "exception": {
+                      "expected": "判定动作组切换失败",
+                      "handling": "修正方向到帧组的映射后复测",
+                      "scenario": "切向后仍显示向右的帧或出现空白帧"
+                    },
+                    "expected": "切向后绘制的是向上动作组的帧，切换发生在 1 个渲染帧之内",
+                    "id": "AC-000009",
+                    "input": "按住右方向键后改为按住上方向键",
+                    "method": "记录切向前后各 5 帧的帧组标识与索引",
+                    "operation": "观察切向瞬间的画面并记录所用帧组",
+                    "preconditions": "角色正在向右行走",
+                    "role": "动画验收者",
+                    "scenario": "核对方向切换动作组"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "松键后 1 秒内的帧索引记录",
+                    "exception": {
+                      "expected": "判定为动画未停止",
+                      "handling": "静止态改为只绘制第 0 帧后复测",
+                      "scenario": "松键后仍在空转播放行走帧"
+                    },
+                    "expected": "帧索引保持不变并停在 0，画面稳定显示该方向的待机帧",
+                    "id": "AC-000010",
+                    "input": "松开所有方向键",
+                    "method": "松键后连续记录帧索引，确认数值不再变化",
+                    "operation": "松键后观察 1 秒",
+                    "preconditions": "角色正在移动",
+                    "role": "动画验收者",
+                    "scenario": "核对静止时停止推进"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "python tools/check_sheet.py 输出 + evidence/33_side_scale_preview.png",
+                    "exception": {
+                      "expected": "判定资产不合格",
+                      "handling": "重新跑切帧与对齐脚本后复检",
+                      "scenario": "存在尺寸不一致、底色残留或帧间跳动"
+                    },
+                    "expected": "16 帧全部 48×48，四角 alpha 为 0，同方向帧间横向漂移不超过 2 像素，脚底基线一致",
+                    "id": "AC-000011",
+                    "input": "无输入",
+                    "method": "用脚本遍历 16 帧，统计尺寸、透明角落与包围盒中心偏移；帧尺寸从 scene.json 读取",
+                    "operation": "运行自检脚本检查 16 帧的尺寸、透明角、帧间漂移与脚底基线",
+                    "preconditions": "动作卡已生成在 assets/crab_sheet.png",
+                    "role": "动画验收者",
+                    "scenario": "核对动作卡资产一致性与尺寸"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "帧序号重置到新方向动作组的第 0 帧，不出现两个方向帧混用的错位画面",
+                    "handling": "方向变化即重置动画计时器与帧索引",
+                    "scenario": "移动过程中快速改变方向"
+                  },
+                  {
+                    "expected": "保持在当前面向方向的第 0 帧，不继续推进动画",
+                    "handling": "无输入时冻结帧索引",
+                    "scenario": "角色静止不动"
+                  },
+                  {
+                    "expected": "侧身行的显示尺寸比正面小约 10%，切换瞬间不出现明显的“变大”跳变",
+                    "handling": "切片阶段按行缩放，并把缩放后的脚底回拉到同一基线",
+                    "scenario": "从正面切到侧身"
+                  }
+                ],
+                "created_at": "2026-10-28T08:54:10.386122+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "螃蟹为四个方向（下、左、右、上）各准备一组走路帧，方向切换时立即切换动作组，移动过程中按固定帧率循环播放，静止时停在该方向的待机帧。动作卡由图片生成模型直接产出 4×4 卡片（绿幕），再由代码完成：等分切格 → 软阈值抠绿 → 按包围盒归一化（脚底对齐同一基线）→ 整表统一调色板量化。当前成品为半尺寸：单帧 48×48、整表 192×192、32 色；其中左侧与右侧两行额外缩放到 90%，避免侧身时视觉上比正面显大。",
+                "digest": "9eb3d2fa058fc7d4588a0382fce3f699fabf2129c3badef805ae216396ebdcf3",
+                "event_id": "EVT-000047",
+                "excluded": [
+                  "斜向与八方向的独立动作组",
+                  "攻击、跳跃、死亡等战斗动作",
+                  "帧间插值生成的补间画面",
+                  "静止时的呼吸/眨眼等二次动作（试做过，已移除）"
+                ],
+                "id": "REQ-000003",
+                "included": [
+                  "上、下、左、右四个方向的独立走路帧组，每组 4 帧",
+                  "按 8 帧每秒循环推进帧序号",
+                  "方向切换时同步切换动作组",
+                  "松开方向键后停在该方向待机帧（第 0 帧）",
+                  "16 帧统一 48×48 尺寸、透明背景、同一套 32 色调色板",
+                  "侧视两行按行缩放到 90%，脚底与正面行保持同一基线"
+                ],
+                "module": "角色动画",
+                "necessity": "只有位移没有帧动画，角色会表现为贴图滑动，用户会直接判定不合格；动作卡是该需求的核心交付物。",
+                "normal_behavior": {
+                  "behavior": "每经过 125 毫秒切换到该方向动作组的下一个帧，四帧结束后回到第一帧继续循环",
+                  "expected": "画面中的螃蟹腿部姿态逐帧变化，形成持续步行动作",
+                  "scenario": "角色正在向右移动"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "让螃蟹的移动看起来是一只活物在走，而不是一张贴图在平移；这也是用户反复强调的“动作卡连续播放”。",
+                "questions": [],
+                "revision": 2,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  },
+                  {
+                    "source_id": "SRC-000002",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "播放四向走路动作卡的连续帧动画",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 2,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                },
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:59:22.515291+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 通过 Edge CDP 在 chatgpt.com 发起的技术咨询",
+                    "digest": "526cf481c8592bf102dac7430092a1f929638f4a83987b5b8e77e65d0a36e982",
+                    "event_id": "EVT-000006",
+                    "id": "SRC-000002",
+                    "kind": "链接",
+                    "location": "https://chatgpt.com/c/6ae10247-06f0-83ee-80ae-b56b5c95a4ff",
+                    "manual_note": null,
+                    "name": "ChatGPT 咨询：深圳海岸像素小游戏最短可行资产方案",
+                    "quote": "推荐技术栈：AI 生图 + Python Pillow + HTML5 Canvas 2D。整体采用三个独立层：固定背景、循环环境特效、角色精灵。不要让 AI 一次生成整张背景和全部角色动作后直接投入使用。游戏逻辑画布 960 × 540 px；背景 960 × 540 PNG；角色逻辑帧 64 × 64 px；四向动画 Down / Left / Right / Up，每方向 4 帧，总帧数 16 帧，最终 Sprite Sheet 256 × 256 PNG；行走动画 8 FPS；游戏渲染 requestAnimationFrame，通常目标 60 FPS；移动速度 110 px/s。推荐先生成一张角色母版（Character Reference），确认角色外观后，再生成四个方向的动作。不要首先要求模型直接输出 256 × 256 的成品 Sheet，更稳妥的方法是生成较大的 4 × 4 等分网格，再用代码裁切。",
+                    "revision": 1,
+                    "summary": "建议采用固定背景层 + 循环环境特效层 + 角色精灵层三层结构，画布 960×540、单帧 64×64、四向各 4 帧共 16 帧、8fps 行走、110px/s 移动；AI 先出角色母版与 4×4 网格大图，再用 Pillow 裁切、抠底、统一对齐得到可用 sprite sheet。"
+                  },
+                  "source_id": "SRC-000002",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000004": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000020",
+                "review_id": "REV-000004",
+                "time": "2026-10-27T20:19:35.854973+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "Network 请求列表截图（含域名列）+ 离线状态下的页面截图",
+                    "exception": {
+                      "expected": "判定不自包含",
+                      "handling": "把所需资源下载到本地目录并改为相对路径后复测",
+                      "scenario": "出现外部域名请求或页面白屏"
+                    },
+                    "expected": "页面完整显示场景与角色，Network 面板中没有任何指向本机以外域名的请求，全部请求为 file:// 或 localhost 本地路径",
+                    "id": "AC-000012",
+                    "input": "无网络",
+                    "method": "断网打开页面并导出 Network 请求列表，逐条检查域名",
+                    "operation": "断开网络后双击 index.html，并查看开发者工具的 Network 面板",
+                    "preconditions": "已拿到 crab-coast 文件夹，网络已断开",
+                    "role": "交付验收者",
+                    "scenario": "核对文件夹自包含与离线可运行"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "性能面板截图或帧率统计数值",
+                    "exception": {
+                      "expected": "判定为不流畅",
+                      "handling": "减少每帧重绘区域或缓存背景图层后复测",
+                      "scenario": "平均帧率低于 55 或出现超过 50 毫秒的长帧"
+                    },
+                    "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+                    "id": "AC-000013",
+                    "input": "按住 → 键移动角色 5 秒",
+                    "method": "录制性能时间线，统计移动期间的帧率均值与最长帧间隔",
+                    "operation": "用浏览器性能面板记录该时段的帧率",
+                    "preconditions": "页面运行在本机 Edge 浏览器",
+                    "role": "交付验收者",
+                    "scenario": "核对渲染帧率"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "角色局部放大截图",
+                    "exception": {
+                      "expected": "判定像素渲染不合格",
+                      "handling": "补充 image-rendering 与关闭图像平滑后复测",
+                      "scenario": "出现模糊或彩色边缘"
+                    },
+                    "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+                    "id": "AC-000014",
+                    "input": "无输入",
+                    "method": "对角色局部区域截图并放大观察边缘像素",
+                    "operation": "放大查看角色与背景边缘",
+                    "preconditions": "页面已打开并显示角色",
+                    "role": "交付验收者",
+                    "scenario": "核对像素清晰度"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "角色移动速度与动画节拍保持与时间一致，不出现慢动作",
+                    "handling": "位移与帧推进都按真实时间增量计算，不按固定步数",
+                    "scenario": "运行在性能较弱的机器上，帧率降到 30 帧每秒"
+                  },
+                  {
+                    "expected": "场景等比缩放，像素边缘保持锐利不模糊",
+                    "handling": "canvas 使用 image-rendering: pixelated，并按整数或等比缩放绘制",
+                    "scenario": "浏览器窗口被缩放到很小或很大"
+                  }
+                ],
+                "created_at": "2026-10-27T19:59:41.739698+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "整站所有文件（页面、脚本、样式、背景图、动作卡、生成脚本、需求台账）只存在于 crab-coast 一个文件夹内，不引用任何外部 CDN、字体或接口；断网状态下双击 index.html 即可运行。渲染使用 requestAnimationFrame 加时间增量推进，画面按 60 帧每秒目标运行，像素素材放大时使用最近邻插值保持锐利。",
+                "digest": "ebe38c666d0ea584981c3f07bf4467a6f41bd9664d7b76fece4d2e3c81292687",
+                "event_id": "EVT-000008",
+                "excluded": [
+                  "后端服务、数据库与账号体系",
+                  "外部 CDN 资源与在线字体",
+                  "移动端触屏手势（当前迭代不做）"
+                ],
+                "id": "REQ-000004",
+                "included": [
+                  "全部代码与资产位于 crab-coast 文件夹内",
+                  "离线可运行的本地静态页面",
+                  "基于时间增量的稳定渲染循环",
+                  "像素素材放大时的最近邻插值"
+                ],
+                "module": "交付与性能",
+                "necessity": "资产散落在多个目录或依赖外部网络会让这份交付在离线环境下不可用，也无法满足“一个文件夹搞定”的明确约束。",
+                "normal_behavior": {
+                  "behavior": "页面加载本地素材并开始渲染，方向键控制正常，动画连续",
+                  "expected": "无任何外部网络请求，画面帧率维持在 60 帧每秒附近",
+                  "scenario": "用户在本机双击打开页面，且当前没有联网"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "用户要求所有产物收在一个文件夹里不外流，并且动画要顺滑、看得出是精心做的像素游戏而不是卡顿的贴图滑动。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  },
+                  {
+                    "source_id": "SRC-000002",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "单文件夹自包含交付并保持流畅渲染",
+                "type": "非功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                },
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:59:22.515291+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 通过 Edge CDP 在 chatgpt.com 发起的技术咨询",
+                    "digest": "526cf481c8592bf102dac7430092a1f929638f4a83987b5b8e77e65d0a36e982",
+                    "event_id": "EVT-000006",
+                    "id": "SRC-000002",
+                    "kind": "链接",
+                    "location": "https://chatgpt.com/c/6ae10247-06f0-83ee-80ae-b56b5c95a4ff",
+                    "manual_note": null,
+                    "name": "ChatGPT 咨询：深圳海岸像素小游戏最短可行资产方案",
+                    "quote": "推荐技术栈：AI 生图 + Python Pillow + HTML5 Canvas 2D。整体采用三个独立层：固定背景、循环环境特效、角色精灵。不要让 AI 一次生成整张背景和全部角色动作后直接投入使用。游戏逻辑画布 960 × 540 px；背景 960 × 540 PNG；角色逻辑帧 64 × 64 px；四向动画 Down / Left / Right / Up，每方向 4 帧，总帧数 16 帧，最终 Sprite Sheet 256 × 256 PNG；行走动画 8 FPS；游戏渲染 requestAnimationFrame，通常目标 60 FPS；移动速度 110 px/s。推荐先生成一张角色母版（Character Reference），确认角色外观后，再生成四个方向的动作。不要首先要求模型直接输出 256 × 256 的成品 Sheet，更稳妥的方法是生成较大的 4 × 4 等分网格，再用代码裁切。",
+                    "revision": 1,
+                    "summary": "建议采用固定背景层 + 循环环境特效层 + 角色精灵层三层结构，画布 960×540、单帧 64×64、四向各 4 帧共 16 帧、8fps 行走、110px/s 移动；AI 先出角色母版与 4×4 网格大图，再用 Pillow 裁切、抠底、统一对齐得到可用 sprite sheet。"
+                  },
+                  "source_id": "SRC-000002",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000005": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000054",
+                "review_id": "REV-000007",
+                "time": "2026-10-28T08:54:13.922021+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "实测输出：duration=40, loop=true",
+                    "exception": {
+                      "expected": "判定播放配置不合格",
+                      "handling": "检查音频文件与 bgm.js 设置后复测",
+                      "scenario": "时长不符或未开启循环"
+                    },
+                    "expected": "duration 为 40（±0.05 秒），loop 属性为 true",
+                    "id": "AC-000015",
+                    "input": "无输入",
+                    "method": "在浏览器控制台读取 window.__bgm.audio.duration 与 loop",
+                    "operation": "读取音频元素的时长与 loop 属性",
+                    "preconditions": "页面已打开且音乐资源加载完成",
+                    "role": "音频验收者",
+                    "scenario": "核对时长与循环设置"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "实测 0.0019 / 0.413 = 0.005",
+                    "exception": {
+                      "expected": "判定会爆音",
+                      "handling": "重新做无缝处理或改用取模合成",
+                      "scenario": "接缝处跳变接近最大值"
+                    },
+                    "expected": "首尾跳变远小于普通相邻差值（比值 \u003c 0.1），听感上无咔哒",
+                    "id": "AC-000016",
+                    "input": "无输入",
+                    "method": "用脚本读取 PCM，计算 |x[0]-x[-1]| 与相邻差值分布的 p99.9 之比",
+                    "operation": "比较首尾采样跳变与整体相邻采样差值",
+                    "preconditions": "已拿到音频文件",
+                    "role": "音频验收者",
+                    "scenario": "核对接缝无断音爆音"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "操作前后 muted 状态记录",
+                    "exception": {
+                      "expected": "判定静音功能不合格",
+                      "handling": "修正 localStorage 读写与 muted 绑定后复测",
+                      "scenario": "点击无效或刷新后自动恢复播放"
+                    },
+                    "expected": "点击后立即静音且按钮变为静音态；刷新后仍为静音",
+                    "id": "AC-000017",
+                    "input": "点击右上角音乐按钮，然后刷新页面",
+                    "method": "读取 window.__bgm.muted 与按钮文案，刷新后再读一次",
+                    "operation": "观察按钮文案、音频 muted 状态与刷新后的状态",
+                    "preconditions": "音乐正在播放",
+                    "role": "音频验收者",
+                    "scenario": "核对静音开关与记忆"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "页面不报错，音乐保持静默直到用户第一次按键或点击",
+                    "handling": "监听首次交互事件后再调用播放，被拒绝时不清除监听",
+                    "scenario": "浏览器拦截自动播放"
+                  },
+                  {
+                    "expected": "游戏画面正常，音乐开关按钮自动隐藏",
+                    "handling": "监听音频错误事件，隐藏按钮并继续运行",
+                    "scenario": "音频文件缺失或路径错误"
+                  },
+                  {
+                    "expected": "刷新后仍保持静音",
+                    "handling": "静音状态写入 localStorage 并在初始化时读取",
+                    "scenario": "用户静音后刷新页面"
+                  }
+                ],
+                "created_at": "2026-10-28T08:54:12.200904+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "页面加载后提供一段 40 秒整、能够无缝循环的海边休闲风格背景音乐。受浏览器自动播放策略限制，首次按键或点击后开始播放；播放中不出现接缝断音或爆音。右上角提供音乐开关，键盘 M 键也可切换，静音状态记在本地，刷新后保持。音乐文件与页面同在一个文件夹内，断网可用；切换到 mp3 版本时行为不变。",
+                "digest": "a5f9a8c76d9e09e77cc22bded06a02ca129928d59b5dcbd0416f6f5c51a1282a",
+                "event_id": "EVT-000051",
+                "excluded": [
+                  "脚步、水声等环境音效",
+                  "多曲目切换与音量滑动条",
+                  "在线流媒体或版权音乐接入"
+                ],
+                "id": "REQ-000005",
+                "included": [
+                  "40.000 秒、首尾无缝衔接的循环音频",
+                  "首次按键或点击后自动开始播放",
+                  "右上角按钮与 M 键切换静音，状态写入 localStorage",
+                  "音乐文件随页面同目录存放，离线可用"
+                ],
+                "module": "音频",
+                "necessity": "没有背景音乐时场景偏“静”，用户明确要求补一段海边悠闲向、可循环的电子音乐。",
+                "normal_behavior": {
+                  "behavior": "背景音乐从当前循环位置开始播放，音量淡入到设定值",
+                  "expected": "能听到连续不断的音乐；走到 40 秒末尾时直接接回开头，没有静音空档或爆音",
+                  "scenario": "用户打开页面并按下任意方向键"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0002"
+                  }
+                },
+                "priority": "P1",
+                "purpose": "给静止或行走中的场景提供持续的氛围声，让页面像一个完整的小游戏而不是一张会动的图。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "播放可无缝循环的海岸背景音乐并支持静音",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0002",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000006": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000133",
+                "review_id": "REV-000019",
+                "time": "2026-10-28T09:12:14.221013+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "实测 7 次序列：24,48,96,48,24,48,96（含 小/中/大 标签）",
+                    "exception": {
+                      "expected": "判定反弹逻辑或标签绑定有误",
+                      "handling": "修正方向翻转与文案刷新后复测",
+                      "scenario": "出现 96 直接跳到 24、或文案与尺寸不符"
+                    },
+                    "expected": "序列为 48(中)→24(小)→48(中)→96(大)→48(中)→24(小)→48(中)；按钮依次显示「尺寸 小 24 / 中 48 / 大 96 …」",
+                    "id": "AC-000024",
+                    "input": "连续按 T 键 7 次",
+                    "method": "点击按钮并读取 window.__probe.state().size 与按钮 textContent",
+                    "operation": "记录每次的尺寸与按钮文案",
+                    "preconditions": "页面已加载三套表，默认中档",
+                    "role": "尺寸验收者",
+                    "scenario": "核对反弹序列与标签"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "实测 24 → 48、96 → 48",
+                    "exception": {
+                      "expected": "判定仍在绕回",
+                      "handling": "检查方向变量是否在越界时翻转",
+                      "scenario": "24 跳到 96 或 96 跳到 24"
+                    },
+                    "expected": "24 的下一档是 48；96 的下一档也是 48",
+                    "id": "AC-000025",
+                    "input": "在端点再按一次 T",
+                    "method": "把档位切到端点后按一次 T，读取结果",
+                    "operation": "观察下一档",
+                    "preconditions": "已停在最小档 24 或最大档 96",
+                    "role": "尺寸验收者",
+                    "scenario": "核对两端不互跳"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "三档基线 86/43/21，朝向行一致",
+                    "exception": {
+                      "expected": "判定该档基线或行映射有问题",
+                      "handling": "修正后复测",
+                      "scenario": "某档悬空或朝向错乱"
+                    },
+                    "expected": "三档脚底分别落在 86/43/21 基线上，朝向仍为右→正面行、上→侧视行",
+                    "id": "AC-000026",
+                    "input": "每档按住右键后改按上键",
+                    "method": "读取角色坐标与该档基线核对偏移",
+                    "operation": "核对脚底贴地与朝向行",
+                    "preconditions": "分别切到三档",
+                    "role": "尺寸验收者",
+                    "scenario": "核对三档脚底与朝向不受切换逻辑影响"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "回到中档（而不是跳到大档）",
+                    "handling": "索引越界时翻转方向再前进一步",
+                    "scenario": "在最小档继续按 T"
+                  },
+                  {
+                    "expected": "回到中档（而不是跳到小档）",
+                    "handling": "同上",
+                    "scenario": "在最大档继续按 T"
+                  },
+                  {
+                    "expected": "位置、碰撞与帧序都不受影响",
+                    "handling": "切换只改绘制用的表与基线",
+                    "scenario": "角色移动过程中切换"
+                  }
+                ],
+                "created_at": "2026-10-28T09:12:07.880416+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "螃蟹保留 96（大）、48（中）、24（小）三套精灵表，由同一张动作卡逐级派生，共用朝向状态机、行走帧序与脚底对齐规则；三档都做了侧视按行缩放 90%。T 键或左上角按钮采用**反弹式**切换：从中档出发先变小，到最小档后掉头变大，到最大档后再掉头变小，形成 中→小→中→大→中→小… 的往复，而不是跳回另一端。按钮显示当前档位的中文标签与像素尺寸（如「尺寸 中 48」）。",
+                "digest": "73343bc0b56bfe6235c12b2c0a1c7b735f114b2ca045861226dab93197d893d8",
+                "event_id": "EVT-000130",
+                "excluded": [
+                  "绕回式（一端的下一档直接跳到另一端）切换",
+                  "尺寸滑块或自定义尺寸",
+                  "按距离自动切换尺寸"
+                ],
+                "id": "REQ-000006",
+                "included": [
+                  "96/48/24 三套精灵表同时存在且都可加载",
+                  "T 键与按钮按反弹方式切换：中→小→中→大→中…",
+                  "按钮显示「尺寸 大/中/小 + 像素值」",
+                  "三档共用朝向状态机与行走帧序，侧视均缩 90%"
+                ],
+                "module": "角色渲染",
+                "necessity": "用户明确要求把绕回式切换改成反弹式，并要求用 小/中/大 表达档位。",
+                "normal_behavior": {
+                  "behavior": "每按一次 T 或点一次按钮，档位沿当前方向走一格；走到端点则反向",
+                  "expected": "序列为 中→小→中→大→中→小…，按钮文案随之更新，且不会出现两端直接互跳",
+                  "scenario": "页面加载完成，默认停在中档 48"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P1",
+                "purpose": "让调节尺寸的过程连续、可预期：越按越接近想要的大小，不会在两端之间突然跳变。",
+                "questions": [],
+                "revision": 3,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "同一角色三档尺寸按 T 键反弹切换（小↔中↔大）",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 3,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000007": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000153",
+                "review_id": "REV-000023",
+                "time": "2026-10-28T10:25:08.580419+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图",
+                    "exception": {
+                      "expected": "判定不通过并记录 fitCount 未增长",
+                      "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460",
+                      "scenario": "静置超过 1 秒画布尺寸仍未变化"
+                    },
+                    "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+                    "id": "AC-000027",
+                    "input": "把可见高度由 390 改为 460，不派发任何事件",
+                    "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+                    "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                    "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+                    "role": "移动端验收者",
+                    "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "前后画布尺寸数值与 fitCount 变化",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向",
+                      "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉"
+                    },
+                    "expected": "画布自动回到 693×390，fitCount 再增加 1",
+                    "id": "AC-000028",
+                    "input": "把可见高度由 460 改回 390，不派发任何事件",
+                    "method": "与上一条同一套模拟手段，反向修改高度",
+                    "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                    "preconditions": "承接上一条，画布当前为 818×460",
+                    "role": "移动端验收者",
+                    "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "三次事件与静置期的 fitCount 数值",
+                    "exception": {
+                      "expected": "判定不通过，说明存在空转",
+                      "handling": "检查轮询是否在尺寸未变时仍调用 fit()",
+                      "scenario": "静置期间 fitCount 持续增长"
+                    },
+                    "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+                    "id": "AC-000029",
+                    "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+                    "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+                    "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+                    "preconditions": "页面稳定，画布尺寸已确定",
+                    "role": "移动端验收者",
+                    "scenario": "核对各事件通道与空闲开销"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名",
+                      "scenario": "画布仍保留 2% / 6% 边距"
+                    },
+                    "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+                    "id": "AC-000030",
+                    "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+                    "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+                    "operation": "读取画布尺寸与可见区域尺寸",
+                    "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+                    "role": "移动端验收者",
+                    "scenario": "触屏设备上画布铺满可见区域"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "视口尺寸、画布尺寸与公式计算值",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏",
+                      "scenario": "桌面画布被拉伸到 929 以上或出现裁剪"
+                    },
+                    "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+                    "id": "AC-000031",
+                    "input": "视口 947×972",
+                    "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+                    "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+                    "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+                    "role": "桌面验收者",
+                    "scenario": "桌面端不出现铺满带来的回归"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "画布的 CSS 尺寸保持不变",
+                    "handling": "viewBox() 退回 innerWidth / innerHeight，跳过本次重排，避免放大过程中画面跳动",
+                    "scenario": "用户正在双指放大（visualViewport.scale 大于 1）"
+                  }
+                ],
+                "created_at": "2026-10-28T10:24:35.811740+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "手机浏览器的工具栏（地址栏、底部导航）收起或展开会改变页面可见高度，但部分浏览器在此时不派发 window.resize（iOS Safari 尤其常见）。当前实现只监听 window.resize，所以可见区域变大后画布仍保持旧尺寸，必须等其它事件（例如点击「收起按键」触发的那一次 resize）才会重排。本需求要求以真实可见区域（visualViewport）为准，在可见区域变化后自动重算画布尺寸，把它放大到当前可见区域内能放下的最大值，并在触屏设备上去掉原来预留的 2% / 6% 边距。",
+                "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+                "event_id": "EVT-000150",
+                "excluded": [
+                  "双指放大（visualViewport.scale 大于 1）过程中的重新排版",
+                  "桌面端留边距策略的变更，桌面仍保持 0.98 / 0.94",
+                  "虚拟按键的位置、显隐与输入通道逻辑"
+                ],
+                "id": "REQ-000007",
+                "included": [
+                  "以 visualViewport 的宽高作为可见区域，在工具栏收起或展开后自动重算画布尺寸",
+                  "触屏设备上画布铺满可见区域，不再保留原来的 2% 宽度与 6% 高度边距",
+                  "同时监听 window resize、visualViewport resize、visualViewport scroll、orientationchange、pageshow、visibilitychange 六条来源",
+                  "增加 400ms 的可见区域尺寸比对兜底，应对浏览器完全不发事件的情况"
+                ],
+                "module": "画面自适应（可见区域适配）",
+                "necessity": "去掉本项，画面会在工具栏收起后长期偏小：横屏实测少用约 6% 的高度（693×390 而非应有的 818×460），竖屏少用 8px 宽度；且表现为“点了某个按钮才放大”的怪异时序，用户会以为页面卡住。",
+                "normal_behavior": {
+                  "behavior": "页面以 visualViewport 为准重新计算画布缩放",
+                  "expected": "画布在一个 400ms 轮询周期内由 693×390 自动变为 818×460，全程无需用户点击任何按钮",
+                  "scenario": "手机横屏下收起浏览器工具栏，可见高度由 390 变为 460，浏览器没有派发 resize"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P1",
+                "purpose": "让手机玩家收起浏览器工具栏后立刻得到更大的画面，不需要手动触发任何按钮。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000003",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": "实现位于 main.js：viewBox() 在 visualViewport.scale 约等于 1 时取 visualViewport 的宽高，否则退回 innerWidth/innerHeight；fit() 依据 html.touch-mode 决定铺满还是保留边距；事件监听与 400ms 轮询兜底同在 fit() 附近注册；另暴露 __probe.fitCount() 与 __probe.viewBox() 供验收读取。",
+                "title": "手机隐藏浏览器工具栏后画面自动放大到最大",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-28T10:24:10.851262+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户消息",
+                    "digest": "ddf640df9e4d1bbd434e4ab85bd1e7ac6d19794064dd9c94565faa4675a8fbd2",
+                    "event_id": "EVT-000149",
+                    "id": "SRC-000003",
+                    "kind": "用户消息",
+                    "location": null,
+                    "manual_note": "用户在本次会话中以文字直接提出的原始需求，未经整理",
+                    "name": "用户提出画面自适应需求（手机隐藏工具栏后自动放大）",
+                    "quote": "手机浏览器有一个问题就是，刚开始的时候如果游戏页面小，我隐藏工具栏之后页面不会自动放大，而是点收起按钮的时候才会自适应放大，让页面自动放大最大，新需求创建修改",
+                    "revision": 1,
+                    "summary": "用户指出：手机隐藏浏览器工具栏后可见区域变大，画面却不会自动放大，要点「收起按键」才重排；要求画面自动放大到最大。"
+                  },
+                  "source_id": "SRC-000003",
+                  "source_revision": 1
+                }
+              ]
+            }
+          },
+          "created_at": "2026-10-28T10:25:50.883955+00:00",
+          "created_by": "octie-agent",
+          "digest": "fa5f6f11c13d50aa2357543396ae9496bef922898194ab898484537abf55106e",
+          "evaluation": null,
+          "event_id": "EVT-000154",
+          "id": "CHG-000005",
+          "impact_objects": [
+            "REQ-000001",
+            "REQ-000004",
+            "REQ-000007"
+          ],
+          "ledger_id": "LED-19d840367862455889aebf797805ea48",
+          "predecessor": "BASE-000005",
+          "revision": 1,
+          "status": "已提出"
+        }
+      ]
     }
   ],
   "counters": {
-    "baseline": 5,
-    "change": 4,
-    "condition": 26,
-    "event": 148,
-    "execution": 40,
+    "baseline": 6,
+    "change": 5,
+    "condition": 31,
+    "event": 175,
+    "execution": 51,
     "page": 1,
-    "release": 5,
-    "requirement": 6,
-    "review": 22,
-    "source": 2
+    "release": 6,
+    "requirement": 7,
+    "review": 25,
+    "source": 3
   },
   "development": [
     {
@@ -12466,9 +15866,41 @@
       "start_event_id": "EVT-000142",
       "state": "已实现",
       "time": "2026-10-28T09:12:40.851866+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "baseline_id": "BASE-000006",
+      "cycle": 1,
+      "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+      "event_id": "EVT-000161",
+      "event_sequence": 161,
+      "id": "DEV-000161",
+      "implemented_event_id": null,
+      "reason": "在有效基线 BASE-000006 下开始 REQ-000007 的开发轮次",
+      "requirement_id": "REQ-000007",
+      "revision": 1,
+      "start_event_id": "EVT-000161",
+      "state": "进行中",
+      "time": "2026-10-28T10:27:41.920418+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "baseline_id": "BASE-000006",
+      "cycle": 1,
+      "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+      "event_id": "EVT-000162",
+      "event_sequence": 162,
+      "id": "DEV-000162",
+      "implemented_event_id": "EVT-000162",
+      "reason": "代码已实现并部署（提交 e4212ab），开发轮次完成",
+      "requirement_id": "REQ-000007",
+      "revision": 1,
+      "start_event_id": "EVT-000161",
+      "state": "已实现",
+      "time": "2026-10-28T10:27:51.579079+00:00"
     }
   ],
-  "document_revision": 148,
+  "document_revision": 175,
   "events": [
     {
       "agent": "octie-agent",
@@ -71631,6 +75063,16703 @@
       },
       "sequence": 148,
       "time": "2026-10-28T09:12:54.291511+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "source add",
+      "fingerprint": "ebf2011de5c8b8787a7e66ac1461c715b501765da3de8ca126657834f45fd27f",
+      "id": "EVT-000149",
+      "operation_id": "crab-src-0003",
+      "reason": "登记用户本次提出的画面自适应原始需求",
+      "request": {
+        "agent": "octie-agent",
+        "command": "source add",
+        "data": {
+          "date_note": "2026-10-28 用户消息",
+          "kind": "用户消息",
+          "manual_note": "用户在本次会话中以文字直接提出的原始需求，未经整理",
+          "name": "用户提出画面自适应需求（手机隐藏工具栏后自动放大）",
+          "quote": "手机浏览器有一个问题就是，刚开始的时候如果游戏页面小，我隐藏工具栏之后页面不会自动放大，而是点收起按钮的时候才会自适应放大，让页面自动放大最大，新需求创建修改",
+          "summary": "用户指出：手机隐藏浏览器工具栏后可见区域变大，画面却不会自动放大，要点「收起按键」才重排；要求画面自动放大到最大。"
+        },
+        "reason": "登记用户本次提出的画面自适应原始需求"
+      },
+      "result": {
+        "command": "source add",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 149,
+        "document_revision": 149,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000149",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:24:10.851262+00:00"
+        },
+        "object": {
+          "created_at": "2026-10-28T10:24:10.851262+00:00",
+          "created_by": "octie-agent",
+          "date_note": "2026-10-28 用户消息",
+          "digest": "ddf640df9e4d1bbd434e4ab85bd1e7ac6d19794064dd9c94565faa4675a8fbd2",
+          "event_id": "EVT-000149",
+          "id": "SRC-000003",
+          "kind": "用户消息",
+          "location": null,
+          "manual_note": "用户在本次会话中以文字直接提出的原始需求，未经整理",
+          "name": "用户提出画面自适应需求（手机隐藏工具栏后自动放大）",
+          "quote": "手机浏览器有一个问题就是，刚开始的时候如果游戏页面小，我隐藏工具栏之后页面不会自动放大，而是点收起按钮的时候才会自适应放大，让页面自动放大最大，新需求创建修改",
+          "revision": 1,
+          "summary": "用户指出：手机隐藏浏览器工具栏后可见区域变大，画面却不会自动放大，要点「收起按键」才重排；要求画面自动放大到最大。"
+        },
+        "previous_content_revision": null,
+        "target": "SRC-000003",
+        "type": "success"
+      },
+      "sequence": 149,
+      "time": "2026-10-28T10:24:10.851262+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "req add",
+      "fingerprint": "fb753b17a6696f1e11ab45ca8fad05b8a0d0f2df5ad90af66e4c3b634b0bd919",
+      "id": "EVT-000150",
+      "operation_id": "crab-req7-add",
+      "reason": "提交画面自适应需求的完整可审阅草稿",
+      "request": {
+        "agent": "octie-agent",
+        "command": "req add",
+        "data": {
+          "acceptance": [
+            {
+              "allow_na": false,
+              "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图",
+              "exception": {
+                "expected": "判定不通过并记录 fitCount 未增长",
+                "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460",
+                "scenario": "静置超过 1 秒画布尺寸仍未变化"
+              },
+              "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+              "input": "把可见高度由 390 改为 460，不派发任何事件",
+              "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+              "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+              "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+              "role": "移动端验收者",
+              "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件"
+            },
+            {
+              "allow_na": false,
+              "evidence": "前后画布尺寸数值与 fitCount 变化",
+              "exception": {
+                "expected": "判定不通过",
+                "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向",
+                "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉"
+              },
+              "expected": "画布自动回到 693×390，fitCount 再增加 1",
+              "input": "把可见高度由 460 改回 390，不派发任何事件",
+              "method": "与上一条同一套模拟手段，反向修改高度",
+              "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+              "preconditions": "承接上一条，画布当前为 818×460",
+              "role": "移动端验收者",
+              "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件"
+            },
+            {
+              "allow_na": false,
+              "evidence": "三次事件与静置期的 fitCount 数值",
+              "exception": {
+                "expected": "判定不通过，说明存在空转",
+                "handling": "检查轮询是否在尺寸未变时仍调用 fit()",
+                "scenario": "静置期间 fitCount 持续增长"
+              },
+              "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+              "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+              "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+              "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+              "preconditions": "页面稳定，画布尺寸已确定",
+              "role": "移动端验收者",
+              "scenario": "核对各事件通道与空闲开销"
+            },
+            {
+              "allow_na": false,
+              "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图",
+              "exception": {
+                "expected": "判定不通过",
+                "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名",
+                "scenario": "画布仍保留 2% / 6% 边距"
+              },
+              "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+              "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+              "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+              "operation": "读取画布尺寸与可见区域尺寸",
+              "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+              "role": "移动端验收者",
+              "scenario": "触屏设备上画布铺满可见区域"
+            },
+            {
+              "allow_na": false,
+              "evidence": "视口尺寸、画布尺寸与公式计算值",
+              "exception": {
+                "expected": "判定不通过",
+                "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏",
+                "scenario": "桌面画布被拉伸到 929 以上或出现裁剪"
+              },
+              "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+              "input": "视口 947×972",
+              "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+              "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+              "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+              "role": "桌面验收者",
+              "scenario": "桌面端不出现铺满带来的回归"
+            }
+          ],
+          "boundaries": [
+            {
+              "expected": "画布的 CSS 尺寸保持不变",
+              "handling": "viewBox() 退回 innerWidth / innerHeight，跳过本次重排，避免放大过程中画面跳动",
+              "scenario": "用户正在双指放大（visualViewport.scale 大于 1）"
+            }
+          ],
+          "dependencies": [],
+          "description": "手机浏览器的工具栏（地址栏、底部导航）收起或展开会改变页面可见高度，但部分浏览器在此时不派发 window.resize（iOS Safari 尤其常见）。当前实现只监听 window.resize，所以可见区域变大后画布仍保持旧尺寸，必须等其它事件（例如点击「收起按键」触发的那一次 resize）才会重排。本需求要求以真实可见区域（visualViewport）为准，在可见区域变化后自动重算画布尺寸，把它放大到当前可见区域内能放下的最大值，并在触屏设备上去掉原来预留的 2% / 6% 边距。",
+          "excluded": [
+            "双指放大（visualViewport.scale 大于 1）过程中的重新排版",
+            "桌面端留边距策略的变更，桌面仍保持 0.98 / 0.94",
+            "虚拟按键的位置、显隐与输入通道逻辑"
+          ],
+          "included": [
+            "以 visualViewport 的宽高作为可见区域，在工具栏收起或展开后自动重算画布尺寸",
+            "触屏设备上画布铺满可见区域，不再保留原来的 2% 宽度与 6% 高度边距",
+            "同时监听 window resize、visualViewport resize、visualViewport scroll、orientationchange、pageshow、visibilitychange 六条来源",
+            "增加 400ms 的可见区域尺寸比对兜底，应对浏览器完全不发事件的情况"
+          ],
+          "module": "画面自适应（可见区域适配）",
+          "necessity": "去掉本项，画面会在工具栏收起后长期偏小：横屏实测少用约 6% 的高度（693×390 而非应有的 818×460），竖屏少用 8px 宽度；且表现为“点了某个按钮才放大”的怪异时序，用户会以为页面卡住。",
+          "normal_behavior": {
+            "behavior": "页面以 visualViewport 为准重新计算画布缩放",
+            "expected": "画布在一个 400ms 轮询周期内由 693×390 自动变为 818×460，全程无需用户点击任何按钮",
+            "scenario": "手机横屏下收起浏览器工具栏，可见高度由 390 变为 460，浏览器没有派发 resize"
+          },
+          "placement": {
+            "kind": "页面",
+            "other": [],
+            "primary": {
+              "page_id": "PAGE-000001",
+              "page_revision": 1,
+              "region_id": "REG-000001-0001-0001"
+            }
+          },
+          "priority": "P1",
+          "purpose": "让手机玩家收起浏览器工具栏后立刻得到更大的画面，不需要手动触发任何按钮。",
+          "questions": [],
+          "sources": [
+            {
+              "source_id": "SRC-000003",
+              "source_revision": 1
+            }
+          ],
+          "tags": [],
+          "technical": "实现位于 main.js：viewBox() 在 visualViewport.scale 约等于 1 时取 visualViewport 的宽高，否则退回 innerWidth/innerHeight；fit() 依据 html.touch-mode 决定铺满还是保留边距；事件监听与 400ms 轮询兜底同在 fit() 附近注册；另暴露 __probe.fitCount() 与 __probe.viewBox() 供验收读取。",
+          "title": "手机隐藏浏览器工具栏后画面自动放大到最大",
+          "type": "功能"
+        },
+        "reason": "提交画面自适应需求的完整可审阅草稿"
+      },
+      "result": {
+        "command": "req add",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 150,
+        "document_revision": 150,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000150",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:24:35.811740+00:00"
+        },
+        "object": {
+          "acceptance": [
+            {
+              "allow_na": false,
+              "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图",
+              "exception": {
+                "expected": "判定不通过并记录 fitCount 未增长",
+                "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460",
+                "scenario": "静置超过 1 秒画布尺寸仍未变化"
+              },
+              "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+              "id": "AC-000027",
+              "input": "把可见高度由 390 改为 460，不派发任何事件",
+              "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+              "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+              "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+              "role": "移动端验收者",
+              "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件"
+            },
+            {
+              "allow_na": false,
+              "evidence": "前后画布尺寸数值与 fitCount 变化",
+              "exception": {
+                "expected": "判定不通过",
+                "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向",
+                "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉"
+              },
+              "expected": "画布自动回到 693×390，fitCount 再增加 1",
+              "id": "AC-000028",
+              "input": "把可见高度由 460 改回 390，不派发任何事件",
+              "method": "与上一条同一套模拟手段，反向修改高度",
+              "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+              "preconditions": "承接上一条，画布当前为 818×460",
+              "role": "移动端验收者",
+              "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件"
+            },
+            {
+              "allow_na": false,
+              "evidence": "三次事件与静置期的 fitCount 数值",
+              "exception": {
+                "expected": "判定不通过，说明存在空转",
+                "handling": "检查轮询是否在尺寸未变时仍调用 fit()",
+                "scenario": "静置期间 fitCount 持续增长"
+              },
+              "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+              "id": "AC-000029",
+              "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+              "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+              "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+              "preconditions": "页面稳定，画布尺寸已确定",
+              "role": "移动端验收者",
+              "scenario": "核对各事件通道与空闲开销"
+            },
+            {
+              "allow_na": false,
+              "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图",
+              "exception": {
+                "expected": "判定不通过",
+                "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名",
+                "scenario": "画布仍保留 2% / 6% 边距"
+              },
+              "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+              "id": "AC-000030",
+              "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+              "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+              "operation": "读取画布尺寸与可见区域尺寸",
+              "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+              "role": "移动端验收者",
+              "scenario": "触屏设备上画布铺满可见区域"
+            },
+            {
+              "allow_na": false,
+              "evidence": "视口尺寸、画布尺寸与公式计算值",
+              "exception": {
+                "expected": "判定不通过",
+                "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏",
+                "scenario": "桌面画布被拉伸到 929 以上或出现裁剪"
+              },
+              "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+              "id": "AC-000031",
+              "input": "视口 947×972",
+              "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+              "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+              "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+              "role": "桌面验收者",
+              "scenario": "桌面端不出现铺满带来的回归"
+            }
+          ],
+          "boundaries": [
+            {
+              "expected": "画布的 CSS 尺寸保持不变",
+              "handling": "viewBox() 退回 innerWidth / innerHeight，跳过本次重排，避免放大过程中画面跳动",
+              "scenario": "用户正在双指放大（visualViewport.scale 大于 1）"
+            }
+          ],
+          "created_at": "2026-10-28T10:24:35.811740+00:00",
+          "created_by": "octie-agent",
+          "dependencies": [],
+          "description": "手机浏览器的工具栏（地址栏、底部导航）收起或展开会改变页面可见高度，但部分浏览器在此时不派发 window.resize（iOS Safari 尤其常见）。当前实现只监听 window.resize，所以可见区域变大后画布仍保持旧尺寸，必须等其它事件（例如点击「收起按键」触发的那一次 resize）才会重排。本需求要求以真实可见区域（visualViewport）为准，在可见区域变化后自动重算画布尺寸，把它放大到当前可见区域内能放下的最大值，并在触屏设备上去掉原来预留的 2% / 6% 边距。",
+          "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+          "event_id": "EVT-000150",
+          "excluded": [
+            "双指放大（visualViewport.scale 大于 1）过程中的重新排版",
+            "桌面端留边距策略的变更，桌面仍保持 0.98 / 0.94",
+            "虚拟按键的位置、显隐与输入通道逻辑"
+          ],
+          "id": "REQ-000007",
+          "included": [
+            "以 visualViewport 的宽高作为可见区域，在工具栏收起或展开后自动重算画布尺寸",
+            "触屏设备上画布铺满可见区域，不再保留原来的 2% 宽度与 6% 高度边距",
+            "同时监听 window resize、visualViewport resize、visualViewport scroll、orientationchange、pageshow、visibilitychange 六条来源",
+            "增加 400ms 的可见区域尺寸比对兜底，应对浏览器完全不发事件的情况"
+          ],
+          "module": "画面自适应（可见区域适配）",
+          "necessity": "去掉本项，画面会在工具栏收起后长期偏小：横屏实测少用约 6% 的高度（693×390 而非应有的 818×460），竖屏少用 8px 宽度；且表现为“点了某个按钮才放大”的怪异时序，用户会以为页面卡住。",
+          "normal_behavior": {
+            "behavior": "页面以 visualViewport 为准重新计算画布缩放",
+            "expected": "画布在一个 400ms 轮询周期内由 693×390 自动变为 818×460，全程无需用户点击任何按钮",
+            "scenario": "手机横屏下收起浏览器工具栏，可见高度由 390 变为 460，浏览器没有派发 resize"
+          },
+          "placement": {
+            "kind": "页面",
+            "other": [],
+            "primary": {
+              "page_id": "PAGE-000001",
+              "page_revision": 1,
+              "region_id": "REG-000001-0001-0001"
+            }
+          },
+          "priority": "P1",
+          "purpose": "让手机玩家收起浏览器工具栏后立刻得到更大的画面，不需要手动触发任何按钮。",
+          "questions": [],
+          "revision": 1,
+          "sources": [
+            {
+              "source_id": "SRC-000003",
+              "source_revision": 1
+            }
+          ],
+          "status": "完整草稿",
+          "tags": [],
+          "technical": "实现位于 main.js：viewBox() 在 visualViewport.scale 约等于 1 时取 visualViewport 的宽高，否则退回 innerWidth/innerHeight；fit() 依据 html.touch-mode 决定铺满还是保留边距；事件监听与 400ms 轮询兜底同在 fit() 附近注册；另暴露 __probe.fitCount() 与 __probe.viewBox() 供验收读取。",
+          "title": "手机隐藏浏览器工具栏后画面自动放大到最大",
+          "type": "功能"
+        },
+        "previous_content_revision": null,
+        "target": "REQ-000007",
+        "type": "success"
+      },
+      "sequence": 150,
+      "time": "2026-10-28T10:24:35.811740+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "req submit",
+      "fingerprint": "163a8802d45b2832e37e32fb3df1e465685e23c35bcd227e646c8909d8930f14",
+      "id": "EVT-000151",
+      "operation_id": "crab-req7-submit",
+      "reason": "把已完成的完整草稿转入待审核",
+      "request": {
+        "agent": "octie-agent",
+        "command": "req submit",
+        "data": {
+          "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+          "id": "REQ-000007",
+          "revision": 1
+        },
+        "reason": "把已完成的完整草稿转入待审核"
+      },
+      "result": {
+        "command": "req submit",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 151,
+        "document_revision": 151,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000151",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:24:46.110066+00:00"
+        },
+        "object": {
+          "acceptance": [
+            {
+              "allow_na": false,
+              "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图",
+              "exception": {
+                "expected": "判定不通过并记录 fitCount 未增长",
+                "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460",
+                "scenario": "静置超过 1 秒画布尺寸仍未变化"
+              },
+              "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+              "id": "AC-000027",
+              "input": "把可见高度由 390 改为 460，不派发任何事件",
+              "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+              "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+              "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+              "role": "移动端验收者",
+              "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件"
+            },
+            {
+              "allow_na": false,
+              "evidence": "前后画布尺寸数值与 fitCount 变化",
+              "exception": {
+                "expected": "判定不通过",
+                "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向",
+                "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉"
+              },
+              "expected": "画布自动回到 693×390，fitCount 再增加 1",
+              "id": "AC-000028",
+              "input": "把可见高度由 460 改回 390，不派发任何事件",
+              "method": "与上一条同一套模拟手段，反向修改高度",
+              "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+              "preconditions": "承接上一条，画布当前为 818×460",
+              "role": "移动端验收者",
+              "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件"
+            },
+            {
+              "allow_na": false,
+              "evidence": "三次事件与静置期的 fitCount 数值",
+              "exception": {
+                "expected": "判定不通过，说明存在空转",
+                "handling": "检查轮询是否在尺寸未变时仍调用 fit()",
+                "scenario": "静置期间 fitCount 持续增长"
+              },
+              "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+              "id": "AC-000029",
+              "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+              "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+              "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+              "preconditions": "页面稳定，画布尺寸已确定",
+              "role": "移动端验收者",
+              "scenario": "核对各事件通道与空闲开销"
+            },
+            {
+              "allow_na": false,
+              "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图",
+              "exception": {
+                "expected": "判定不通过",
+                "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名",
+                "scenario": "画布仍保留 2% / 6% 边距"
+              },
+              "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+              "id": "AC-000030",
+              "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+              "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+              "operation": "读取画布尺寸与可见区域尺寸",
+              "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+              "role": "移动端验收者",
+              "scenario": "触屏设备上画布铺满可见区域"
+            },
+            {
+              "allow_na": false,
+              "evidence": "视口尺寸、画布尺寸与公式计算值",
+              "exception": {
+                "expected": "判定不通过",
+                "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏",
+                "scenario": "桌面画布被拉伸到 929 以上或出现裁剪"
+              },
+              "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+              "id": "AC-000031",
+              "input": "视口 947×972",
+              "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+              "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+              "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+              "role": "桌面验收者",
+              "scenario": "桌面端不出现铺满带来的回归"
+            }
+          ],
+          "boundaries": [
+            {
+              "expected": "画布的 CSS 尺寸保持不变",
+              "handling": "viewBox() 退回 innerWidth / innerHeight，跳过本次重排，避免放大过程中画面跳动",
+              "scenario": "用户正在双指放大（visualViewport.scale 大于 1）"
+            }
+          ],
+          "created_at": "2026-10-28T10:24:35.811740+00:00",
+          "created_by": "octie-agent",
+          "dependencies": [],
+          "description": "手机浏览器的工具栏（地址栏、底部导航）收起或展开会改变页面可见高度，但部分浏览器在此时不派发 window.resize（iOS Safari 尤其常见）。当前实现只监听 window.resize，所以可见区域变大后画布仍保持旧尺寸，必须等其它事件（例如点击「收起按键」触发的那一次 resize）才会重排。本需求要求以真实可见区域（visualViewport）为准，在可见区域变化后自动重算画布尺寸，把它放大到当前可见区域内能放下的最大值，并在触屏设备上去掉原来预留的 2% / 6% 边距。",
+          "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+          "event_id": "EVT-000150",
+          "excluded": [
+            "双指放大（visualViewport.scale 大于 1）过程中的重新排版",
+            "桌面端留边距策略的变更，桌面仍保持 0.98 / 0.94",
+            "虚拟按键的位置、显隐与输入通道逻辑"
+          ],
+          "id": "REQ-000007",
+          "included": [
+            "以 visualViewport 的宽高作为可见区域，在工具栏收起或展开后自动重算画布尺寸",
+            "触屏设备上画布铺满可见区域，不再保留原来的 2% 宽度与 6% 高度边距",
+            "同时监听 window resize、visualViewport resize、visualViewport scroll、orientationchange、pageshow、visibilitychange 六条来源",
+            "增加 400ms 的可见区域尺寸比对兜底，应对浏览器完全不发事件的情况"
+          ],
+          "module": "画面自适应（可见区域适配）",
+          "necessity": "去掉本项，画面会在工具栏收起后长期偏小：横屏实测少用约 6% 的高度（693×390 而非应有的 818×460），竖屏少用 8px 宽度；且表现为“点了某个按钮才放大”的怪异时序，用户会以为页面卡住。",
+          "normal_behavior": {
+            "behavior": "页面以 visualViewport 为准重新计算画布缩放",
+            "expected": "画布在一个 400ms 轮询周期内由 693×390 自动变为 818×460，全程无需用户点击任何按钮",
+            "scenario": "手机横屏下收起浏览器工具栏，可见高度由 390 变为 460，浏览器没有派发 resize"
+          },
+          "placement": {
+            "kind": "页面",
+            "other": [],
+            "primary": {
+              "page_id": "PAGE-000001",
+              "page_revision": 1,
+              "region_id": "REG-000001-0001-0001"
+            }
+          },
+          "priority": "P1",
+          "purpose": "让手机玩家收起浏览器工具栏后立刻得到更大的画面，不需要手动触发任何按钮。",
+          "questions": [],
+          "revision": 1,
+          "sources": [
+            {
+              "source_id": "SRC-000003",
+              "source_revision": 1
+            }
+          ],
+          "status": "待审核",
+          "tags": [],
+          "technical": "实现位于 main.js：viewBox() 在 visualViewport.scale 约等于 1 时取 visualViewport 的宽高，否则退回 innerWidth/innerHeight；fit() 依据 html.touch-mode 决定铺满还是保留边距；事件监听与 400ms 轮询兜底同在 fit() 附近注册；另暴露 __probe.fitCount() 与 __probe.viewBox() 供验收读取。",
+          "title": "手机隐藏浏览器工具栏后画面自动放大到最大",
+          "type": "功能"
+        },
+        "previous_content_revision": null,
+        "target": "REQ-000007",
+        "type": "success"
+      },
+      "sequence": 151,
+      "time": "2026-10-28T10:24:46.110066+00:00"
+    },
+    {
+      "agent": "review-agent",
+      "command": "review add",
+      "fingerprint": "38398868fa3d44e60eea449166a6ce1ce977b1896a0e2f57a39fb029e61f20e9",
+      "id": "EVT-000152",
+      "operation_id": "crab-req7-review",
+      "reason": "对 REQ-000007 第 1 修订做逐字段语义审核",
+      "request": {
+        "agent": "review-agent",
+        "command": "review add",
+        "data": {
+          "acceptance_review": "5 条验收均具备角色、场景、前置、输入、操作、预期、异常、方法与证据，且可执行：前两条通过覆写 visualViewport.height 模拟工具栏收起与恢复，第三条核对三个事件通道与静置期不空转，第四条在竖屏与横屏核对铺满尺寸，第五条核对桌面端 928×522 不回归。预期均为可读数值或明确现象。",
+          "basis": "依据 target_digest 171736a1 指向的 REQ-000007 第 1 次内容修订，对照来源 SRC-000003 r1 记录的用户原话逐字段审阅。声明式审核，Agent 身份仅作操作归因。",
+          "completeness_review": "逐项核对：说明、目的、必要性、类型（功能）、模块、优先级 P1、页面归属（PAGE-000001 r1 场景画布区）、来源（SRC-000003 r1）、纳入 4 条、排除 3 条、正常行为、边界 1 条、验收 5 条、开放问题为空。范围边界清晰，未与既有需求冲突（虚拟按键与输入通道已明确排除）。",
+          "conclusion": "通过",
+          "necessity_review": "必要性已核对：工具栏收起后若不重排，横屏画布会长期停在 693×390 而不是应有的 818×460，竖屏少 8px 宽度，而且表现为“点某个按钮才放大”的时序错觉。删除本项会让移动端可见画面长期偏小，判断成立。",
+          "target_digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+          "target_id": "REQ-000007",
+          "target_revision": 1,
+          "target_type": "requirement"
+        },
+        "reason": "对 REQ-000007 第 1 修订做逐字段语义审核"
+      },
+      "result": {
+        "command": "review add",
+        "commit_status": "committed",
+        "content_revision": null,
+        "current_document_revision": 152,
+        "document_revision": 152,
+        "issues": [],
+        "meta": {
+          "agent": "review-agent",
+          "event_id": "EVT-000152",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:24:59.327083+00:00"
+        },
+        "object": {
+          "acceptance_review": "5 条验收均具备角色、场景、前置、输入、操作、预期、异常、方法与证据，且可执行：前两条通过覆写 visualViewport.height 模拟工具栏收起与恢复，第三条核对三个事件通道与静置期不空转，第四条在竖屏与横屏核对铺满尺寸，第五条核对桌面端 928×522 不回归。预期均为可读数值或明确现象。",
+          "basis": "依据 target_digest 171736a1 指向的 REQ-000007 第 1 次内容修订，对照来源 SRC-000003 r1 记录的用户原话逐字段审阅。声明式审核，Agent 身份仅作操作归因。",
+          "completeness_review": "逐项核对：说明、目的、必要性、类型（功能）、模块、优先级 P1、页面归属（PAGE-000001 r1 场景画布区）、来源（SRC-000003 r1）、纳入 4 条、排除 3 条、正常行为、边界 1 条、验收 5 条、开放问题为空。范围边界清晰，未与既有需求冲突（虚拟按键与输入通道已明确排除）。",
+          "conclusion": "通过",
+          "created_at": "2026-10-28T10:24:59.327083+00:00",
+          "created_by": "review-agent",
+          "event_id": "EVT-000152",
+          "event_sequence": 152,
+          "id": "REV-000023",
+          "necessity_review": "必要性已核对：工具栏收起后若不重排，横屏画布会长期停在 693×390 而不是应有的 818×460，竖屏少 8px 宽度，而且表现为“点某个按钮才放大”的时序错觉。删除本项会让移动端可见画面长期偏小，判断成立。",
+          "target_digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+          "target_id": "REQ-000007",
+          "target_revision": 1,
+          "target_type": "requirement"
+        },
+        "previous_content_revision": null,
+        "target": "REV-000023",
+        "type": "success"
+      },
+      "sequence": 152,
+      "time": "2026-10-28T10:24:59.327083+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "req confirm",
+      "fingerprint": "da97d57514e8429742d5386ffbcb42721e14465be73facb98270a0fbadd2263f",
+      "id": "EVT-000153",
+      "operation_id": "crab-req7-confirm",
+      "reason": "审核通过且无开放问题，确认纳入范围为后续变更加入基线",
+      "request": {
+        "agent": "octie-agent",
+        "command": "req confirm",
+        "data": {
+          "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+          "id": "REQ-000007",
+          "revision": 1,
+          "scope": {
+            "decision": "纳入",
+            "reason": null
+          }
+        },
+        "reason": "审核通过且无开放问题，确认纳入范围为后续变更加入基线"
+      },
+      "result": {
+        "command": "req confirm",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 153,
+        "document_revision": 153,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000153",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:25:08.580419+00:00"
+        },
+        "object": {
+          "acceptance": [
+            {
+              "allow_na": false,
+              "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图",
+              "exception": {
+                "expected": "判定不通过并记录 fitCount 未增长",
+                "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460",
+                "scenario": "静置超过 1 秒画布尺寸仍未变化"
+              },
+              "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+              "id": "AC-000027",
+              "input": "把可见高度由 390 改为 460，不派发任何事件",
+              "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+              "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+              "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+              "role": "移动端验收者",
+              "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件"
+            },
+            {
+              "allow_na": false,
+              "evidence": "前后画布尺寸数值与 fitCount 变化",
+              "exception": {
+                "expected": "判定不通过",
+                "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向",
+                "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉"
+              },
+              "expected": "画布自动回到 693×390，fitCount 再增加 1",
+              "id": "AC-000028",
+              "input": "把可见高度由 460 改回 390，不派发任何事件",
+              "method": "与上一条同一套模拟手段，反向修改高度",
+              "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+              "preconditions": "承接上一条，画布当前为 818×460",
+              "role": "移动端验收者",
+              "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件"
+            },
+            {
+              "allow_na": false,
+              "evidence": "三次事件与静置期的 fitCount 数值",
+              "exception": {
+                "expected": "判定不通过，说明存在空转",
+                "handling": "检查轮询是否在尺寸未变时仍调用 fit()",
+                "scenario": "静置期间 fitCount 持续增长"
+              },
+              "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+              "id": "AC-000029",
+              "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+              "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+              "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+              "preconditions": "页面稳定，画布尺寸已确定",
+              "role": "移动端验收者",
+              "scenario": "核对各事件通道与空闲开销"
+            },
+            {
+              "allow_na": false,
+              "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图",
+              "exception": {
+                "expected": "判定不通过",
+                "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名",
+                "scenario": "画布仍保留 2% / 6% 边距"
+              },
+              "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+              "id": "AC-000030",
+              "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+              "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+              "operation": "读取画布尺寸与可见区域尺寸",
+              "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+              "role": "移动端验收者",
+              "scenario": "触屏设备上画布铺满可见区域"
+            },
+            {
+              "allow_na": false,
+              "evidence": "视口尺寸、画布尺寸与公式计算值",
+              "exception": {
+                "expected": "判定不通过",
+                "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏",
+                "scenario": "桌面画布被拉伸到 929 以上或出现裁剪"
+              },
+              "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+              "id": "AC-000031",
+              "input": "视口 947×972",
+              "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+              "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+              "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+              "role": "桌面验收者",
+              "scenario": "桌面端不出现铺满带来的回归"
+            }
+          ],
+          "boundaries": [
+            {
+              "expected": "画布的 CSS 尺寸保持不变",
+              "handling": "viewBox() 退回 innerWidth / innerHeight，跳过本次重排，避免放大过程中画面跳动",
+              "scenario": "用户正在双指放大（visualViewport.scale 大于 1）"
+            }
+          ],
+          "confirmation": {
+            "agent": "octie-agent",
+            "event_id": "EVT-000153",
+            "review_id": "REV-000023",
+            "time": "2026-10-28T10:25:08.580419+00:00"
+          },
+          "created_at": "2026-10-28T10:24:35.811740+00:00",
+          "created_by": "octie-agent",
+          "dependencies": [],
+          "description": "手机浏览器的工具栏（地址栏、底部导航）收起或展开会改变页面可见高度，但部分浏览器在此时不派发 window.resize（iOS Safari 尤其常见）。当前实现只监听 window.resize，所以可见区域变大后画布仍保持旧尺寸，必须等其它事件（例如点击「收起按键」触发的那一次 resize）才会重排。本需求要求以真实可见区域（visualViewport）为准，在可见区域变化后自动重算画布尺寸，把它放大到当前可见区域内能放下的最大值，并在触屏设备上去掉原来预留的 2% / 6% 边距。",
+          "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+          "event_id": "EVT-000150",
+          "excluded": [
+            "双指放大（visualViewport.scale 大于 1）过程中的重新排版",
+            "桌面端留边距策略的变更，桌面仍保持 0.98 / 0.94",
+            "虚拟按键的位置、显隐与输入通道逻辑"
+          ],
+          "id": "REQ-000007",
+          "included": [
+            "以 visualViewport 的宽高作为可见区域，在工具栏收起或展开后自动重算画布尺寸",
+            "触屏设备上画布铺满可见区域，不再保留原来的 2% 宽度与 6% 高度边距",
+            "同时监听 window resize、visualViewport resize、visualViewport scroll、orientationchange、pageshow、visibilitychange 六条来源",
+            "增加 400ms 的可见区域尺寸比对兜底，应对浏览器完全不发事件的情况"
+          ],
+          "latest_review": {
+            "acceptance_review": "5 条验收均具备角色、场景、前置、输入、操作、预期、异常、方法与证据，且可执行：前两条通过覆写 visualViewport.height 模拟工具栏收起与恢复，第三条核对三个事件通道与静置期不空转，第四条在竖屏与横屏核对铺满尺寸，第五条核对桌面端 928×522 不回归。预期均为可读数值或明确现象。",
+            "basis": "依据 target_digest 171736a1 指向的 REQ-000007 第 1 次内容修订，对照来源 SRC-000003 r1 记录的用户原话逐字段审阅。声明式审核，Agent 身份仅作操作归因。",
+            "completeness_review": "逐项核对：说明、目的、必要性、类型（功能）、模块、优先级 P1、页面归属（PAGE-000001 r1 场景画布区）、来源（SRC-000003 r1）、纳入 4 条、排除 3 条、正常行为、边界 1 条、验收 5 条、开放问题为空。范围边界清晰，未与既有需求冲突（虚拟按键与输入通道已明确排除）。",
+            "conclusion": "通过",
+            "created_at": "2026-10-28T10:24:59.327083+00:00",
+            "created_by": "review-agent",
+            "event_id": "EVT-000152",
+            "event_sequence": 152,
+            "id": "REV-000023",
+            "necessity_review": "必要性已核对：工具栏收起后若不重排，横屏画布会长期停在 693×390 而不是应有的 818×460，竖屏少 8px 宽度，而且表现为“点某个按钮才放大”的时序错觉。删除本项会让移动端可见画面长期偏小，判断成立。",
+            "target_digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+            "target_id": "REQ-000007",
+            "target_revision": 1,
+            "target_type": "requirement"
+          },
+          "module": "画面自适应（可见区域适配）",
+          "necessity": "去掉本项，画面会在工具栏收起后长期偏小：横屏实测少用约 6% 的高度（693×390 而非应有的 818×460），竖屏少用 8px 宽度；且表现为“点了某个按钮才放大”的怪异时序，用户会以为页面卡住。",
+          "normal_behavior": {
+            "behavior": "页面以 visualViewport 为准重新计算画布缩放",
+            "expected": "画布在一个 400ms 轮询周期内由 693×390 自动变为 818×460，全程无需用户点击任何按钮",
+            "scenario": "手机横屏下收起浏览器工具栏，可见高度由 390 变为 460，浏览器没有派发 resize"
+          },
+          "placement": {
+            "kind": "页面",
+            "other": [],
+            "primary": {
+              "page_id": "PAGE-000001",
+              "page_revision": 1,
+              "region_id": "REG-000001-0001-0001"
+            }
+          },
+          "priority": "P1",
+          "purpose": "让手机玩家收起浏览器工具栏后立刻得到更大的画面，不需要手动触发任何按钮。",
+          "questions": [],
+          "revision": 1,
+          "scope": {
+            "decision": "纳入",
+            "reason": null
+          },
+          "sources": [
+            {
+              "source_id": "SRC-000003",
+              "source_revision": 1
+            }
+          ],
+          "status": "已确认",
+          "tags": [],
+          "technical": "实现位于 main.js：viewBox() 在 visualViewport.scale 约等于 1 时取 visualViewport 的宽高，否则退回 innerWidth/innerHeight；fit() 依据 html.touch-mode 决定铺满还是保留边距；事件监听与 400ms 轮询兜底同在 fit() 附近注册；另暴露 __probe.fitCount() 与 __probe.viewBox() 供验收读取。",
+          "title": "手机隐藏浏览器工具栏后画面自动放大到最大",
+          "type": "功能"
+        },
+        "previous_content_revision": null,
+        "target": "REQ-000007",
+        "type": "success"
+      },
+      "sequence": 153,
+      "time": "2026-10-28T10:25:08.580419+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "change propose",
+      "fingerprint": "0aa08ec97ec8ca935da98d2bcc9c4ef85413c5ffed8e8264c48117b86b41a5cd",
+      "id": "EVT-000154",
+      "operation_id": "crab-chg5-propose",
+      "reason": "把已确认的 REQ-000007 新增进基线，走变更而不是直接封基线",
+      "request": {
+        "agent": "octie-agent",
+        "command": "change propose",
+        "data": {
+          "actions": [
+            {
+              "new_revision": 1,
+              "old_revision": null,
+              "requirement_id": "REQ-000007",
+              "type": "新增"
+            }
+          ],
+          "impact_objects": [
+            "REQ-000001",
+            "REQ-000004",
+            "REQ-000007"
+          ],
+          "predecessor": "BASE-000005"
+        },
+        "reason": "把已确认的 REQ-000007 新增进基线，走变更而不是直接封基线"
+      },
+      "result": {
+        "command": "change propose",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 154,
+        "document_revision": 154,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000154",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:25:50.883955+00:00"
+        },
+        "object": {
+          "actions": [
+            {
+              "new_revision": 1,
+              "old_revision": null,
+              "requirement_id": "REQ-000007",
+              "type": "新增"
+            }
+          ],
+          "candidate_members": {
+            "REQ-000001": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000011",
+                "review_id": "REV-000001",
+                "time": "2026-10-27T20:19:33.136841+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "初始画面截图 + 七类元素勾选清单（含各自大致坐标）",
+                    "exception": {
+                      "expected": "某类元素缺失或颜色与同类无法区分",
+                      "handling": "记为不通过，补画该类元素后重新截图核对",
+                      "scenario": "某类元素缺失或与同类无法区分"
+                    },
+                    "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+                    "id": "AC-000001",
+                    "input": "无输入，仅观察初始画面",
+                    "method": "对初始画面截图，按七类元素清单逐项勾选并标注位置",
+                    "operation": "打开 index.html 并等待加载提示消失",
+                    "preconditions": "资源已加载完成，页面处于初始状态",
+                    "role": "场景验收者",
+                    "scenario": "核对七类海岸元素是否齐全"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "移动前后两张截图 + 背景区域差异率数值",
+                    "exception": {
+                      "expected": "背景出现任何平移或缩放跳动",
+                      "handling": "判定为不通过，移除背景位移逻辑",
+                      "scenario": "角色移动过程中背景发生位移"
+                    },
+                    "expected": "除角色精灵所在区域外，背景像素与移动前一致，背景位移为 0 像素",
+                    "id": "AC-000002",
+                    "input": "按住右方向键持续 3 秒，再按住左方向键持续 3 秒",
+                    "method": "移动前后各截一张图，用像素差分统计背景区域差异率",
+                    "operation": "移动角色后回到起始位置附近，比较背景像素",
+                    "preconditions": "页面已进入且背景渲染完成",
+                    "role": "场景验收者",
+                    "scenario": "验证背景不随角色移动"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "连续 3 帧截图",
+                    "exception": {
+                      "expected": "海面完全静止或每帧出现大面积跳变",
+                      "handling": "记为不通过，调整波浪相位与循环周期后复测",
+                      "scenario": "海面静止或帧间跳变过大"
+                    },
+                    "expected": "三帧海浪纹理位置不同，循环周期内无整幅跳动或闪烁",
+                    "id": "AC-000003",
+                    "input": "无输入",
+                    "method": "间隔 1 秒连续截 3 帧，比对海浪纹理位移",
+                    "operation": "静置观察海面 3 秒并连续截取 3 帧",
+                    "preconditions": "页面静止无角色输入",
+                    "role": "场景验收者",
+                    "scenario": "验证海面循环动画存在且连贯"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "场景等比缩放并居中，四周留出底色，不拉伸不变形",
+                    "handling": "按 min(宽比, 高比) 等比缩放后居中绘制，留边填深色",
+                    "scenario": "浏览器窗口宽高比与场景原始比例不一致"
+                  },
+                  {
+                    "expected": "仍能看完整幅场景与角色，元素不变形",
+                    "handling": "继续等比缩放至适配宽度，允许整体变小但不裁切",
+                    "scenario": "窗口宽度小于 480px 的窄屏"
+                  }
+                ],
+                "created_at": "2026-10-27T19:58:51.627651+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "页面打开后在画布上绘制一幅完整的深圳海岸场景：海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋。背景是一整张固定的 2.5D 平面图，角色在其上方行走时背景像素位置保持不变，不做相机跟随与地图滚动。海水部分带持续的循环动画（波浪流动），让画面不是死图。",
+                "digest": "2310b3e8c298e8c9a0645878ccae71b3e32c822529ee1675b0ddce9d973bbed4",
+                "event_id": "EVT-000004",
+                "excluded": [
+                  "视差滚动、相机跟随与地图平移",
+                  "多场景或关卡切换",
+                  "玩家侧的场景缩放与旋转"
+                ],
+                "id": "REQ-000001",
+                "included": [
+                  "海水区与沙滩区上固定绘制的一整幅海岸背景",
+                  "红树林、海藻床、珊瑚礁三类深圳典型海岸元素的可见呈现",
+                  "台阶与房屋等场景道具的可见呈现",
+                  "海面波浪的循环动画"
+                ],
+                "module": "场景渲染",
+                "necessity": "没有背景就没有场景可言：用户明确要求网站带海洋、沙滩与深圳典型海岸元素，且背景必须固定不动，否则就不是他要的“大地图一站到底”的观感。",
+                "normal_behavior": {
+                  "behavior": "画布按场景原始比例等比绘制完整海岸背景，海面开始循环波浪动画",
+                  "expected": "画面同时可见海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋共七类元素，且背景在角色移动前后像素位置不变",
+                  "scenario": "用户打开本地页面且资产已就绪"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "给螃蟹角色提供一个可辨认的深圳海岸小世界作为舞台，让用户一眼看出这是海藻床、红树林、珊瑚礁构成的真实海岸场景。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "呈现固定不滚动的深圳海岸 2.5D 场景背景",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000002": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000014",
+                "review_id": "REV-000002",
+                "time": "2026-10-27T20:19:33.931717+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "四次按键的起点终点坐标记录表（含 dx、dy 数值）",
+                    "exception": {
+                      "expected": "该方向判定不通过",
+                      "handling": "修正该方向的输入映射后复测",
+                      "scenario": "某个方向位移方向相反或出现斜向偏移"
+                    },
+                    "expected": "↑ 的 y 减小且 x 不变，↓ 的 y 增大且 x 不变，← 的 x 减小且 y 不变，→ 的 x 增大且 y 不变，四次的垂直轴偏移均为 0 像素",
+                    "id": "AC-000004",
+                    "input": "依次单独按住 ↑、↓、←、→ 各 1 秒",
+                    "method": "在页面中暴露角色坐标并逐次记录，比对 dx 与 dy 的正负和零值",
+                    "operation": "每次按键后记录角色起点与终点坐标",
+                    "preconditions": "角色位于场景中央，四个方向均有足够空间",
+                    "role": "操作验收者",
+                    "scenario": "逐个方向核对移动方向正确"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "三组位移量原始数值与相对差计算结果",
+                    "exception": {
+                      "expected": "判定速度不稳定",
+                      "handling": "改为按时间增量累加位移后复测",
+                      "scenario": "三次位移差异超过 10% 或位移接近 0"
+                    },
+                    "expected": "三次位移量的最大值与最小值相对差不超过 10%",
+                    "id": "AC-000005",
+                    "input": "连续 3 次按住 → 各 1 秒后松开",
+                    "method": "同一方向的 3 组位移量做极差与均值比值计算",
+                    "operation": "记录每次 1 秒内的水平位移量",
+                    "preconditions": "角色位于场景中央",
+                    "role": "操作验收者",
+                    "scenario": "核对移动速度稳定"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "最终坐标数值 + 贴边截图",
+                    "exception": {
+                      "expected": "判定边界处理不通过",
+                      "handling": "修正钳制范围并复测",
+                      "scenario": "角色移出画面或贴在边缘抖动"
+                    },
+                    "expected": "角色整体仍在可视区域内，其右边缘不超过场景右内边距，坐标被钳制在允许范围",
+                    "id": "AC-000006",
+                    "input": "持续按住 → 5 秒",
+                    "method": "持续按键后读取角色最终坐标与场景边界值做比较",
+                    "operation": "观察角色最终位置与画面右边缘的关系",
+                    "preconditions": "角色靠近右侧边界",
+                    "role": "操作验收者",
+                    "scenario": "核对边界限制"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "松键时刻与最后一帧位移的时间差记录",
+                    "exception": {
+                      "expected": "判定为未立即停止",
+                      "handling": "移除速度衰减逻辑，改为松键直接归零",
+                      "scenario": "松键后角色继续滑行超过 100 毫秒"
+                    },
+                    "expected": "松键后 100 毫秒内水平位移归零，角色不再移动",
+                    "id": "AC-000007",
+                    "input": "松开 → 键",
+                    "method": "松键后按帧记录坐标，找出最后一次位移的帧号与时间差",
+                    "operation": "松键后连续观察 0.5 秒",
+                    "preconditions": "角色正在向右移动",
+                    "role": "操作验收者",
+                    "scenario": "核对松键立即停止"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "角色只沿最后按下的那个方向移动，不同时产生斜向位移",
+                    "handling": "以最后一次按下的方向键为准，忽略先前仍按住的轴",
+                    "scenario": "同时按住两个方向键（例如右键与上键）"
+                  },
+                  {
+                    "expected": "角色停在边界内侧，不越出画面",
+                    "handling": "对坐标做上下限钳制，越界时保留在允许范围内",
+                    "scenario": "角色持续朝同一个方向移动到场景边缘"
+                  },
+                  {
+                    "expected": "角色停止移动，不出现卡住持续漂移",
+                    "handling": "监听失焦事件清空按键状态",
+                    "scenario": "按住方向键时浏览器窗口失去焦点"
+                  }
+                ],
+                "created_at": "2026-10-27T19:59:07.557201+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "用户按下 W/A/S/D 或键盘方向键时，螃蟹角色在固定场景内沿对应方向匀速移动；松开按键立即停止。移动只在上下左右四个轴方向发生，不产生斜向位移，角色始终被限制在场景可视范围内。",
+                "digest": "433c05bb460b38b24a3f7879d6b4fe2d1231808c67f52164bd721002d7614d6a",
+                "event_id": "EVT-000005",
+                "excluded": [
+                  "斜向八方向自由移动",
+                  "跳跃、攻击、拾取等额外动作",
+                  "身体惯性、摩擦滑行与加速缓冲"
+                ],
+                "id": "REQ-000002",
+                "included": [
+                  "W 与 ↑ 向上移动，S 与 ↓ 向下移动，A 与 ← 向左移动，D 与 → 向右移动",
+                  "恒定速度的水平与垂直位移",
+                  "角色位置限制在场景可视区域内",
+                  "松开按键后立即停止"
+                ],
+                "module": "角色控制",
+                "necessity": "没有四向移动就没有交互，整个场景退化为一张静止图片；用户原话明确这是当前唯一必须实现的功能。",
+                "normal_behavior": {
+                  "behavior": "按住某一个方向键，角色沿该轴方向持续移动并播放行走动画，松开按键后停住",
+                  "expected": "位移方向与按键方向一致，单位时间位移量保持稳定",
+                  "scenario": "角色位于场景中央且没有触达边界"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "这是用户唯一要求现在必须完成的操作能力：用四个方向键驱动小螃蟹在海岸场景里走动。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "支持键盘四向移动螃蟹角色",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000003": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000050",
+                "review_id": "REV-000006",
+                "time": "2026-10-28T08:54:11.706903+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "帧索引序列日志 + 行走中截图 evidence/03~06",
+                    "exception": {
+                      "expected": "判定动画不连通",
+                      "handling": "修正帧推进逻辑与计时基准后复测",
+                      "scenario": "帧序出现跳跃、倒退或长时间停在同帧"
+                    },
+                    "expected": "帧索引按 0、1、2、3 循环推进，无跳帧与倒序",
+                    "id": "AC-000008",
+                    "input": "按住右方向键持续 1 秒",
+                    "method": "在渲染循环中记录每次帧切换的时间戳与索引，导出序列后检查连续性",
+                    "operation": "记录这 1 秒内实际绘制的帧索引序列",
+                    "preconditions": "角色在可行走沙地上，四个方向的帧组已加载",
+                    "role": "动画验收者",
+                    "scenario": "核对单一方向的帧循环连通"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "切向前后帧组标识日志 + 切向瞬间截图",
+                    "exception": {
+                      "expected": "判定动作组切换失败",
+                      "handling": "修正方向到帧组的映射后复测",
+                      "scenario": "切向后仍显示向右的帧或出现空白帧"
+                    },
+                    "expected": "切向后绘制的是向上动作组的帧，切换发生在 1 个渲染帧之内",
+                    "id": "AC-000009",
+                    "input": "按住右方向键后改为按住上方向键",
+                    "method": "记录切向前后各 5 帧的帧组标识与索引",
+                    "operation": "观察切向瞬间的画面并记录所用帧组",
+                    "preconditions": "角色正在向右行走",
+                    "role": "动画验收者",
+                    "scenario": "核对方向切换动作组"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "松键后 1 秒内的帧索引记录",
+                    "exception": {
+                      "expected": "判定为动画未停止",
+                      "handling": "静止态改为只绘制第 0 帧后复测",
+                      "scenario": "松键后仍在空转播放行走帧"
+                    },
+                    "expected": "帧索引保持不变并停在 0，画面稳定显示该方向的待机帧",
+                    "id": "AC-000010",
+                    "input": "松开所有方向键",
+                    "method": "松键后连续记录帧索引，确认数值不再变化",
+                    "operation": "松键后观察 1 秒",
+                    "preconditions": "角色正在移动",
+                    "role": "动画验收者",
+                    "scenario": "核对静止时停止推进"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "python tools/check_sheet.py 输出 + evidence/33_side_scale_preview.png",
+                    "exception": {
+                      "expected": "判定资产不合格",
+                      "handling": "重新跑切帧与对齐脚本后复检",
+                      "scenario": "存在尺寸不一致、底色残留或帧间跳动"
+                    },
+                    "expected": "16 帧全部 48×48，四角 alpha 为 0，同方向帧间横向漂移不超过 2 像素，脚底基线一致",
+                    "id": "AC-000011",
+                    "input": "无输入",
+                    "method": "用脚本遍历 16 帧，统计尺寸、透明角落与包围盒中心偏移；帧尺寸从 scene.json 读取",
+                    "operation": "运行自检脚本检查 16 帧的尺寸、透明角、帧间漂移与脚底基线",
+                    "preconditions": "动作卡已生成在 assets/crab_sheet.png",
+                    "role": "动画验收者",
+                    "scenario": "核对动作卡资产一致性与尺寸"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "帧序号重置到新方向动作组的第 0 帧，不出现两个方向帧混用的错位画面",
+                    "handling": "方向变化即重置动画计时器与帧索引",
+                    "scenario": "移动过程中快速改变方向"
+                  },
+                  {
+                    "expected": "保持在当前面向方向的第 0 帧，不继续推进动画",
+                    "handling": "无输入时冻结帧索引",
+                    "scenario": "角色静止不动"
+                  },
+                  {
+                    "expected": "侧身行的显示尺寸比正面小约 10%，切换瞬间不出现明显的“变大”跳变",
+                    "handling": "切片阶段按行缩放，并把缩放后的脚底回拉到同一基线",
+                    "scenario": "从正面切到侧身"
+                  }
+                ],
+                "created_at": "2026-10-28T08:54:10.386122+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "螃蟹为四个方向（下、左、右、上）各准备一组走路帧，方向切换时立即切换动作组，移动过程中按固定帧率循环播放，静止时停在该方向的待机帧。动作卡由图片生成模型直接产出 4×4 卡片（绿幕），再由代码完成：等分切格 → 软阈值抠绿 → 按包围盒归一化（脚底对齐同一基线）→ 整表统一调色板量化。当前成品为半尺寸：单帧 48×48、整表 192×192、32 色；其中左侧与右侧两行额外缩放到 90%，避免侧身时视觉上比正面显大。",
+                "digest": "9eb3d2fa058fc7d4588a0382fce3f699fabf2129c3badef805ae216396ebdcf3",
+                "event_id": "EVT-000047",
+                "excluded": [
+                  "斜向与八方向的独立动作组",
+                  "攻击、跳跃、死亡等战斗动作",
+                  "帧间插值生成的补间画面",
+                  "静止时的呼吸/眨眼等二次动作（试做过，已移除）"
+                ],
+                "id": "REQ-000003",
+                "included": [
+                  "上、下、左、右四个方向的独立走路帧组，每组 4 帧",
+                  "按 8 帧每秒循环推进帧序号",
+                  "方向切换时同步切换动作组",
+                  "松开方向键后停在该方向待机帧（第 0 帧）",
+                  "16 帧统一 48×48 尺寸、透明背景、同一套 32 色调色板",
+                  "侧视两行按行缩放到 90%，脚底与正面行保持同一基线"
+                ],
+                "module": "角色动画",
+                "necessity": "只有位移没有帧动画，角色会表现为贴图滑动，用户会直接判定不合格；动作卡是该需求的核心交付物。",
+                "normal_behavior": {
+                  "behavior": "每经过 125 毫秒切换到该方向动作组的下一个帧，四帧结束后回到第一帧继续循环",
+                  "expected": "画面中的螃蟹腿部姿态逐帧变化，形成持续步行动作",
+                  "scenario": "角色正在向右移动"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "让螃蟹的移动看起来是一只活物在走，而不是一张贴图在平移；这也是用户反复强调的“动作卡连续播放”。",
+                "questions": [],
+                "revision": 2,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  },
+                  {
+                    "source_id": "SRC-000002",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "播放四向走路动作卡的连续帧动画",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 2,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                },
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:59:22.515291+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 通过 Edge CDP 在 chatgpt.com 发起的技术咨询",
+                    "digest": "526cf481c8592bf102dac7430092a1f929638f4a83987b5b8e77e65d0a36e982",
+                    "event_id": "EVT-000006",
+                    "id": "SRC-000002",
+                    "kind": "链接",
+                    "location": "https://chatgpt.com/c/6ae10247-06f0-83ee-80ae-b56b5c95a4ff",
+                    "manual_note": null,
+                    "name": "ChatGPT 咨询：深圳海岸像素小游戏最短可行资产方案",
+                    "quote": "推荐技术栈：AI 生图 + Python Pillow + HTML5 Canvas 2D。整体采用三个独立层：固定背景、循环环境特效、角色精灵。不要让 AI 一次生成整张背景和全部角色动作后直接投入使用。游戏逻辑画布 960 × 540 px；背景 960 × 540 PNG；角色逻辑帧 64 × 64 px；四向动画 Down / Left / Right / Up，每方向 4 帧，总帧数 16 帧，最终 Sprite Sheet 256 × 256 PNG；行走动画 8 FPS；游戏渲染 requestAnimationFrame，通常目标 60 FPS；移动速度 110 px/s。推荐先生成一张角色母版（Character Reference），确认角色外观后，再生成四个方向的动作。不要首先要求模型直接输出 256 × 256 的成品 Sheet，更稳妥的方法是生成较大的 4 × 4 等分网格，再用代码裁切。",
+                    "revision": 1,
+                    "summary": "建议采用固定背景层 + 循环环境特效层 + 角色精灵层三层结构，画布 960×540、单帧 64×64、四向各 4 帧共 16 帧、8fps 行走、110px/s 移动；AI 先出角色母版与 4×4 网格大图，再用 Pillow 裁切、抠底、统一对齐得到可用 sprite sheet。"
+                  },
+                  "source_id": "SRC-000002",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000004": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000020",
+                "review_id": "REV-000004",
+                "time": "2026-10-27T20:19:35.854973+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "Network 请求列表截图（含域名列）+ 离线状态下的页面截图",
+                    "exception": {
+                      "expected": "判定不自包含",
+                      "handling": "把所需资源下载到本地目录并改为相对路径后复测",
+                      "scenario": "出现外部域名请求或页面白屏"
+                    },
+                    "expected": "页面完整显示场景与角色，Network 面板中没有任何指向本机以外域名的请求，全部请求为 file:// 或 localhost 本地路径",
+                    "id": "AC-000012",
+                    "input": "无网络",
+                    "method": "断网打开页面并导出 Network 请求列表，逐条检查域名",
+                    "operation": "断开网络后双击 index.html，并查看开发者工具的 Network 面板",
+                    "preconditions": "已拿到 crab-coast 文件夹，网络已断开",
+                    "role": "交付验收者",
+                    "scenario": "核对文件夹自包含与离线可运行"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "性能面板截图或帧率统计数值",
+                    "exception": {
+                      "expected": "判定为不流畅",
+                      "handling": "减少每帧重绘区域或缓存背景图层后复测",
+                      "scenario": "平均帧率低于 55 或出现超过 50 毫秒的长帧"
+                    },
+                    "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+                    "id": "AC-000013",
+                    "input": "按住 → 键移动角色 5 秒",
+                    "method": "录制性能时间线，统计移动期间的帧率均值与最长帧间隔",
+                    "operation": "用浏览器性能面板记录该时段的帧率",
+                    "preconditions": "页面运行在本机 Edge 浏览器",
+                    "role": "交付验收者",
+                    "scenario": "核对渲染帧率"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "角色局部放大截图",
+                    "exception": {
+                      "expected": "判定像素渲染不合格",
+                      "handling": "补充 image-rendering 与关闭图像平滑后复测",
+                      "scenario": "出现模糊或彩色边缘"
+                    },
+                    "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+                    "id": "AC-000014",
+                    "input": "无输入",
+                    "method": "对角色局部区域截图并放大观察边缘像素",
+                    "operation": "放大查看角色与背景边缘",
+                    "preconditions": "页面已打开并显示角色",
+                    "role": "交付验收者",
+                    "scenario": "核对像素清晰度"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "角色移动速度与动画节拍保持与时间一致，不出现慢动作",
+                    "handling": "位移与帧推进都按真实时间增量计算，不按固定步数",
+                    "scenario": "运行在性能较弱的机器上，帧率降到 30 帧每秒"
+                  },
+                  {
+                    "expected": "场景等比缩放，像素边缘保持锐利不模糊",
+                    "handling": "canvas 使用 image-rendering: pixelated，并按整数或等比缩放绘制",
+                    "scenario": "浏览器窗口被缩放到很小或很大"
+                  }
+                ],
+                "created_at": "2026-10-27T19:59:41.739698+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "整站所有文件（页面、脚本、样式、背景图、动作卡、生成脚本、需求台账）只存在于 crab-coast 一个文件夹内，不引用任何外部 CDN、字体或接口；断网状态下双击 index.html 即可运行。渲染使用 requestAnimationFrame 加时间增量推进，画面按 60 帧每秒目标运行，像素素材放大时使用最近邻插值保持锐利。",
+                "digest": "ebe38c666d0ea584981c3f07bf4467a6f41bd9664d7b76fece4d2e3c81292687",
+                "event_id": "EVT-000008",
+                "excluded": [
+                  "后端服务、数据库与账号体系",
+                  "外部 CDN 资源与在线字体",
+                  "移动端触屏手势（当前迭代不做）"
+                ],
+                "id": "REQ-000004",
+                "included": [
+                  "全部代码与资产位于 crab-coast 文件夹内",
+                  "离线可运行的本地静态页面",
+                  "基于时间增量的稳定渲染循环",
+                  "像素素材放大时的最近邻插值"
+                ],
+                "module": "交付与性能",
+                "necessity": "资产散落在多个目录或依赖外部网络会让这份交付在离线环境下不可用，也无法满足“一个文件夹搞定”的明确约束。",
+                "normal_behavior": {
+                  "behavior": "页面加载本地素材并开始渲染，方向键控制正常，动画连续",
+                  "expected": "无任何外部网络请求，画面帧率维持在 60 帧每秒附近",
+                  "scenario": "用户在本机双击打开页面，且当前没有联网"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "用户要求所有产物收在一个文件夹里不外流，并且动画要顺滑、看得出是精心做的像素游戏而不是卡顿的贴图滑动。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  },
+                  {
+                    "source_id": "SRC-000002",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "单文件夹自包含交付并保持流畅渲染",
+                "type": "非功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                },
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:59:22.515291+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 通过 Edge CDP 在 chatgpt.com 发起的技术咨询",
+                    "digest": "526cf481c8592bf102dac7430092a1f929638f4a83987b5b8e77e65d0a36e982",
+                    "event_id": "EVT-000006",
+                    "id": "SRC-000002",
+                    "kind": "链接",
+                    "location": "https://chatgpt.com/c/6ae10247-06f0-83ee-80ae-b56b5c95a4ff",
+                    "manual_note": null,
+                    "name": "ChatGPT 咨询：深圳海岸像素小游戏最短可行资产方案",
+                    "quote": "推荐技术栈：AI 生图 + Python Pillow + HTML5 Canvas 2D。整体采用三个独立层：固定背景、循环环境特效、角色精灵。不要让 AI 一次生成整张背景和全部角色动作后直接投入使用。游戏逻辑画布 960 × 540 px；背景 960 × 540 PNG；角色逻辑帧 64 × 64 px；四向动画 Down / Left / Right / Up，每方向 4 帧，总帧数 16 帧，最终 Sprite Sheet 256 × 256 PNG；行走动画 8 FPS；游戏渲染 requestAnimationFrame，通常目标 60 FPS；移动速度 110 px/s。推荐先生成一张角色母版（Character Reference），确认角色外观后，再生成四个方向的动作。不要首先要求模型直接输出 256 × 256 的成品 Sheet，更稳妥的方法是生成较大的 4 × 4 等分网格，再用代码裁切。",
+                    "revision": 1,
+                    "summary": "建议采用固定背景层 + 循环环境特效层 + 角色精灵层三层结构，画布 960×540、单帧 64×64、四向各 4 帧共 16 帧、8fps 行走、110px/s 移动；AI 先出角色母版与 4×4 网格大图，再用 Pillow 裁切、抠底、统一对齐得到可用 sprite sheet。"
+                  },
+                  "source_id": "SRC-000002",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000005": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000054",
+                "review_id": "REV-000007",
+                "time": "2026-10-28T08:54:13.922021+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "实测输出：duration=40, loop=true",
+                    "exception": {
+                      "expected": "判定播放配置不合格",
+                      "handling": "检查音频文件与 bgm.js 设置后复测",
+                      "scenario": "时长不符或未开启循环"
+                    },
+                    "expected": "duration 为 40（±0.05 秒），loop 属性为 true",
+                    "id": "AC-000015",
+                    "input": "无输入",
+                    "method": "在浏览器控制台读取 window.__bgm.audio.duration 与 loop",
+                    "operation": "读取音频元素的时长与 loop 属性",
+                    "preconditions": "页面已打开且音乐资源加载完成",
+                    "role": "音频验收者",
+                    "scenario": "核对时长与循环设置"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "实测 0.0019 / 0.413 = 0.005",
+                    "exception": {
+                      "expected": "判定会爆音",
+                      "handling": "重新做无缝处理或改用取模合成",
+                      "scenario": "接缝处跳变接近最大值"
+                    },
+                    "expected": "首尾跳变远小于普通相邻差值（比值 \u003c 0.1），听感上无咔哒",
+                    "id": "AC-000016",
+                    "input": "无输入",
+                    "method": "用脚本读取 PCM，计算 |x[0]-x[-1]| 与相邻差值分布的 p99.9 之比",
+                    "operation": "比较首尾采样跳变与整体相邻采样差值",
+                    "preconditions": "已拿到音频文件",
+                    "role": "音频验收者",
+                    "scenario": "核对接缝无断音爆音"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "操作前后 muted 状态记录",
+                    "exception": {
+                      "expected": "判定静音功能不合格",
+                      "handling": "修正 localStorage 读写与 muted 绑定后复测",
+                      "scenario": "点击无效或刷新后自动恢复播放"
+                    },
+                    "expected": "点击后立即静音且按钮变为静音态；刷新后仍为静音",
+                    "id": "AC-000017",
+                    "input": "点击右上角音乐按钮，然后刷新页面",
+                    "method": "读取 window.__bgm.muted 与按钮文案，刷新后再读一次",
+                    "operation": "观察按钮文案、音频 muted 状态与刷新后的状态",
+                    "preconditions": "音乐正在播放",
+                    "role": "音频验收者",
+                    "scenario": "核对静音开关与记忆"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "页面不报错，音乐保持静默直到用户第一次按键或点击",
+                    "handling": "监听首次交互事件后再调用播放，被拒绝时不清除监听",
+                    "scenario": "浏览器拦截自动播放"
+                  },
+                  {
+                    "expected": "游戏画面正常，音乐开关按钮自动隐藏",
+                    "handling": "监听音频错误事件，隐藏按钮并继续运行",
+                    "scenario": "音频文件缺失或路径错误"
+                  },
+                  {
+                    "expected": "刷新后仍保持静音",
+                    "handling": "静音状态写入 localStorage 并在初始化时读取",
+                    "scenario": "用户静音后刷新页面"
+                  }
+                ],
+                "created_at": "2026-10-28T08:54:12.200904+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "页面加载后提供一段 40 秒整、能够无缝循环的海边休闲风格背景音乐。受浏览器自动播放策略限制，首次按键或点击后开始播放；播放中不出现接缝断音或爆音。右上角提供音乐开关，键盘 M 键也可切换，静音状态记在本地，刷新后保持。音乐文件与页面同在一个文件夹内，断网可用；切换到 mp3 版本时行为不变。",
+                "digest": "a5f9a8c76d9e09e77cc22bded06a02ca129928d59b5dcbd0416f6f5c51a1282a",
+                "event_id": "EVT-000051",
+                "excluded": [
+                  "脚步、水声等环境音效",
+                  "多曲目切换与音量滑动条",
+                  "在线流媒体或版权音乐接入"
+                ],
+                "id": "REQ-000005",
+                "included": [
+                  "40.000 秒、首尾无缝衔接的循环音频",
+                  "首次按键或点击后自动开始播放",
+                  "右上角按钮与 M 键切换静音，状态写入 localStorage",
+                  "音乐文件随页面同目录存放，离线可用"
+                ],
+                "module": "音频",
+                "necessity": "没有背景音乐时场景偏“静”，用户明确要求补一段海边悠闲向、可循环的电子音乐。",
+                "normal_behavior": {
+                  "behavior": "背景音乐从当前循环位置开始播放，音量淡入到设定值",
+                  "expected": "能听到连续不断的音乐；走到 40 秒末尾时直接接回开头，没有静音空档或爆音",
+                  "scenario": "用户打开页面并按下任意方向键"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0002"
+                  }
+                },
+                "priority": "P1",
+                "purpose": "给静止或行走中的场景提供持续的氛围声，让页面像一个完整的小游戏而不是一张会动的图。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "播放可无缝循环的海岸背景音乐并支持静音",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0002",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000006": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000133",
+                "review_id": "REV-000019",
+                "time": "2026-10-28T09:12:14.221013+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "实测 7 次序列：24,48,96,48,24,48,96（含 小/中/大 标签）",
+                    "exception": {
+                      "expected": "判定反弹逻辑或标签绑定有误",
+                      "handling": "修正方向翻转与文案刷新后复测",
+                      "scenario": "出现 96 直接跳到 24、或文案与尺寸不符"
+                    },
+                    "expected": "序列为 48(中)→24(小)→48(中)→96(大)→48(中)→24(小)→48(中)；按钮依次显示「尺寸 小 24 / 中 48 / 大 96 …」",
+                    "id": "AC-000024",
+                    "input": "连续按 T 键 7 次",
+                    "method": "点击按钮并读取 window.__probe.state().size 与按钮 textContent",
+                    "operation": "记录每次的尺寸与按钮文案",
+                    "preconditions": "页面已加载三套表，默认中档",
+                    "role": "尺寸验收者",
+                    "scenario": "核对反弹序列与标签"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "实测 24 → 48、96 → 48",
+                    "exception": {
+                      "expected": "判定仍在绕回",
+                      "handling": "检查方向变量是否在越界时翻转",
+                      "scenario": "24 跳到 96 或 96 跳到 24"
+                    },
+                    "expected": "24 的下一档是 48；96 的下一档也是 48",
+                    "id": "AC-000025",
+                    "input": "在端点再按一次 T",
+                    "method": "把档位切到端点后按一次 T，读取结果",
+                    "operation": "观察下一档",
+                    "preconditions": "已停在最小档 24 或最大档 96",
+                    "role": "尺寸验收者",
+                    "scenario": "核对两端不互跳"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "三档基线 86/43/21，朝向行一致",
+                    "exception": {
+                      "expected": "判定该档基线或行映射有问题",
+                      "handling": "修正后复测",
+                      "scenario": "某档悬空或朝向错乱"
+                    },
+                    "expected": "三档脚底分别落在 86/43/21 基线上，朝向仍为右→正面行、上→侧视行",
+                    "id": "AC-000026",
+                    "input": "每档按住右键后改按上键",
+                    "method": "读取角色坐标与该档基线核对偏移",
+                    "operation": "核对脚底贴地与朝向行",
+                    "preconditions": "分别切到三档",
+                    "role": "尺寸验收者",
+                    "scenario": "核对三档脚底与朝向不受切换逻辑影响"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "回到中档（而不是跳到大档）",
+                    "handling": "索引越界时翻转方向再前进一步",
+                    "scenario": "在最小档继续按 T"
+                  },
+                  {
+                    "expected": "回到中档（而不是跳到小档）",
+                    "handling": "同上",
+                    "scenario": "在最大档继续按 T"
+                  },
+                  {
+                    "expected": "位置、碰撞与帧序都不受影响",
+                    "handling": "切换只改绘制用的表与基线",
+                    "scenario": "角色移动过程中切换"
+                  }
+                ],
+                "created_at": "2026-10-28T09:12:07.880416+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "螃蟹保留 96（大）、48（中）、24（小）三套精灵表，由同一张动作卡逐级派生，共用朝向状态机、行走帧序与脚底对齐规则；三档都做了侧视按行缩放 90%。T 键或左上角按钮采用**反弹式**切换：从中档出发先变小，到最小档后掉头变大，到最大档后再掉头变小，形成 中→小→中→大→中→小… 的往复，而不是跳回另一端。按钮显示当前档位的中文标签与像素尺寸（如「尺寸 中 48」）。",
+                "digest": "73343bc0b56bfe6235c12b2c0a1c7b735f114b2ca045861226dab93197d893d8",
+                "event_id": "EVT-000130",
+                "excluded": [
+                  "绕回式（一端的下一档直接跳到另一端）切换",
+                  "尺寸滑块或自定义尺寸",
+                  "按距离自动切换尺寸"
+                ],
+                "id": "REQ-000006",
+                "included": [
+                  "96/48/24 三套精灵表同时存在且都可加载",
+                  "T 键与按钮按反弹方式切换：中→小→中→大→中…",
+                  "按钮显示「尺寸 大/中/小 + 像素值」",
+                  "三档共用朝向状态机与行走帧序，侧视均缩 90%"
+                ],
+                "module": "角色渲染",
+                "necessity": "用户明确要求把绕回式切换改成反弹式，并要求用 小/中/大 表达档位。",
+                "normal_behavior": {
+                  "behavior": "每按一次 T 或点一次按钮，档位沿当前方向走一格；走到端点则反向",
+                  "expected": "序列为 中→小→中→大→中→小…，按钮文案随之更新，且不会出现两端直接互跳",
+                  "scenario": "页面加载完成，默认停在中档 48"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P1",
+                "purpose": "让调节尺寸的过程连续、可预期：越按越接近想要的大小，不会在两端之间突然跳变。",
+                "questions": [],
+                "revision": 3,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "同一角色三档尺寸按 T 键反弹切换（小↔中↔大）",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 3,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000007": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000153",
+                "review_id": "REV-000023",
+                "time": "2026-10-28T10:25:08.580419+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图",
+                    "exception": {
+                      "expected": "判定不通过并记录 fitCount 未增长",
+                      "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460",
+                      "scenario": "静置超过 1 秒画布尺寸仍未变化"
+                    },
+                    "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+                    "id": "AC-000027",
+                    "input": "把可见高度由 390 改为 460，不派发任何事件",
+                    "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+                    "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                    "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+                    "role": "移动端验收者",
+                    "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "前后画布尺寸数值与 fitCount 变化",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向",
+                      "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉"
+                    },
+                    "expected": "画布自动回到 693×390，fitCount 再增加 1",
+                    "id": "AC-000028",
+                    "input": "把可见高度由 460 改回 390，不派发任何事件",
+                    "method": "与上一条同一套模拟手段，反向修改高度",
+                    "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                    "preconditions": "承接上一条，画布当前为 818×460",
+                    "role": "移动端验收者",
+                    "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "三次事件与静置期的 fitCount 数值",
+                    "exception": {
+                      "expected": "判定不通过，说明存在空转",
+                      "handling": "检查轮询是否在尺寸未变时仍调用 fit()",
+                      "scenario": "静置期间 fitCount 持续增长"
+                    },
+                    "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+                    "id": "AC-000029",
+                    "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+                    "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+                    "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+                    "preconditions": "页面稳定，画布尺寸已确定",
+                    "role": "移动端验收者",
+                    "scenario": "核对各事件通道与空闲开销"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名",
+                      "scenario": "画布仍保留 2% / 6% 边距"
+                    },
+                    "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+                    "id": "AC-000030",
+                    "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+                    "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+                    "operation": "读取画布尺寸与可见区域尺寸",
+                    "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+                    "role": "移动端验收者",
+                    "scenario": "触屏设备上画布铺满可见区域"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "视口尺寸、画布尺寸与公式计算值",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏",
+                      "scenario": "桌面画布被拉伸到 929 以上或出现裁剪"
+                    },
+                    "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+                    "id": "AC-000031",
+                    "input": "视口 947×972",
+                    "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+                    "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+                    "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+                    "role": "桌面验收者",
+                    "scenario": "桌面端不出现铺满带来的回归"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "画布的 CSS 尺寸保持不变",
+                    "handling": "viewBox() 退回 innerWidth / innerHeight，跳过本次重排，避免放大过程中画面跳动",
+                    "scenario": "用户正在双指放大（visualViewport.scale 大于 1）"
+                  }
+                ],
+                "created_at": "2026-10-28T10:24:35.811740+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "手机浏览器的工具栏（地址栏、底部导航）收起或展开会改变页面可见高度，但部分浏览器在此时不派发 window.resize（iOS Safari 尤其常见）。当前实现只监听 window.resize，所以可见区域变大后画布仍保持旧尺寸，必须等其它事件（例如点击「收起按键」触发的那一次 resize）才会重排。本需求要求以真实可见区域（visualViewport）为准，在可见区域变化后自动重算画布尺寸，把它放大到当前可见区域内能放下的最大值，并在触屏设备上去掉原来预留的 2% / 6% 边距。",
+                "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+                "event_id": "EVT-000150",
+                "excluded": [
+                  "双指放大（visualViewport.scale 大于 1）过程中的重新排版",
+                  "桌面端留边距策略的变更，桌面仍保持 0.98 / 0.94",
+                  "虚拟按键的位置、显隐与输入通道逻辑"
+                ],
+                "id": "REQ-000007",
+                "included": [
+                  "以 visualViewport 的宽高作为可见区域，在工具栏收起或展开后自动重算画布尺寸",
+                  "触屏设备上画布铺满可见区域，不再保留原来的 2% 宽度与 6% 高度边距",
+                  "同时监听 window resize、visualViewport resize、visualViewport scroll、orientationchange、pageshow、visibilitychange 六条来源",
+                  "增加 400ms 的可见区域尺寸比对兜底，应对浏览器完全不发事件的情况"
+                ],
+                "module": "画面自适应（可见区域适配）",
+                "necessity": "去掉本项，画面会在工具栏收起后长期偏小：横屏实测少用约 6% 的高度（693×390 而非应有的 818×460），竖屏少用 8px 宽度；且表现为“点了某个按钮才放大”的怪异时序，用户会以为页面卡住。",
+                "normal_behavior": {
+                  "behavior": "页面以 visualViewport 为准重新计算画布缩放",
+                  "expected": "画布在一个 400ms 轮询周期内由 693×390 自动变为 818×460，全程无需用户点击任何按钮",
+                  "scenario": "手机横屏下收起浏览器工具栏，可见高度由 390 变为 460，浏览器没有派发 resize"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P1",
+                "purpose": "让手机玩家收起浏览器工具栏后立刻得到更大的画面，不需要手动触发任何按钮。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000003",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": "实现位于 main.js：viewBox() 在 visualViewport.scale 约等于 1 时取 visualViewport 的宽高，否则退回 innerWidth/innerHeight；fit() 依据 html.touch-mode 决定铺满还是保留边距；事件监听与 400ms 轮询兜底同在 fit() 附近注册；另暴露 __probe.fitCount() 与 __probe.viewBox() 供验收读取。",
+                "title": "手机隐藏浏览器工具栏后画面自动放大到最大",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-28T10:24:10.851262+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户消息",
+                    "digest": "ddf640df9e4d1bbd434e4ab85bd1e7ac6d19794064dd9c94565faa4675a8fbd2",
+                    "event_id": "EVT-000149",
+                    "id": "SRC-000003",
+                    "kind": "用户消息",
+                    "location": null,
+                    "manual_note": "用户在本次会话中以文字直接提出的原始需求，未经整理",
+                    "name": "用户提出画面自适应需求（手机隐藏工具栏后自动放大）",
+                    "quote": "手机浏览器有一个问题就是，刚开始的时候如果游戏页面小，我隐藏工具栏之后页面不会自动放大，而是点收起按钮的时候才会自适应放大，让页面自动放大最大，新需求创建修改",
+                    "revision": 1,
+                    "summary": "用户指出：手机隐藏浏览器工具栏后可见区域变大，画面却不会自动放大，要点「收起按键」才重排；要求画面自动放大到最大。"
+                  },
+                  "source_id": "SRC-000003",
+                  "source_revision": 1
+                }
+              ]
+            }
+          },
+          "created_at": "2026-10-28T10:25:50.883955+00:00",
+          "created_by": "octie-agent",
+          "digest": "fa5f6f11c13d50aa2357543396ae9496bef922898194ab898484537abf55106e",
+          "evaluation": null,
+          "event_id": "EVT-000154",
+          "id": "CHG-000005",
+          "impact_objects": [
+            "REQ-000001",
+            "REQ-000004",
+            "REQ-000007"
+          ],
+          "ledger_id": "LED-19d840367862455889aebf797805ea48",
+          "predecessor": "BASE-000005",
+          "revision": 1,
+          "status": "已提出"
+        },
+        "previous_content_revision": null,
+        "target": "CHG-000005",
+        "type": "success"
+      },
+      "sequence": 154,
+      "time": "2026-10-28T10:25:50.883955+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "change evaluate",
+      "fingerprint": "3521839f0f1545a6735b6a364da7a14b1fb9495b802f20e23ca35faeafff3ad0",
+      "id": "EVT-000155",
+      "operation_id": "crab-chg5-evaluate",
+      "reason": "补齐变更影响评估与精确重验清单",
+      "request": {
+        "agent": "octie-agent",
+        "command": "change evaluate",
+        "data": {
+          "digest": "fa5f6f11c13d50aa2357543396ae9496bef922898194ab898484537abf55106e",
+          "empty_retests_reason": null,
+          "id": "CHG-000005",
+          "impact_analysis": "本次变更只新增一条需求（REQ-000007 手机隐藏工具栏后画面自动放大到最大），落地改动集中在 main.js 的画布尺寸计算：新增 viewBox() 取 visualViewport、fit() 增加触屏铺满分支、注册 resize / visualViewport.resize / visualViewport.scroll / orientationchange / pageshow / visibilitychange 六条监听与 400ms 轮询兜底。不涉及场景贴图、角色精灵、朝向状态机、碰撞网格、帧序与音频，因此这些既有需求的内容不需要修改。仍然受影响的点有三类：一是画布缩放比例发生变化后，场景是否仍完整呈现且不变形（REQ-000001）；二是触屏上画布被放大到铺满后，帧率与像素硬边是否仍然达标（REQ-000004）；三是新需求自身的五条验收条件需要逐条实测（REQ-000007）。已排除的虚拟按键显隐与输入通道、双指放大过程中的重排，均不在本次差异内。",
+          "retests": [
+            {
+              "condition_id": "AC-000001",
+              "requirement_id": "REQ-000001",
+              "revision": 1
+            },
+            {
+              "condition_id": "AC-000013",
+              "requirement_id": "REQ-000004",
+              "revision": 1
+            },
+            {
+              "condition_id": "AC-000014",
+              "requirement_id": "REQ-000004",
+              "revision": 1
+            },
+            {
+              "condition_id": "AC-000027",
+              "requirement_id": "REQ-000007",
+              "revision": 1
+            },
+            {
+              "condition_id": "AC-000028",
+              "requirement_id": "REQ-000007",
+              "revision": 1
+            },
+            {
+              "condition_id": "AC-000029",
+              "requirement_id": "REQ-000007",
+              "revision": 1
+            },
+            {
+              "condition_id": "AC-000030",
+              "requirement_id": "REQ-000007",
+              "revision": 1
+            },
+            {
+              "condition_id": "AC-000031",
+              "requirement_id": "REQ-000007",
+              "revision": 1
+            }
+          ],
+          "revision": 1,
+          "supersessions": []
+        },
+        "reason": "补齐变更影响评估与精确重验清单"
+      },
+      "result": {
+        "command": "change evaluate",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 155,
+        "document_revision": 155,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000155",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:26:12.645568+00:00"
+        },
+        "object": {
+          "actions": [
+            {
+              "new_revision": 1,
+              "old_revision": null,
+              "requirement_id": "REQ-000007",
+              "type": "新增"
+            }
+          ],
+          "candidate_members": {
+            "REQ-000001": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000011",
+                "review_id": "REV-000001",
+                "time": "2026-10-27T20:19:33.136841+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "初始画面截图 + 七类元素勾选清单（含各自大致坐标）",
+                    "exception": {
+                      "expected": "某类元素缺失或颜色与同类无法区分",
+                      "handling": "记为不通过，补画该类元素后重新截图核对",
+                      "scenario": "某类元素缺失或与同类无法区分"
+                    },
+                    "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+                    "id": "AC-000001",
+                    "input": "无输入，仅观察初始画面",
+                    "method": "对初始画面截图，按七类元素清单逐项勾选并标注位置",
+                    "operation": "打开 index.html 并等待加载提示消失",
+                    "preconditions": "资源已加载完成，页面处于初始状态",
+                    "role": "场景验收者",
+                    "scenario": "核对七类海岸元素是否齐全"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "移动前后两张截图 + 背景区域差异率数值",
+                    "exception": {
+                      "expected": "背景出现任何平移或缩放跳动",
+                      "handling": "判定为不通过，移除背景位移逻辑",
+                      "scenario": "角色移动过程中背景发生位移"
+                    },
+                    "expected": "除角色精灵所在区域外，背景像素与移动前一致，背景位移为 0 像素",
+                    "id": "AC-000002",
+                    "input": "按住右方向键持续 3 秒，再按住左方向键持续 3 秒",
+                    "method": "移动前后各截一张图，用像素差分统计背景区域差异率",
+                    "operation": "移动角色后回到起始位置附近，比较背景像素",
+                    "preconditions": "页面已进入且背景渲染完成",
+                    "role": "场景验收者",
+                    "scenario": "验证背景不随角色移动"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "连续 3 帧截图",
+                    "exception": {
+                      "expected": "海面完全静止或每帧出现大面积跳变",
+                      "handling": "记为不通过，调整波浪相位与循环周期后复测",
+                      "scenario": "海面静止或帧间跳变过大"
+                    },
+                    "expected": "三帧海浪纹理位置不同，循环周期内无整幅跳动或闪烁",
+                    "id": "AC-000003",
+                    "input": "无输入",
+                    "method": "间隔 1 秒连续截 3 帧，比对海浪纹理位移",
+                    "operation": "静置观察海面 3 秒并连续截取 3 帧",
+                    "preconditions": "页面静止无角色输入",
+                    "role": "场景验收者",
+                    "scenario": "验证海面循环动画存在且连贯"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "场景等比缩放并居中，四周留出底色，不拉伸不变形",
+                    "handling": "按 min(宽比, 高比) 等比缩放后居中绘制，留边填深色",
+                    "scenario": "浏览器窗口宽高比与场景原始比例不一致"
+                  },
+                  {
+                    "expected": "仍能看完整幅场景与角色，元素不变形",
+                    "handling": "继续等比缩放至适配宽度，允许整体变小但不裁切",
+                    "scenario": "窗口宽度小于 480px 的窄屏"
+                  }
+                ],
+                "created_at": "2026-10-27T19:58:51.627651+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "页面打开后在画布上绘制一幅完整的深圳海岸场景：海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋。背景是一整张固定的 2.5D 平面图，角色在其上方行走时背景像素位置保持不变，不做相机跟随与地图滚动。海水部分带持续的循环动画（波浪流动），让画面不是死图。",
+                "digest": "2310b3e8c298e8c9a0645878ccae71b3e32c822529ee1675b0ddce9d973bbed4",
+                "event_id": "EVT-000004",
+                "excluded": [
+                  "视差滚动、相机跟随与地图平移",
+                  "多场景或关卡切换",
+                  "玩家侧的场景缩放与旋转"
+                ],
+                "id": "REQ-000001",
+                "included": [
+                  "海水区与沙滩区上固定绘制的一整幅海岸背景",
+                  "红树林、海藻床、珊瑚礁三类深圳典型海岸元素的可见呈现",
+                  "台阶与房屋等场景道具的可见呈现",
+                  "海面波浪的循环动画"
+                ],
+                "module": "场景渲染",
+                "necessity": "没有背景就没有场景可言：用户明确要求网站带海洋、沙滩与深圳典型海岸元素，且背景必须固定不动，否则就不是他要的“大地图一站到底”的观感。",
+                "normal_behavior": {
+                  "behavior": "画布按场景原始比例等比绘制完整海岸背景，海面开始循环波浪动画",
+                  "expected": "画面同时可见海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋共七类元素，且背景在角色移动前后像素位置不变",
+                  "scenario": "用户打开本地页面且资产已就绪"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "给螃蟹角色提供一个可辨认的深圳海岸小世界作为舞台，让用户一眼看出这是海藻床、红树林、珊瑚礁构成的真实海岸场景。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "呈现固定不滚动的深圳海岸 2.5D 场景背景",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000002": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000014",
+                "review_id": "REV-000002",
+                "time": "2026-10-27T20:19:33.931717+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "四次按键的起点终点坐标记录表（含 dx、dy 数值）",
+                    "exception": {
+                      "expected": "该方向判定不通过",
+                      "handling": "修正该方向的输入映射后复测",
+                      "scenario": "某个方向位移方向相反或出现斜向偏移"
+                    },
+                    "expected": "↑ 的 y 减小且 x 不变，↓ 的 y 增大且 x 不变，← 的 x 减小且 y 不变，→ 的 x 增大且 y 不变，四次的垂直轴偏移均为 0 像素",
+                    "id": "AC-000004",
+                    "input": "依次单独按住 ↑、↓、←、→ 各 1 秒",
+                    "method": "在页面中暴露角色坐标并逐次记录，比对 dx 与 dy 的正负和零值",
+                    "operation": "每次按键后记录角色起点与终点坐标",
+                    "preconditions": "角色位于场景中央，四个方向均有足够空间",
+                    "role": "操作验收者",
+                    "scenario": "逐个方向核对移动方向正确"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "三组位移量原始数值与相对差计算结果",
+                    "exception": {
+                      "expected": "判定速度不稳定",
+                      "handling": "改为按时间增量累加位移后复测",
+                      "scenario": "三次位移差异超过 10% 或位移接近 0"
+                    },
+                    "expected": "三次位移量的最大值与最小值相对差不超过 10%",
+                    "id": "AC-000005",
+                    "input": "连续 3 次按住 → 各 1 秒后松开",
+                    "method": "同一方向的 3 组位移量做极差与均值比值计算",
+                    "operation": "记录每次 1 秒内的水平位移量",
+                    "preconditions": "角色位于场景中央",
+                    "role": "操作验收者",
+                    "scenario": "核对移动速度稳定"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "最终坐标数值 + 贴边截图",
+                    "exception": {
+                      "expected": "判定边界处理不通过",
+                      "handling": "修正钳制范围并复测",
+                      "scenario": "角色移出画面或贴在边缘抖动"
+                    },
+                    "expected": "角色整体仍在可视区域内，其右边缘不超过场景右内边距，坐标被钳制在允许范围",
+                    "id": "AC-000006",
+                    "input": "持续按住 → 5 秒",
+                    "method": "持续按键后读取角色最终坐标与场景边界值做比较",
+                    "operation": "观察角色最终位置与画面右边缘的关系",
+                    "preconditions": "角色靠近右侧边界",
+                    "role": "操作验收者",
+                    "scenario": "核对边界限制"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "松键时刻与最后一帧位移的时间差记录",
+                    "exception": {
+                      "expected": "判定为未立即停止",
+                      "handling": "移除速度衰减逻辑，改为松键直接归零",
+                      "scenario": "松键后角色继续滑行超过 100 毫秒"
+                    },
+                    "expected": "松键后 100 毫秒内水平位移归零，角色不再移动",
+                    "id": "AC-000007",
+                    "input": "松开 → 键",
+                    "method": "松键后按帧记录坐标，找出最后一次位移的帧号与时间差",
+                    "operation": "松键后连续观察 0.5 秒",
+                    "preconditions": "角色正在向右移动",
+                    "role": "操作验收者",
+                    "scenario": "核对松键立即停止"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "角色只沿最后按下的那个方向移动，不同时产生斜向位移",
+                    "handling": "以最后一次按下的方向键为准，忽略先前仍按住的轴",
+                    "scenario": "同时按住两个方向键（例如右键与上键）"
+                  },
+                  {
+                    "expected": "角色停在边界内侧，不越出画面",
+                    "handling": "对坐标做上下限钳制，越界时保留在允许范围内",
+                    "scenario": "角色持续朝同一个方向移动到场景边缘"
+                  },
+                  {
+                    "expected": "角色停止移动，不出现卡住持续漂移",
+                    "handling": "监听失焦事件清空按键状态",
+                    "scenario": "按住方向键时浏览器窗口失去焦点"
+                  }
+                ],
+                "created_at": "2026-10-27T19:59:07.557201+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "用户按下 W/A/S/D 或键盘方向键时，螃蟹角色在固定场景内沿对应方向匀速移动；松开按键立即停止。移动只在上下左右四个轴方向发生，不产生斜向位移，角色始终被限制在场景可视范围内。",
+                "digest": "433c05bb460b38b24a3f7879d6b4fe2d1231808c67f52164bd721002d7614d6a",
+                "event_id": "EVT-000005",
+                "excluded": [
+                  "斜向八方向自由移动",
+                  "跳跃、攻击、拾取等额外动作",
+                  "身体惯性、摩擦滑行与加速缓冲"
+                ],
+                "id": "REQ-000002",
+                "included": [
+                  "W 与 ↑ 向上移动，S 与 ↓ 向下移动，A 与 ← 向左移动，D 与 → 向右移动",
+                  "恒定速度的水平与垂直位移",
+                  "角色位置限制在场景可视区域内",
+                  "松开按键后立即停止"
+                ],
+                "module": "角色控制",
+                "necessity": "没有四向移动就没有交互，整个场景退化为一张静止图片；用户原话明确这是当前唯一必须实现的功能。",
+                "normal_behavior": {
+                  "behavior": "按住某一个方向键，角色沿该轴方向持续移动并播放行走动画，松开按键后停住",
+                  "expected": "位移方向与按键方向一致，单位时间位移量保持稳定",
+                  "scenario": "角色位于场景中央且没有触达边界"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "这是用户唯一要求现在必须完成的操作能力：用四个方向键驱动小螃蟹在海岸场景里走动。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "支持键盘四向移动螃蟹角色",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000003": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000050",
+                "review_id": "REV-000006",
+                "time": "2026-10-28T08:54:11.706903+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "帧索引序列日志 + 行走中截图 evidence/03~06",
+                    "exception": {
+                      "expected": "判定动画不连通",
+                      "handling": "修正帧推进逻辑与计时基准后复测",
+                      "scenario": "帧序出现跳跃、倒退或长时间停在同帧"
+                    },
+                    "expected": "帧索引按 0、1、2、3 循环推进，无跳帧与倒序",
+                    "id": "AC-000008",
+                    "input": "按住右方向键持续 1 秒",
+                    "method": "在渲染循环中记录每次帧切换的时间戳与索引，导出序列后检查连续性",
+                    "operation": "记录这 1 秒内实际绘制的帧索引序列",
+                    "preconditions": "角色在可行走沙地上，四个方向的帧组已加载",
+                    "role": "动画验收者",
+                    "scenario": "核对单一方向的帧循环连通"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "切向前后帧组标识日志 + 切向瞬间截图",
+                    "exception": {
+                      "expected": "判定动作组切换失败",
+                      "handling": "修正方向到帧组的映射后复测",
+                      "scenario": "切向后仍显示向右的帧或出现空白帧"
+                    },
+                    "expected": "切向后绘制的是向上动作组的帧，切换发生在 1 个渲染帧之内",
+                    "id": "AC-000009",
+                    "input": "按住右方向键后改为按住上方向键",
+                    "method": "记录切向前后各 5 帧的帧组标识与索引",
+                    "operation": "观察切向瞬间的画面并记录所用帧组",
+                    "preconditions": "角色正在向右行走",
+                    "role": "动画验收者",
+                    "scenario": "核对方向切换动作组"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "松键后 1 秒内的帧索引记录",
+                    "exception": {
+                      "expected": "判定为动画未停止",
+                      "handling": "静止态改为只绘制第 0 帧后复测",
+                      "scenario": "松键后仍在空转播放行走帧"
+                    },
+                    "expected": "帧索引保持不变并停在 0，画面稳定显示该方向的待机帧",
+                    "id": "AC-000010",
+                    "input": "松开所有方向键",
+                    "method": "松键后连续记录帧索引，确认数值不再变化",
+                    "operation": "松键后观察 1 秒",
+                    "preconditions": "角色正在移动",
+                    "role": "动画验收者",
+                    "scenario": "核对静止时停止推进"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "python tools/check_sheet.py 输出 + evidence/33_side_scale_preview.png",
+                    "exception": {
+                      "expected": "判定资产不合格",
+                      "handling": "重新跑切帧与对齐脚本后复检",
+                      "scenario": "存在尺寸不一致、底色残留或帧间跳动"
+                    },
+                    "expected": "16 帧全部 48×48，四角 alpha 为 0，同方向帧间横向漂移不超过 2 像素，脚底基线一致",
+                    "id": "AC-000011",
+                    "input": "无输入",
+                    "method": "用脚本遍历 16 帧，统计尺寸、透明角落与包围盒中心偏移；帧尺寸从 scene.json 读取",
+                    "operation": "运行自检脚本检查 16 帧的尺寸、透明角、帧间漂移与脚底基线",
+                    "preconditions": "动作卡已生成在 assets/crab_sheet.png",
+                    "role": "动画验收者",
+                    "scenario": "核对动作卡资产一致性与尺寸"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "帧序号重置到新方向动作组的第 0 帧，不出现两个方向帧混用的错位画面",
+                    "handling": "方向变化即重置动画计时器与帧索引",
+                    "scenario": "移动过程中快速改变方向"
+                  },
+                  {
+                    "expected": "保持在当前面向方向的第 0 帧，不继续推进动画",
+                    "handling": "无输入时冻结帧索引",
+                    "scenario": "角色静止不动"
+                  },
+                  {
+                    "expected": "侧身行的显示尺寸比正面小约 10%，切换瞬间不出现明显的“变大”跳变",
+                    "handling": "切片阶段按行缩放，并把缩放后的脚底回拉到同一基线",
+                    "scenario": "从正面切到侧身"
+                  }
+                ],
+                "created_at": "2026-10-28T08:54:10.386122+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "螃蟹为四个方向（下、左、右、上）各准备一组走路帧，方向切换时立即切换动作组，移动过程中按固定帧率循环播放，静止时停在该方向的待机帧。动作卡由图片生成模型直接产出 4×4 卡片（绿幕），再由代码完成：等分切格 → 软阈值抠绿 → 按包围盒归一化（脚底对齐同一基线）→ 整表统一调色板量化。当前成品为半尺寸：单帧 48×48、整表 192×192、32 色；其中左侧与右侧两行额外缩放到 90%，避免侧身时视觉上比正面显大。",
+                "digest": "9eb3d2fa058fc7d4588a0382fce3f699fabf2129c3badef805ae216396ebdcf3",
+                "event_id": "EVT-000047",
+                "excluded": [
+                  "斜向与八方向的独立动作组",
+                  "攻击、跳跃、死亡等战斗动作",
+                  "帧间插值生成的补间画面",
+                  "静止时的呼吸/眨眼等二次动作（试做过，已移除）"
+                ],
+                "id": "REQ-000003",
+                "included": [
+                  "上、下、左、右四个方向的独立走路帧组，每组 4 帧",
+                  "按 8 帧每秒循环推进帧序号",
+                  "方向切换时同步切换动作组",
+                  "松开方向键后停在该方向待机帧（第 0 帧）",
+                  "16 帧统一 48×48 尺寸、透明背景、同一套 32 色调色板",
+                  "侧视两行按行缩放到 90%，脚底与正面行保持同一基线"
+                ],
+                "module": "角色动画",
+                "necessity": "只有位移没有帧动画，角色会表现为贴图滑动，用户会直接判定不合格；动作卡是该需求的核心交付物。",
+                "normal_behavior": {
+                  "behavior": "每经过 125 毫秒切换到该方向动作组的下一个帧，四帧结束后回到第一帧继续循环",
+                  "expected": "画面中的螃蟹腿部姿态逐帧变化，形成持续步行动作",
+                  "scenario": "角色正在向右移动"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "让螃蟹的移动看起来是一只活物在走，而不是一张贴图在平移；这也是用户反复强调的“动作卡连续播放”。",
+                "questions": [],
+                "revision": 2,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  },
+                  {
+                    "source_id": "SRC-000002",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "播放四向走路动作卡的连续帧动画",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 2,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                },
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:59:22.515291+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 通过 Edge CDP 在 chatgpt.com 发起的技术咨询",
+                    "digest": "526cf481c8592bf102dac7430092a1f929638f4a83987b5b8e77e65d0a36e982",
+                    "event_id": "EVT-000006",
+                    "id": "SRC-000002",
+                    "kind": "链接",
+                    "location": "https://chatgpt.com/c/6ae10247-06f0-83ee-80ae-b56b5c95a4ff",
+                    "manual_note": null,
+                    "name": "ChatGPT 咨询：深圳海岸像素小游戏最短可行资产方案",
+                    "quote": "推荐技术栈：AI 生图 + Python Pillow + HTML5 Canvas 2D。整体采用三个独立层：固定背景、循环环境特效、角色精灵。不要让 AI 一次生成整张背景和全部角色动作后直接投入使用。游戏逻辑画布 960 × 540 px；背景 960 × 540 PNG；角色逻辑帧 64 × 64 px；四向动画 Down / Left / Right / Up，每方向 4 帧，总帧数 16 帧，最终 Sprite Sheet 256 × 256 PNG；行走动画 8 FPS；游戏渲染 requestAnimationFrame，通常目标 60 FPS；移动速度 110 px/s。推荐先生成一张角色母版（Character Reference），确认角色外观后，再生成四个方向的动作。不要首先要求模型直接输出 256 × 256 的成品 Sheet，更稳妥的方法是生成较大的 4 × 4 等分网格，再用代码裁切。",
+                    "revision": 1,
+                    "summary": "建议采用固定背景层 + 循环环境特效层 + 角色精灵层三层结构，画布 960×540、单帧 64×64、四向各 4 帧共 16 帧、8fps 行走、110px/s 移动；AI 先出角色母版与 4×4 网格大图，再用 Pillow 裁切、抠底、统一对齐得到可用 sprite sheet。"
+                  },
+                  "source_id": "SRC-000002",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000004": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000020",
+                "review_id": "REV-000004",
+                "time": "2026-10-27T20:19:35.854973+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "Network 请求列表截图（含域名列）+ 离线状态下的页面截图",
+                    "exception": {
+                      "expected": "判定不自包含",
+                      "handling": "把所需资源下载到本地目录并改为相对路径后复测",
+                      "scenario": "出现外部域名请求或页面白屏"
+                    },
+                    "expected": "页面完整显示场景与角色，Network 面板中没有任何指向本机以外域名的请求，全部请求为 file:// 或 localhost 本地路径",
+                    "id": "AC-000012",
+                    "input": "无网络",
+                    "method": "断网打开页面并导出 Network 请求列表，逐条检查域名",
+                    "operation": "断开网络后双击 index.html，并查看开发者工具的 Network 面板",
+                    "preconditions": "已拿到 crab-coast 文件夹，网络已断开",
+                    "role": "交付验收者",
+                    "scenario": "核对文件夹自包含与离线可运行"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "性能面板截图或帧率统计数值",
+                    "exception": {
+                      "expected": "判定为不流畅",
+                      "handling": "减少每帧重绘区域或缓存背景图层后复测",
+                      "scenario": "平均帧率低于 55 或出现超过 50 毫秒的长帧"
+                    },
+                    "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+                    "id": "AC-000013",
+                    "input": "按住 → 键移动角色 5 秒",
+                    "method": "录制性能时间线，统计移动期间的帧率均值与最长帧间隔",
+                    "operation": "用浏览器性能面板记录该时段的帧率",
+                    "preconditions": "页面运行在本机 Edge 浏览器",
+                    "role": "交付验收者",
+                    "scenario": "核对渲染帧率"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "角色局部放大截图",
+                    "exception": {
+                      "expected": "判定像素渲染不合格",
+                      "handling": "补充 image-rendering 与关闭图像平滑后复测",
+                      "scenario": "出现模糊或彩色边缘"
+                    },
+                    "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+                    "id": "AC-000014",
+                    "input": "无输入",
+                    "method": "对角色局部区域截图并放大观察边缘像素",
+                    "operation": "放大查看角色与背景边缘",
+                    "preconditions": "页面已打开并显示角色",
+                    "role": "交付验收者",
+                    "scenario": "核对像素清晰度"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "角色移动速度与动画节拍保持与时间一致，不出现慢动作",
+                    "handling": "位移与帧推进都按真实时间增量计算，不按固定步数",
+                    "scenario": "运行在性能较弱的机器上，帧率降到 30 帧每秒"
+                  },
+                  {
+                    "expected": "场景等比缩放，像素边缘保持锐利不模糊",
+                    "handling": "canvas 使用 image-rendering: pixelated，并按整数或等比缩放绘制",
+                    "scenario": "浏览器窗口被缩放到很小或很大"
+                  }
+                ],
+                "created_at": "2026-10-27T19:59:41.739698+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "整站所有文件（页面、脚本、样式、背景图、动作卡、生成脚本、需求台账）只存在于 crab-coast 一个文件夹内，不引用任何外部 CDN、字体或接口；断网状态下双击 index.html 即可运行。渲染使用 requestAnimationFrame 加时间增量推进，画面按 60 帧每秒目标运行，像素素材放大时使用最近邻插值保持锐利。",
+                "digest": "ebe38c666d0ea584981c3f07bf4467a6f41bd9664d7b76fece4d2e3c81292687",
+                "event_id": "EVT-000008",
+                "excluded": [
+                  "后端服务、数据库与账号体系",
+                  "外部 CDN 资源与在线字体",
+                  "移动端触屏手势（当前迭代不做）"
+                ],
+                "id": "REQ-000004",
+                "included": [
+                  "全部代码与资产位于 crab-coast 文件夹内",
+                  "离线可运行的本地静态页面",
+                  "基于时间增量的稳定渲染循环",
+                  "像素素材放大时的最近邻插值"
+                ],
+                "module": "交付与性能",
+                "necessity": "资产散落在多个目录或依赖外部网络会让这份交付在离线环境下不可用，也无法满足“一个文件夹搞定”的明确约束。",
+                "normal_behavior": {
+                  "behavior": "页面加载本地素材并开始渲染，方向键控制正常，动画连续",
+                  "expected": "无任何外部网络请求，画面帧率维持在 60 帧每秒附近",
+                  "scenario": "用户在本机双击打开页面，且当前没有联网"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "用户要求所有产物收在一个文件夹里不外流，并且动画要顺滑、看得出是精心做的像素游戏而不是卡顿的贴图滑动。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  },
+                  {
+                    "source_id": "SRC-000002",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "单文件夹自包含交付并保持流畅渲染",
+                "type": "非功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                },
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:59:22.515291+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 通过 Edge CDP 在 chatgpt.com 发起的技术咨询",
+                    "digest": "526cf481c8592bf102dac7430092a1f929638f4a83987b5b8e77e65d0a36e982",
+                    "event_id": "EVT-000006",
+                    "id": "SRC-000002",
+                    "kind": "链接",
+                    "location": "https://chatgpt.com/c/6ae10247-06f0-83ee-80ae-b56b5c95a4ff",
+                    "manual_note": null,
+                    "name": "ChatGPT 咨询：深圳海岸像素小游戏最短可行资产方案",
+                    "quote": "推荐技术栈：AI 生图 + Python Pillow + HTML5 Canvas 2D。整体采用三个独立层：固定背景、循环环境特效、角色精灵。不要让 AI 一次生成整张背景和全部角色动作后直接投入使用。游戏逻辑画布 960 × 540 px；背景 960 × 540 PNG；角色逻辑帧 64 × 64 px；四向动画 Down / Left / Right / Up，每方向 4 帧，总帧数 16 帧，最终 Sprite Sheet 256 × 256 PNG；行走动画 8 FPS；游戏渲染 requestAnimationFrame，通常目标 60 FPS；移动速度 110 px/s。推荐先生成一张角色母版（Character Reference），确认角色外观后，再生成四个方向的动作。不要首先要求模型直接输出 256 × 256 的成品 Sheet，更稳妥的方法是生成较大的 4 × 4 等分网格，再用代码裁切。",
+                    "revision": 1,
+                    "summary": "建议采用固定背景层 + 循环环境特效层 + 角色精灵层三层结构，画布 960×540、单帧 64×64、四向各 4 帧共 16 帧、8fps 行走、110px/s 移动；AI 先出角色母版与 4×4 网格大图，再用 Pillow 裁切、抠底、统一对齐得到可用 sprite sheet。"
+                  },
+                  "source_id": "SRC-000002",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000005": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000054",
+                "review_id": "REV-000007",
+                "time": "2026-10-28T08:54:13.922021+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "实测输出：duration=40, loop=true",
+                    "exception": {
+                      "expected": "判定播放配置不合格",
+                      "handling": "检查音频文件与 bgm.js 设置后复测",
+                      "scenario": "时长不符或未开启循环"
+                    },
+                    "expected": "duration 为 40（±0.05 秒），loop 属性为 true",
+                    "id": "AC-000015",
+                    "input": "无输入",
+                    "method": "在浏览器控制台读取 window.__bgm.audio.duration 与 loop",
+                    "operation": "读取音频元素的时长与 loop 属性",
+                    "preconditions": "页面已打开且音乐资源加载完成",
+                    "role": "音频验收者",
+                    "scenario": "核对时长与循环设置"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "实测 0.0019 / 0.413 = 0.005",
+                    "exception": {
+                      "expected": "判定会爆音",
+                      "handling": "重新做无缝处理或改用取模合成",
+                      "scenario": "接缝处跳变接近最大值"
+                    },
+                    "expected": "首尾跳变远小于普通相邻差值（比值 \u003c 0.1），听感上无咔哒",
+                    "id": "AC-000016",
+                    "input": "无输入",
+                    "method": "用脚本读取 PCM，计算 |x[0]-x[-1]| 与相邻差值分布的 p99.9 之比",
+                    "operation": "比较首尾采样跳变与整体相邻采样差值",
+                    "preconditions": "已拿到音频文件",
+                    "role": "音频验收者",
+                    "scenario": "核对接缝无断音爆音"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "操作前后 muted 状态记录",
+                    "exception": {
+                      "expected": "判定静音功能不合格",
+                      "handling": "修正 localStorage 读写与 muted 绑定后复测",
+                      "scenario": "点击无效或刷新后自动恢复播放"
+                    },
+                    "expected": "点击后立即静音且按钮变为静音态；刷新后仍为静音",
+                    "id": "AC-000017",
+                    "input": "点击右上角音乐按钮，然后刷新页面",
+                    "method": "读取 window.__bgm.muted 与按钮文案，刷新后再读一次",
+                    "operation": "观察按钮文案、音频 muted 状态与刷新后的状态",
+                    "preconditions": "音乐正在播放",
+                    "role": "音频验收者",
+                    "scenario": "核对静音开关与记忆"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "页面不报错，音乐保持静默直到用户第一次按键或点击",
+                    "handling": "监听首次交互事件后再调用播放，被拒绝时不清除监听",
+                    "scenario": "浏览器拦截自动播放"
+                  },
+                  {
+                    "expected": "游戏画面正常，音乐开关按钮自动隐藏",
+                    "handling": "监听音频错误事件，隐藏按钮并继续运行",
+                    "scenario": "音频文件缺失或路径错误"
+                  },
+                  {
+                    "expected": "刷新后仍保持静音",
+                    "handling": "静音状态写入 localStorage 并在初始化时读取",
+                    "scenario": "用户静音后刷新页面"
+                  }
+                ],
+                "created_at": "2026-10-28T08:54:12.200904+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "页面加载后提供一段 40 秒整、能够无缝循环的海边休闲风格背景音乐。受浏览器自动播放策略限制，首次按键或点击后开始播放；播放中不出现接缝断音或爆音。右上角提供音乐开关，键盘 M 键也可切换，静音状态记在本地，刷新后保持。音乐文件与页面同在一个文件夹内，断网可用；切换到 mp3 版本时行为不变。",
+                "digest": "a5f9a8c76d9e09e77cc22bded06a02ca129928d59b5dcbd0416f6f5c51a1282a",
+                "event_id": "EVT-000051",
+                "excluded": [
+                  "脚步、水声等环境音效",
+                  "多曲目切换与音量滑动条",
+                  "在线流媒体或版权音乐接入"
+                ],
+                "id": "REQ-000005",
+                "included": [
+                  "40.000 秒、首尾无缝衔接的循环音频",
+                  "首次按键或点击后自动开始播放",
+                  "右上角按钮与 M 键切换静音，状态写入 localStorage",
+                  "音乐文件随页面同目录存放，离线可用"
+                ],
+                "module": "音频",
+                "necessity": "没有背景音乐时场景偏“静”，用户明确要求补一段海边悠闲向、可循环的电子音乐。",
+                "normal_behavior": {
+                  "behavior": "背景音乐从当前循环位置开始播放，音量淡入到设定值",
+                  "expected": "能听到连续不断的音乐；走到 40 秒末尾时直接接回开头，没有静音空档或爆音",
+                  "scenario": "用户打开页面并按下任意方向键"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0002"
+                  }
+                },
+                "priority": "P1",
+                "purpose": "给静止或行走中的场景提供持续的氛围声，让页面像一个完整的小游戏而不是一张会动的图。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "播放可无缝循环的海岸背景音乐并支持静音",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0002",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000006": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000133",
+                "review_id": "REV-000019",
+                "time": "2026-10-28T09:12:14.221013+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "实测 7 次序列：24,48,96,48,24,48,96（含 小/中/大 标签）",
+                    "exception": {
+                      "expected": "判定反弹逻辑或标签绑定有误",
+                      "handling": "修正方向翻转与文案刷新后复测",
+                      "scenario": "出现 96 直接跳到 24、或文案与尺寸不符"
+                    },
+                    "expected": "序列为 48(中)→24(小)→48(中)→96(大)→48(中)→24(小)→48(中)；按钮依次显示「尺寸 小 24 / 中 48 / 大 96 …」",
+                    "id": "AC-000024",
+                    "input": "连续按 T 键 7 次",
+                    "method": "点击按钮并读取 window.__probe.state().size 与按钮 textContent",
+                    "operation": "记录每次的尺寸与按钮文案",
+                    "preconditions": "页面已加载三套表，默认中档",
+                    "role": "尺寸验收者",
+                    "scenario": "核对反弹序列与标签"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "实测 24 → 48、96 → 48",
+                    "exception": {
+                      "expected": "判定仍在绕回",
+                      "handling": "检查方向变量是否在越界时翻转",
+                      "scenario": "24 跳到 96 或 96 跳到 24"
+                    },
+                    "expected": "24 的下一档是 48；96 的下一档也是 48",
+                    "id": "AC-000025",
+                    "input": "在端点再按一次 T",
+                    "method": "把档位切到端点后按一次 T，读取结果",
+                    "operation": "观察下一档",
+                    "preconditions": "已停在最小档 24 或最大档 96",
+                    "role": "尺寸验收者",
+                    "scenario": "核对两端不互跳"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "三档基线 86/43/21，朝向行一致",
+                    "exception": {
+                      "expected": "判定该档基线或行映射有问题",
+                      "handling": "修正后复测",
+                      "scenario": "某档悬空或朝向错乱"
+                    },
+                    "expected": "三档脚底分别落在 86/43/21 基线上，朝向仍为右→正面行、上→侧视行",
+                    "id": "AC-000026",
+                    "input": "每档按住右键后改按上键",
+                    "method": "读取角色坐标与该档基线核对偏移",
+                    "operation": "核对脚底贴地与朝向行",
+                    "preconditions": "分别切到三档",
+                    "role": "尺寸验收者",
+                    "scenario": "核对三档脚底与朝向不受切换逻辑影响"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "回到中档（而不是跳到大档）",
+                    "handling": "索引越界时翻转方向再前进一步",
+                    "scenario": "在最小档继续按 T"
+                  },
+                  {
+                    "expected": "回到中档（而不是跳到小档）",
+                    "handling": "同上",
+                    "scenario": "在最大档继续按 T"
+                  },
+                  {
+                    "expected": "位置、碰撞与帧序都不受影响",
+                    "handling": "切换只改绘制用的表与基线",
+                    "scenario": "角色移动过程中切换"
+                  }
+                ],
+                "created_at": "2026-10-28T09:12:07.880416+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "螃蟹保留 96（大）、48（中）、24（小）三套精灵表，由同一张动作卡逐级派生，共用朝向状态机、行走帧序与脚底对齐规则；三档都做了侧视按行缩放 90%。T 键或左上角按钮采用**反弹式**切换：从中档出发先变小，到最小档后掉头变大，到最大档后再掉头变小，形成 中→小→中→大→中→小… 的往复，而不是跳回另一端。按钮显示当前档位的中文标签与像素尺寸（如「尺寸 中 48」）。",
+                "digest": "73343bc0b56bfe6235c12b2c0a1c7b735f114b2ca045861226dab93197d893d8",
+                "event_id": "EVT-000130",
+                "excluded": [
+                  "绕回式（一端的下一档直接跳到另一端）切换",
+                  "尺寸滑块或自定义尺寸",
+                  "按距离自动切换尺寸"
+                ],
+                "id": "REQ-000006",
+                "included": [
+                  "96/48/24 三套精灵表同时存在且都可加载",
+                  "T 键与按钮按反弹方式切换：中→小→中→大→中…",
+                  "按钮显示「尺寸 大/中/小 + 像素值」",
+                  "三档共用朝向状态机与行走帧序，侧视均缩 90%"
+                ],
+                "module": "角色渲染",
+                "necessity": "用户明确要求把绕回式切换改成反弹式，并要求用 小/中/大 表达档位。",
+                "normal_behavior": {
+                  "behavior": "每按一次 T 或点一次按钮，档位沿当前方向走一格；走到端点则反向",
+                  "expected": "序列为 中→小→中→大→中→小…，按钮文案随之更新，且不会出现两端直接互跳",
+                  "scenario": "页面加载完成，默认停在中档 48"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P1",
+                "purpose": "让调节尺寸的过程连续、可预期：越按越接近想要的大小，不会在两端之间突然跳变。",
+                "questions": [],
+                "revision": 3,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "同一角色三档尺寸按 T 键反弹切换（小↔中↔大）",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 3,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000007": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000153",
+                "review_id": "REV-000023",
+                "time": "2026-10-28T10:25:08.580419+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图",
+                    "exception": {
+                      "expected": "判定不通过并记录 fitCount 未增长",
+                      "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460",
+                      "scenario": "静置超过 1 秒画布尺寸仍未变化"
+                    },
+                    "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+                    "id": "AC-000027",
+                    "input": "把可见高度由 390 改为 460，不派发任何事件",
+                    "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+                    "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                    "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+                    "role": "移动端验收者",
+                    "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "前后画布尺寸数值与 fitCount 变化",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向",
+                      "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉"
+                    },
+                    "expected": "画布自动回到 693×390，fitCount 再增加 1",
+                    "id": "AC-000028",
+                    "input": "把可见高度由 460 改回 390，不派发任何事件",
+                    "method": "与上一条同一套模拟手段，反向修改高度",
+                    "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                    "preconditions": "承接上一条，画布当前为 818×460",
+                    "role": "移动端验收者",
+                    "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "三次事件与静置期的 fitCount 数值",
+                    "exception": {
+                      "expected": "判定不通过，说明存在空转",
+                      "handling": "检查轮询是否在尺寸未变时仍调用 fit()",
+                      "scenario": "静置期间 fitCount 持续增长"
+                    },
+                    "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+                    "id": "AC-000029",
+                    "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+                    "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+                    "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+                    "preconditions": "页面稳定，画布尺寸已确定",
+                    "role": "移动端验收者",
+                    "scenario": "核对各事件通道与空闲开销"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名",
+                      "scenario": "画布仍保留 2% / 6% 边距"
+                    },
+                    "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+                    "id": "AC-000030",
+                    "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+                    "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+                    "operation": "读取画布尺寸与可见区域尺寸",
+                    "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+                    "role": "移动端验收者",
+                    "scenario": "触屏设备上画布铺满可见区域"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "视口尺寸、画布尺寸与公式计算值",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏",
+                      "scenario": "桌面画布被拉伸到 929 以上或出现裁剪"
+                    },
+                    "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+                    "id": "AC-000031",
+                    "input": "视口 947×972",
+                    "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+                    "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+                    "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+                    "role": "桌面验收者",
+                    "scenario": "桌面端不出现铺满带来的回归"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "画布的 CSS 尺寸保持不变",
+                    "handling": "viewBox() 退回 innerWidth / innerHeight，跳过本次重排，避免放大过程中画面跳动",
+                    "scenario": "用户正在双指放大（visualViewport.scale 大于 1）"
+                  }
+                ],
+                "created_at": "2026-10-28T10:24:35.811740+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "手机浏览器的工具栏（地址栏、底部导航）收起或展开会改变页面可见高度，但部分浏览器在此时不派发 window.resize（iOS Safari 尤其常见）。当前实现只监听 window.resize，所以可见区域变大后画布仍保持旧尺寸，必须等其它事件（例如点击「收起按键」触发的那一次 resize）才会重排。本需求要求以真实可见区域（visualViewport）为准，在可见区域变化后自动重算画布尺寸，把它放大到当前可见区域内能放下的最大值，并在触屏设备上去掉原来预留的 2% / 6% 边距。",
+                "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+                "event_id": "EVT-000150",
+                "excluded": [
+                  "双指放大（visualViewport.scale 大于 1）过程中的重新排版",
+                  "桌面端留边距策略的变更，桌面仍保持 0.98 / 0.94",
+                  "虚拟按键的位置、显隐与输入通道逻辑"
+                ],
+                "id": "REQ-000007",
+                "included": [
+                  "以 visualViewport 的宽高作为可见区域，在工具栏收起或展开后自动重算画布尺寸",
+                  "触屏设备上画布铺满可见区域，不再保留原来的 2% 宽度与 6% 高度边距",
+                  "同时监听 window resize、visualViewport resize、visualViewport scroll、orientationchange、pageshow、visibilitychange 六条来源",
+                  "增加 400ms 的可见区域尺寸比对兜底，应对浏览器完全不发事件的情况"
+                ],
+                "module": "画面自适应（可见区域适配）",
+                "necessity": "去掉本项，画面会在工具栏收起后长期偏小：横屏实测少用约 6% 的高度（693×390 而非应有的 818×460），竖屏少用 8px 宽度；且表现为“点了某个按钮才放大”的怪异时序，用户会以为页面卡住。",
+                "normal_behavior": {
+                  "behavior": "页面以 visualViewport 为准重新计算画布缩放",
+                  "expected": "画布在一个 400ms 轮询周期内由 693×390 自动变为 818×460，全程无需用户点击任何按钮",
+                  "scenario": "手机横屏下收起浏览器工具栏，可见高度由 390 变为 460，浏览器没有派发 resize"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P1",
+                "purpose": "让手机玩家收起浏览器工具栏后立刻得到更大的画面，不需要手动触发任何按钮。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000003",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": "实现位于 main.js：viewBox() 在 visualViewport.scale 约等于 1 时取 visualViewport 的宽高，否则退回 innerWidth/innerHeight；fit() 依据 html.touch-mode 决定铺满还是保留边距；事件监听与 400ms 轮询兜底同在 fit() 附近注册；另暴露 __probe.fitCount() 与 __probe.viewBox() 供验收读取。",
+                "title": "手机隐藏浏览器工具栏后画面自动放大到最大",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-28T10:24:10.851262+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户消息",
+                    "digest": "ddf640df9e4d1bbd434e4ab85bd1e7ac6d19794064dd9c94565faa4675a8fbd2",
+                    "event_id": "EVT-000149",
+                    "id": "SRC-000003",
+                    "kind": "用户消息",
+                    "location": null,
+                    "manual_note": "用户在本次会话中以文字直接提出的原始需求，未经整理",
+                    "name": "用户提出画面自适应需求（手机隐藏工具栏后自动放大）",
+                    "quote": "手机浏览器有一个问题就是，刚开始的时候如果游戏页面小，我隐藏工具栏之后页面不会自动放大，而是点收起按钮的时候才会自适应放大，让页面自动放大最大，新需求创建修改",
+                    "revision": 1,
+                    "summary": "用户指出：手机隐藏浏览器工具栏后可见区域变大，画面却不会自动放大，要点「收起按键」才重排；要求画面自动放大到最大。"
+                  },
+                  "source_id": "SRC-000003",
+                  "source_revision": 1
+                }
+              ]
+            }
+          },
+          "created_at": "2026-10-28T10:25:50.883955+00:00",
+          "created_by": "octie-agent",
+          "digest": "ea172f2a692d679024b59f612fd1241d308fc7ff08614b04a4ffe7e7cfe228b5",
+          "evaluation": {
+            "affected_members": [
+              {
+                "requirement_id": "REQ-000001",
+                "revision": 1
+              },
+              {
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              },
+              {
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              }
+            ],
+            "empty_retests_reason": null,
+            "impact_analysis": "本次变更只新增一条需求（REQ-000007 手机隐藏工具栏后画面自动放大到最大），落地改动集中在 main.js 的画布尺寸计算：新增 viewBox() 取 visualViewport、fit() 增加触屏铺满分支、注册 resize / visualViewport.resize / visualViewport.scroll / orientationchange / pageshow / visibilitychange 六条监听与 400ms 轮询兜底。不涉及场景贴图、角色精灵、朝向状态机、碰撞网格、帧序与音频，因此这些既有需求的内容不需要修改。仍然受影响的点有三类：一是画布缩放比例发生变化后，场景是否仍完整呈现且不变形（REQ-000001）；二是触屏上画布被放大到铺满后，帧率与像素硬边是否仍然达标（REQ-000004）；三是新需求自身的五条验收条件需要逐条实测（REQ-000007）。已排除的虚拟按键显隐与输入通道、双指放大过程中的重排，均不在本次差异内。",
+            "obligations": [
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "初始画面截图 + 七类元素勾选清单（含各自大致坐标）",
+                  "exception": {
+                    "expected": "某类元素缺失或颜色与同类无法区分",
+                    "handling": "记为不通过，补画该类元素后重新截图核对",
+                    "scenario": "某类元素缺失或与同类无法区分"
+                  },
+                  "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+                  "id": "AC-000001",
+                  "input": "无输入，仅观察初始画面",
+                  "method": "对初始画面截图，按七类元素清单逐项勾选并标注位置",
+                  "operation": "打开 index.html 并等待加载提示消失",
+                  "preconditions": "资源已加载完成，页面处于初始状态",
+                  "role": "场景验收者",
+                  "scenario": "核对七类海岸元素是否齐全"
+                },
+                "condition_id": "AC-000001",
+                "requirement_id": "REQ-000001",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "性能面板截图或帧率统计数值",
+                  "exception": {
+                    "expected": "判定为不流畅",
+                    "handling": "减少每帧重绘区域或缓存背景图层后复测",
+                    "scenario": "平均帧率低于 55 或出现超过 50 毫秒的长帧"
+                  },
+                  "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+                  "id": "AC-000013",
+                  "input": "按住 → 键移动角色 5 秒",
+                  "method": "录制性能时间线，统计移动期间的帧率均值与最长帧间隔",
+                  "operation": "用浏览器性能面板记录该时段的帧率",
+                  "preconditions": "页面运行在本机 Edge 浏览器",
+                  "role": "交付验收者",
+                  "scenario": "核对渲染帧率"
+                },
+                "condition_id": "AC-000013",
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "角色局部放大截图",
+                  "exception": {
+                    "expected": "判定像素渲染不合格",
+                    "handling": "补充 image-rendering 与关闭图像平滑后复测",
+                    "scenario": "出现模糊或彩色边缘"
+                  },
+                  "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+                  "id": "AC-000014",
+                  "input": "无输入",
+                  "method": "对角色局部区域截图并放大观察边缘像素",
+                  "operation": "放大查看角色与背景边缘",
+                  "preconditions": "页面已打开并显示角色",
+                  "role": "交付验收者",
+                  "scenario": "核对像素清晰度"
+                },
+                "condition_id": "AC-000014",
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图",
+                  "exception": {
+                    "expected": "判定不通过并记录 fitCount 未增长",
+                    "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460",
+                    "scenario": "静置超过 1 秒画布尺寸仍未变化"
+                  },
+                  "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+                  "id": "AC-000027",
+                  "input": "把可见高度由 390 改为 460，不派发任何事件",
+                  "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+                  "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                  "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+                  "role": "移动端验收者",
+                  "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件"
+                },
+                "condition_id": "AC-000027",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "前后画布尺寸数值与 fitCount 变化",
+                  "exception": {
+                    "expected": "判定不通过",
+                    "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向",
+                    "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉"
+                  },
+                  "expected": "画布自动回到 693×390，fitCount 再增加 1",
+                  "id": "AC-000028",
+                  "input": "把可见高度由 460 改回 390，不派发任何事件",
+                  "method": "与上一条同一套模拟手段，反向修改高度",
+                  "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                  "preconditions": "承接上一条，画布当前为 818×460",
+                  "role": "移动端验收者",
+                  "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件"
+                },
+                "condition_id": "AC-000028",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "三次事件与静置期的 fitCount 数值",
+                  "exception": {
+                    "expected": "判定不通过，说明存在空转",
+                    "handling": "检查轮询是否在尺寸未变时仍调用 fit()",
+                    "scenario": "静置期间 fitCount 持续增长"
+                  },
+                  "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+                  "id": "AC-000029",
+                  "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+                  "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+                  "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+                  "preconditions": "页面稳定，画布尺寸已确定",
+                  "role": "移动端验收者",
+                  "scenario": "核对各事件通道与空闲开销"
+                },
+                "condition_id": "AC-000029",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图",
+                  "exception": {
+                    "expected": "判定不通过",
+                    "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名",
+                    "scenario": "画布仍保留 2% / 6% 边距"
+                  },
+                  "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+                  "id": "AC-000030",
+                  "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+                  "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+                  "operation": "读取画布尺寸与可见区域尺寸",
+                  "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+                  "role": "移动端验收者",
+                  "scenario": "触屏设备上画布铺满可见区域"
+                },
+                "condition_id": "AC-000030",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "视口尺寸、画布尺寸与公式计算值",
+                  "exception": {
+                    "expected": "判定不通过",
+                    "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏",
+                    "scenario": "桌面画布被拉伸到 929 以上或出现裁剪"
+                  },
+                  "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+                  "id": "AC-000031",
+                  "input": "视口 947×972",
+                  "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+                  "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+                  "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+                  "role": "桌面验收者",
+                  "scenario": "桌面端不出现铺满带来的回归"
+                },
+                "condition_id": "AC-000031",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              }
+            ],
+            "retests": [
+              {
+                "condition_id": "AC-000001",
+                "requirement_id": "REQ-000001",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000013",
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000014",
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000027",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000028",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000029",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000030",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000031",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              }
+            ],
+            "supersessions": []
+          },
+          "event_id": "EVT-000154",
+          "id": "CHG-000005",
+          "impact_objects": [
+            "REQ-000001",
+            "REQ-000004",
+            "REQ-000007"
+          ],
+          "ledger_id": "LED-19d840367862455889aebf797805ea48",
+          "predecessor": "BASE-000005",
+          "revision": 1,
+          "status": "已评估"
+        },
+        "previous_content_revision": null,
+        "target": "CHG-000005",
+        "type": "success"
+      },
+      "sequence": 155,
+      "time": "2026-10-28T10:26:12.645568+00:00"
+    },
+    {
+      "agent": "review-agent",
+      "command": "review add",
+      "fingerprint": "1a42113e38b972a9ee007a1968ed04acca4723a7eae7063bab2dc2fe1e09ee5f",
+      "id": "EVT-000156",
+      "operation_id": "crab-chg5-review",
+      "reason": "对 CHG-000005 当前修订（已评估）做变更审核",
+      "request": {
+        "agent": "review-agent",
+        "command": "review add",
+        "data": {
+          "acceptance_review": "评估给出 8 项精确重验义务，逐条对照候选纳入条件：REQ-000001 的 AC-000001（场景仍完整呈现、不变形）、REQ-000004 的 AC-000013 与 AC-000014（放大后帧率与像素硬边）、REQ-000007 的 AC-000027 至 AC-000031（自动放大、自动缩回、事件通道与空闲、触屏铺满、桌面不回归）。条数与重验清单一致，均为可执行的具体条件，没有用“整体回归”这类笼统说法替代。",
+          "basis": "依据 target_digest ea172f2a 指向的 CHG-000005 第 1 修订（propose 后经 evaluate 的当前摘要，非 propose 时的 fa5f6f11），结合 REQ-000007 已确认事件与 BASE-000005 成员快照审阅。声明式审核，Agent 身份仅作操作归因。",
+          "completeness_review": "差异完整：actions 仅一条 {新增, REQ-000007, old_revision=null, new_revision=1}，恰好对应已确认的 REQ-000007 第 1 修订；predecessor 指向当前有效基线 BASE-000005；候选成员为原 6 条加新增 1 条，其余成员保持原修订未动。impact_objects 列出 REQ-000001 / REQ-000004 / REQ-000007，覆盖了受画布缩放影响的既有需求与新需求本身。",
+          "conclusion": "通过",
+          "necessity_review": "必要性核对：REQ-000007 已确认纳入，而基线 BASE-000005 的成员集合不含它，若直接封新基线会被“非初始成员差异须经变更”这道门禁拦住；走 CHG-000005 是唯一合规路径，且差异确实只有一条新增，没有夹带替换或移除。",
+          "target_digest": "ea172f2a692d679024b59f612fd1241d308fc7ff08614b04a4ffe7e7cfe228b5",
+          "target_id": "CHG-000005",
+          "target_revision": 1,
+          "target_type": "change"
+        },
+        "reason": "对 CHG-000005 当前修订（已评估）做变更审核"
+      },
+      "result": {
+        "command": "review add",
+        "commit_status": "committed",
+        "content_revision": null,
+        "current_document_revision": 156,
+        "document_revision": 156,
+        "issues": [],
+        "meta": {
+          "agent": "review-agent",
+          "event_id": "EVT-000156",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:26:36.861548+00:00"
+        },
+        "object": {
+          "acceptance_review": "评估给出 8 项精确重验义务，逐条对照候选纳入条件：REQ-000001 的 AC-000001（场景仍完整呈现、不变形）、REQ-000004 的 AC-000013 与 AC-000014（放大后帧率与像素硬边）、REQ-000007 的 AC-000027 至 AC-000031（自动放大、自动缩回、事件通道与空闲、触屏铺满、桌面不回归）。条数与重验清单一致，均为可执行的具体条件，没有用“整体回归”这类笼统说法替代。",
+          "basis": "依据 target_digest ea172f2a 指向的 CHG-000005 第 1 修订（propose 后经 evaluate 的当前摘要，非 propose 时的 fa5f6f11），结合 REQ-000007 已确认事件与 BASE-000005 成员快照审阅。声明式审核，Agent 身份仅作操作归因。",
+          "completeness_review": "差异完整：actions 仅一条 {新增, REQ-000007, old_revision=null, new_revision=1}，恰好对应已确认的 REQ-000007 第 1 修订；predecessor 指向当前有效基线 BASE-000005；候选成员为原 6 条加新增 1 条，其余成员保持原修订未动。impact_objects 列出 REQ-000001 / REQ-000004 / REQ-000007，覆盖了受画布缩放影响的既有需求与新需求本身。",
+          "conclusion": "通过",
+          "created_at": "2026-10-28T10:26:36.861548+00:00",
+          "created_by": "review-agent",
+          "event_id": "EVT-000156",
+          "event_sequence": 156,
+          "id": "REV-000024",
+          "necessity_review": "必要性核对：REQ-000007 已确认纳入，而基线 BASE-000005 的成员集合不含它，若直接封新基线会被“非初始成员差异须经变更”这道门禁拦住；走 CHG-000005 是唯一合规路径，且差异确实只有一条新增，没有夹带替换或移除。",
+          "target_digest": "ea172f2a692d679024b59f612fd1241d308fc7ff08614b04a4ffe7e7cfe228b5",
+          "target_id": "CHG-000005",
+          "target_revision": 1,
+          "target_type": "change"
+        },
+        "previous_content_revision": null,
+        "target": "REV-000024",
+        "type": "success"
+      },
+      "sequence": 156,
+      "time": "2026-10-28T10:26:36.861548+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "change approve",
+      "fingerprint": "3b5430a50e4bd0f1ba6a9cd5d658f63021d7277f91850fe3ec6f8cf367c87a78",
+      "id": "EVT-000157",
+      "operation_id": "crab-chg5-approve",
+      "reason": "变更已获当前最新通过审核，予以批准并生成候选",
+      "request": {
+        "agent": "octie-agent",
+        "command": "change approve",
+        "data": {
+          "digest": "ea172f2a692d679024b59f612fd1241d308fc7ff08614b04a4ffe7e7cfe228b5",
+          "id": "CHG-000005",
+          "revision": 1
+        },
+        "reason": "变更已获当前最新通过审核，予以批准并生成候选"
+      },
+      "result": {
+        "command": "change approve",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 157,
+        "document_revision": 157,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000157",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:26:47.084697+00:00"
+        },
+        "object": {
+          "actions": [
+            {
+              "new_revision": 1,
+              "old_revision": null,
+              "requirement_id": "REQ-000007",
+              "type": "新增"
+            }
+          ],
+          "approval": {
+            "agent": "octie-agent",
+            "event_id": "EVT-000157",
+            "review_id": "REV-000024",
+            "time": "2026-10-28T10:26:47.084697+00:00"
+          },
+          "candidate_members": {
+            "REQ-000001": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000011",
+                "review_id": "REV-000001",
+                "time": "2026-10-27T20:19:33.136841+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "初始画面截图 + 七类元素勾选清单（含各自大致坐标）",
+                    "exception": {
+                      "expected": "某类元素缺失或颜色与同类无法区分",
+                      "handling": "记为不通过，补画该类元素后重新截图核对",
+                      "scenario": "某类元素缺失或与同类无法区分"
+                    },
+                    "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+                    "id": "AC-000001",
+                    "input": "无输入，仅观察初始画面",
+                    "method": "对初始画面截图，按七类元素清单逐项勾选并标注位置",
+                    "operation": "打开 index.html 并等待加载提示消失",
+                    "preconditions": "资源已加载完成，页面处于初始状态",
+                    "role": "场景验收者",
+                    "scenario": "核对七类海岸元素是否齐全"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "移动前后两张截图 + 背景区域差异率数值",
+                    "exception": {
+                      "expected": "背景出现任何平移或缩放跳动",
+                      "handling": "判定为不通过，移除背景位移逻辑",
+                      "scenario": "角色移动过程中背景发生位移"
+                    },
+                    "expected": "除角色精灵所在区域外，背景像素与移动前一致，背景位移为 0 像素",
+                    "id": "AC-000002",
+                    "input": "按住右方向键持续 3 秒，再按住左方向键持续 3 秒",
+                    "method": "移动前后各截一张图，用像素差分统计背景区域差异率",
+                    "operation": "移动角色后回到起始位置附近，比较背景像素",
+                    "preconditions": "页面已进入且背景渲染完成",
+                    "role": "场景验收者",
+                    "scenario": "验证背景不随角色移动"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "连续 3 帧截图",
+                    "exception": {
+                      "expected": "海面完全静止或每帧出现大面积跳变",
+                      "handling": "记为不通过，调整波浪相位与循环周期后复测",
+                      "scenario": "海面静止或帧间跳变过大"
+                    },
+                    "expected": "三帧海浪纹理位置不同，循环周期内无整幅跳动或闪烁",
+                    "id": "AC-000003",
+                    "input": "无输入",
+                    "method": "间隔 1 秒连续截 3 帧，比对海浪纹理位移",
+                    "operation": "静置观察海面 3 秒并连续截取 3 帧",
+                    "preconditions": "页面静止无角色输入",
+                    "role": "场景验收者",
+                    "scenario": "验证海面循环动画存在且连贯"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "场景等比缩放并居中，四周留出底色，不拉伸不变形",
+                    "handling": "按 min(宽比, 高比) 等比缩放后居中绘制，留边填深色",
+                    "scenario": "浏览器窗口宽高比与场景原始比例不一致"
+                  },
+                  {
+                    "expected": "仍能看完整幅场景与角色，元素不变形",
+                    "handling": "继续等比缩放至适配宽度，允许整体变小但不裁切",
+                    "scenario": "窗口宽度小于 480px 的窄屏"
+                  }
+                ],
+                "created_at": "2026-10-27T19:58:51.627651+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "页面打开后在画布上绘制一幅完整的深圳海岸场景：海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋。背景是一整张固定的 2.5D 平面图，角色在其上方行走时背景像素位置保持不变，不做相机跟随与地图滚动。海水部分带持续的循环动画（波浪流动），让画面不是死图。",
+                "digest": "2310b3e8c298e8c9a0645878ccae71b3e32c822529ee1675b0ddce9d973bbed4",
+                "event_id": "EVT-000004",
+                "excluded": [
+                  "视差滚动、相机跟随与地图平移",
+                  "多场景或关卡切换",
+                  "玩家侧的场景缩放与旋转"
+                ],
+                "id": "REQ-000001",
+                "included": [
+                  "海水区与沙滩区上固定绘制的一整幅海岸背景",
+                  "红树林、海藻床、珊瑚礁三类深圳典型海岸元素的可见呈现",
+                  "台阶与房屋等场景道具的可见呈现",
+                  "海面波浪的循环动画"
+                ],
+                "module": "场景渲染",
+                "necessity": "没有背景就没有场景可言：用户明确要求网站带海洋、沙滩与深圳典型海岸元素，且背景必须固定不动，否则就不是他要的“大地图一站到底”的观感。",
+                "normal_behavior": {
+                  "behavior": "画布按场景原始比例等比绘制完整海岸背景，海面开始循环波浪动画",
+                  "expected": "画面同时可见海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋共七类元素，且背景在角色移动前后像素位置不变",
+                  "scenario": "用户打开本地页面且资产已就绪"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "给螃蟹角色提供一个可辨认的深圳海岸小世界作为舞台，让用户一眼看出这是海藻床、红树林、珊瑚礁构成的真实海岸场景。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "呈现固定不滚动的深圳海岸 2.5D 场景背景",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000002": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000014",
+                "review_id": "REV-000002",
+                "time": "2026-10-27T20:19:33.931717+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "四次按键的起点终点坐标记录表（含 dx、dy 数值）",
+                    "exception": {
+                      "expected": "该方向判定不通过",
+                      "handling": "修正该方向的输入映射后复测",
+                      "scenario": "某个方向位移方向相反或出现斜向偏移"
+                    },
+                    "expected": "↑ 的 y 减小且 x 不变，↓ 的 y 增大且 x 不变，← 的 x 减小且 y 不变，→ 的 x 增大且 y 不变，四次的垂直轴偏移均为 0 像素",
+                    "id": "AC-000004",
+                    "input": "依次单独按住 ↑、↓、←、→ 各 1 秒",
+                    "method": "在页面中暴露角色坐标并逐次记录，比对 dx 与 dy 的正负和零值",
+                    "operation": "每次按键后记录角色起点与终点坐标",
+                    "preconditions": "角色位于场景中央，四个方向均有足够空间",
+                    "role": "操作验收者",
+                    "scenario": "逐个方向核对移动方向正确"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "三组位移量原始数值与相对差计算结果",
+                    "exception": {
+                      "expected": "判定速度不稳定",
+                      "handling": "改为按时间增量累加位移后复测",
+                      "scenario": "三次位移差异超过 10% 或位移接近 0"
+                    },
+                    "expected": "三次位移量的最大值与最小值相对差不超过 10%",
+                    "id": "AC-000005",
+                    "input": "连续 3 次按住 → 各 1 秒后松开",
+                    "method": "同一方向的 3 组位移量做极差与均值比值计算",
+                    "operation": "记录每次 1 秒内的水平位移量",
+                    "preconditions": "角色位于场景中央",
+                    "role": "操作验收者",
+                    "scenario": "核对移动速度稳定"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "最终坐标数值 + 贴边截图",
+                    "exception": {
+                      "expected": "判定边界处理不通过",
+                      "handling": "修正钳制范围并复测",
+                      "scenario": "角色移出画面或贴在边缘抖动"
+                    },
+                    "expected": "角色整体仍在可视区域内，其右边缘不超过场景右内边距，坐标被钳制在允许范围",
+                    "id": "AC-000006",
+                    "input": "持续按住 → 5 秒",
+                    "method": "持续按键后读取角色最终坐标与场景边界值做比较",
+                    "operation": "观察角色最终位置与画面右边缘的关系",
+                    "preconditions": "角色靠近右侧边界",
+                    "role": "操作验收者",
+                    "scenario": "核对边界限制"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "松键时刻与最后一帧位移的时间差记录",
+                    "exception": {
+                      "expected": "判定为未立即停止",
+                      "handling": "移除速度衰减逻辑，改为松键直接归零",
+                      "scenario": "松键后角色继续滑行超过 100 毫秒"
+                    },
+                    "expected": "松键后 100 毫秒内水平位移归零，角色不再移动",
+                    "id": "AC-000007",
+                    "input": "松开 → 键",
+                    "method": "松键后按帧记录坐标，找出最后一次位移的帧号与时间差",
+                    "operation": "松键后连续观察 0.5 秒",
+                    "preconditions": "角色正在向右移动",
+                    "role": "操作验收者",
+                    "scenario": "核对松键立即停止"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "角色只沿最后按下的那个方向移动，不同时产生斜向位移",
+                    "handling": "以最后一次按下的方向键为准，忽略先前仍按住的轴",
+                    "scenario": "同时按住两个方向键（例如右键与上键）"
+                  },
+                  {
+                    "expected": "角色停在边界内侧，不越出画面",
+                    "handling": "对坐标做上下限钳制，越界时保留在允许范围内",
+                    "scenario": "角色持续朝同一个方向移动到场景边缘"
+                  },
+                  {
+                    "expected": "角色停止移动，不出现卡住持续漂移",
+                    "handling": "监听失焦事件清空按键状态",
+                    "scenario": "按住方向键时浏览器窗口失去焦点"
+                  }
+                ],
+                "created_at": "2026-10-27T19:59:07.557201+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "用户按下 W/A/S/D 或键盘方向键时，螃蟹角色在固定场景内沿对应方向匀速移动；松开按键立即停止。移动只在上下左右四个轴方向发生，不产生斜向位移，角色始终被限制在场景可视范围内。",
+                "digest": "433c05bb460b38b24a3f7879d6b4fe2d1231808c67f52164bd721002d7614d6a",
+                "event_id": "EVT-000005",
+                "excluded": [
+                  "斜向八方向自由移动",
+                  "跳跃、攻击、拾取等额外动作",
+                  "身体惯性、摩擦滑行与加速缓冲"
+                ],
+                "id": "REQ-000002",
+                "included": [
+                  "W 与 ↑ 向上移动，S 与 ↓ 向下移动，A 与 ← 向左移动，D 与 → 向右移动",
+                  "恒定速度的水平与垂直位移",
+                  "角色位置限制在场景可视区域内",
+                  "松开按键后立即停止"
+                ],
+                "module": "角色控制",
+                "necessity": "没有四向移动就没有交互，整个场景退化为一张静止图片；用户原话明确这是当前唯一必须实现的功能。",
+                "normal_behavior": {
+                  "behavior": "按住某一个方向键，角色沿该轴方向持续移动并播放行走动画，松开按键后停住",
+                  "expected": "位移方向与按键方向一致，单位时间位移量保持稳定",
+                  "scenario": "角色位于场景中央且没有触达边界"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "这是用户唯一要求现在必须完成的操作能力：用四个方向键驱动小螃蟹在海岸场景里走动。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "支持键盘四向移动螃蟹角色",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000003": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000050",
+                "review_id": "REV-000006",
+                "time": "2026-10-28T08:54:11.706903+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "帧索引序列日志 + 行走中截图 evidence/03~06",
+                    "exception": {
+                      "expected": "判定动画不连通",
+                      "handling": "修正帧推进逻辑与计时基准后复测",
+                      "scenario": "帧序出现跳跃、倒退或长时间停在同帧"
+                    },
+                    "expected": "帧索引按 0、1、2、3 循环推进，无跳帧与倒序",
+                    "id": "AC-000008",
+                    "input": "按住右方向键持续 1 秒",
+                    "method": "在渲染循环中记录每次帧切换的时间戳与索引，导出序列后检查连续性",
+                    "operation": "记录这 1 秒内实际绘制的帧索引序列",
+                    "preconditions": "角色在可行走沙地上，四个方向的帧组已加载",
+                    "role": "动画验收者",
+                    "scenario": "核对单一方向的帧循环连通"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "切向前后帧组标识日志 + 切向瞬间截图",
+                    "exception": {
+                      "expected": "判定动作组切换失败",
+                      "handling": "修正方向到帧组的映射后复测",
+                      "scenario": "切向后仍显示向右的帧或出现空白帧"
+                    },
+                    "expected": "切向后绘制的是向上动作组的帧，切换发生在 1 个渲染帧之内",
+                    "id": "AC-000009",
+                    "input": "按住右方向键后改为按住上方向键",
+                    "method": "记录切向前后各 5 帧的帧组标识与索引",
+                    "operation": "观察切向瞬间的画面并记录所用帧组",
+                    "preconditions": "角色正在向右行走",
+                    "role": "动画验收者",
+                    "scenario": "核对方向切换动作组"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "松键后 1 秒内的帧索引记录",
+                    "exception": {
+                      "expected": "判定为动画未停止",
+                      "handling": "静止态改为只绘制第 0 帧后复测",
+                      "scenario": "松键后仍在空转播放行走帧"
+                    },
+                    "expected": "帧索引保持不变并停在 0，画面稳定显示该方向的待机帧",
+                    "id": "AC-000010",
+                    "input": "松开所有方向键",
+                    "method": "松键后连续记录帧索引，确认数值不再变化",
+                    "operation": "松键后观察 1 秒",
+                    "preconditions": "角色正在移动",
+                    "role": "动画验收者",
+                    "scenario": "核对静止时停止推进"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "python tools/check_sheet.py 输出 + evidence/33_side_scale_preview.png",
+                    "exception": {
+                      "expected": "判定资产不合格",
+                      "handling": "重新跑切帧与对齐脚本后复检",
+                      "scenario": "存在尺寸不一致、底色残留或帧间跳动"
+                    },
+                    "expected": "16 帧全部 48×48，四角 alpha 为 0，同方向帧间横向漂移不超过 2 像素，脚底基线一致",
+                    "id": "AC-000011",
+                    "input": "无输入",
+                    "method": "用脚本遍历 16 帧，统计尺寸、透明角落与包围盒中心偏移；帧尺寸从 scene.json 读取",
+                    "operation": "运行自检脚本检查 16 帧的尺寸、透明角、帧间漂移与脚底基线",
+                    "preconditions": "动作卡已生成在 assets/crab_sheet.png",
+                    "role": "动画验收者",
+                    "scenario": "核对动作卡资产一致性与尺寸"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "帧序号重置到新方向动作组的第 0 帧，不出现两个方向帧混用的错位画面",
+                    "handling": "方向变化即重置动画计时器与帧索引",
+                    "scenario": "移动过程中快速改变方向"
+                  },
+                  {
+                    "expected": "保持在当前面向方向的第 0 帧，不继续推进动画",
+                    "handling": "无输入时冻结帧索引",
+                    "scenario": "角色静止不动"
+                  },
+                  {
+                    "expected": "侧身行的显示尺寸比正面小约 10%，切换瞬间不出现明显的“变大”跳变",
+                    "handling": "切片阶段按行缩放，并把缩放后的脚底回拉到同一基线",
+                    "scenario": "从正面切到侧身"
+                  }
+                ],
+                "created_at": "2026-10-28T08:54:10.386122+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "螃蟹为四个方向（下、左、右、上）各准备一组走路帧，方向切换时立即切换动作组，移动过程中按固定帧率循环播放，静止时停在该方向的待机帧。动作卡由图片生成模型直接产出 4×4 卡片（绿幕），再由代码完成：等分切格 → 软阈值抠绿 → 按包围盒归一化（脚底对齐同一基线）→ 整表统一调色板量化。当前成品为半尺寸：单帧 48×48、整表 192×192、32 色；其中左侧与右侧两行额外缩放到 90%，避免侧身时视觉上比正面显大。",
+                "digest": "9eb3d2fa058fc7d4588a0382fce3f699fabf2129c3badef805ae216396ebdcf3",
+                "event_id": "EVT-000047",
+                "excluded": [
+                  "斜向与八方向的独立动作组",
+                  "攻击、跳跃、死亡等战斗动作",
+                  "帧间插值生成的补间画面",
+                  "静止时的呼吸/眨眼等二次动作（试做过，已移除）"
+                ],
+                "id": "REQ-000003",
+                "included": [
+                  "上、下、左、右四个方向的独立走路帧组，每组 4 帧",
+                  "按 8 帧每秒循环推进帧序号",
+                  "方向切换时同步切换动作组",
+                  "松开方向键后停在该方向待机帧（第 0 帧）",
+                  "16 帧统一 48×48 尺寸、透明背景、同一套 32 色调色板",
+                  "侧视两行按行缩放到 90%，脚底与正面行保持同一基线"
+                ],
+                "module": "角色动画",
+                "necessity": "只有位移没有帧动画，角色会表现为贴图滑动，用户会直接判定不合格；动作卡是该需求的核心交付物。",
+                "normal_behavior": {
+                  "behavior": "每经过 125 毫秒切换到该方向动作组的下一个帧，四帧结束后回到第一帧继续循环",
+                  "expected": "画面中的螃蟹腿部姿态逐帧变化，形成持续步行动作",
+                  "scenario": "角色正在向右移动"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "让螃蟹的移动看起来是一只活物在走，而不是一张贴图在平移；这也是用户反复强调的“动作卡连续播放”。",
+                "questions": [],
+                "revision": 2,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  },
+                  {
+                    "source_id": "SRC-000002",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "播放四向走路动作卡的连续帧动画",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 2,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                },
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:59:22.515291+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 通过 Edge CDP 在 chatgpt.com 发起的技术咨询",
+                    "digest": "526cf481c8592bf102dac7430092a1f929638f4a83987b5b8e77e65d0a36e982",
+                    "event_id": "EVT-000006",
+                    "id": "SRC-000002",
+                    "kind": "链接",
+                    "location": "https://chatgpt.com/c/6ae10247-06f0-83ee-80ae-b56b5c95a4ff",
+                    "manual_note": null,
+                    "name": "ChatGPT 咨询：深圳海岸像素小游戏最短可行资产方案",
+                    "quote": "推荐技术栈：AI 生图 + Python Pillow + HTML5 Canvas 2D。整体采用三个独立层：固定背景、循环环境特效、角色精灵。不要让 AI 一次生成整张背景和全部角色动作后直接投入使用。游戏逻辑画布 960 × 540 px；背景 960 × 540 PNG；角色逻辑帧 64 × 64 px；四向动画 Down / Left / Right / Up，每方向 4 帧，总帧数 16 帧，最终 Sprite Sheet 256 × 256 PNG；行走动画 8 FPS；游戏渲染 requestAnimationFrame，通常目标 60 FPS；移动速度 110 px/s。推荐先生成一张角色母版（Character Reference），确认角色外观后，再生成四个方向的动作。不要首先要求模型直接输出 256 × 256 的成品 Sheet，更稳妥的方法是生成较大的 4 × 4 等分网格，再用代码裁切。",
+                    "revision": 1,
+                    "summary": "建议采用固定背景层 + 循环环境特效层 + 角色精灵层三层结构，画布 960×540、单帧 64×64、四向各 4 帧共 16 帧、8fps 行走、110px/s 移动；AI 先出角色母版与 4×4 网格大图，再用 Pillow 裁切、抠底、统一对齐得到可用 sprite sheet。"
+                  },
+                  "source_id": "SRC-000002",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000004": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000020",
+                "review_id": "REV-000004",
+                "time": "2026-10-27T20:19:35.854973+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "Network 请求列表截图（含域名列）+ 离线状态下的页面截图",
+                    "exception": {
+                      "expected": "判定不自包含",
+                      "handling": "把所需资源下载到本地目录并改为相对路径后复测",
+                      "scenario": "出现外部域名请求或页面白屏"
+                    },
+                    "expected": "页面完整显示场景与角色，Network 面板中没有任何指向本机以外域名的请求，全部请求为 file:// 或 localhost 本地路径",
+                    "id": "AC-000012",
+                    "input": "无网络",
+                    "method": "断网打开页面并导出 Network 请求列表，逐条检查域名",
+                    "operation": "断开网络后双击 index.html，并查看开发者工具的 Network 面板",
+                    "preconditions": "已拿到 crab-coast 文件夹，网络已断开",
+                    "role": "交付验收者",
+                    "scenario": "核对文件夹自包含与离线可运行"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "性能面板截图或帧率统计数值",
+                    "exception": {
+                      "expected": "判定为不流畅",
+                      "handling": "减少每帧重绘区域或缓存背景图层后复测",
+                      "scenario": "平均帧率低于 55 或出现超过 50 毫秒的长帧"
+                    },
+                    "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+                    "id": "AC-000013",
+                    "input": "按住 → 键移动角色 5 秒",
+                    "method": "录制性能时间线，统计移动期间的帧率均值与最长帧间隔",
+                    "operation": "用浏览器性能面板记录该时段的帧率",
+                    "preconditions": "页面运行在本机 Edge 浏览器",
+                    "role": "交付验收者",
+                    "scenario": "核对渲染帧率"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "角色局部放大截图",
+                    "exception": {
+                      "expected": "判定像素渲染不合格",
+                      "handling": "补充 image-rendering 与关闭图像平滑后复测",
+                      "scenario": "出现模糊或彩色边缘"
+                    },
+                    "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+                    "id": "AC-000014",
+                    "input": "无输入",
+                    "method": "对角色局部区域截图并放大观察边缘像素",
+                    "operation": "放大查看角色与背景边缘",
+                    "preconditions": "页面已打开并显示角色",
+                    "role": "交付验收者",
+                    "scenario": "核对像素清晰度"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "角色移动速度与动画节拍保持与时间一致，不出现慢动作",
+                    "handling": "位移与帧推进都按真实时间增量计算，不按固定步数",
+                    "scenario": "运行在性能较弱的机器上，帧率降到 30 帧每秒"
+                  },
+                  {
+                    "expected": "场景等比缩放，像素边缘保持锐利不模糊",
+                    "handling": "canvas 使用 image-rendering: pixelated，并按整数或等比缩放绘制",
+                    "scenario": "浏览器窗口被缩放到很小或很大"
+                  }
+                ],
+                "created_at": "2026-10-27T19:59:41.739698+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "整站所有文件（页面、脚本、样式、背景图、动作卡、生成脚本、需求台账）只存在于 crab-coast 一个文件夹内，不引用任何外部 CDN、字体或接口；断网状态下双击 index.html 即可运行。渲染使用 requestAnimationFrame 加时间增量推进，画面按 60 帧每秒目标运行，像素素材放大时使用最近邻插值保持锐利。",
+                "digest": "ebe38c666d0ea584981c3f07bf4467a6f41bd9664d7b76fece4d2e3c81292687",
+                "event_id": "EVT-000008",
+                "excluded": [
+                  "后端服务、数据库与账号体系",
+                  "外部 CDN 资源与在线字体",
+                  "移动端触屏手势（当前迭代不做）"
+                ],
+                "id": "REQ-000004",
+                "included": [
+                  "全部代码与资产位于 crab-coast 文件夹内",
+                  "离线可运行的本地静态页面",
+                  "基于时间增量的稳定渲染循环",
+                  "像素素材放大时的最近邻插值"
+                ],
+                "module": "交付与性能",
+                "necessity": "资产散落在多个目录或依赖外部网络会让这份交付在离线环境下不可用，也无法满足“一个文件夹搞定”的明确约束。",
+                "normal_behavior": {
+                  "behavior": "页面加载本地素材并开始渲染，方向键控制正常，动画连续",
+                  "expected": "无任何外部网络请求，画面帧率维持在 60 帧每秒附近",
+                  "scenario": "用户在本机双击打开页面，且当前没有联网"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "用户要求所有产物收在一个文件夹里不外流，并且动画要顺滑、看得出是精心做的像素游戏而不是卡顿的贴图滑动。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  },
+                  {
+                    "source_id": "SRC-000002",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "单文件夹自包含交付并保持流畅渲染",
+                "type": "非功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                },
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:59:22.515291+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 通过 Edge CDP 在 chatgpt.com 发起的技术咨询",
+                    "digest": "526cf481c8592bf102dac7430092a1f929638f4a83987b5b8e77e65d0a36e982",
+                    "event_id": "EVT-000006",
+                    "id": "SRC-000002",
+                    "kind": "链接",
+                    "location": "https://chatgpt.com/c/6ae10247-06f0-83ee-80ae-b56b5c95a4ff",
+                    "manual_note": null,
+                    "name": "ChatGPT 咨询：深圳海岸像素小游戏最短可行资产方案",
+                    "quote": "推荐技术栈：AI 生图 + Python Pillow + HTML5 Canvas 2D。整体采用三个独立层：固定背景、循环环境特效、角色精灵。不要让 AI 一次生成整张背景和全部角色动作后直接投入使用。游戏逻辑画布 960 × 540 px；背景 960 × 540 PNG；角色逻辑帧 64 × 64 px；四向动画 Down / Left / Right / Up，每方向 4 帧，总帧数 16 帧，最终 Sprite Sheet 256 × 256 PNG；行走动画 8 FPS；游戏渲染 requestAnimationFrame，通常目标 60 FPS；移动速度 110 px/s。推荐先生成一张角色母版（Character Reference），确认角色外观后，再生成四个方向的动作。不要首先要求模型直接输出 256 × 256 的成品 Sheet，更稳妥的方法是生成较大的 4 × 4 等分网格，再用代码裁切。",
+                    "revision": 1,
+                    "summary": "建议采用固定背景层 + 循环环境特效层 + 角色精灵层三层结构，画布 960×540、单帧 64×64、四向各 4 帧共 16 帧、8fps 行走、110px/s 移动；AI 先出角色母版与 4×4 网格大图，再用 Pillow 裁切、抠底、统一对齐得到可用 sprite sheet。"
+                  },
+                  "source_id": "SRC-000002",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000005": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000054",
+                "review_id": "REV-000007",
+                "time": "2026-10-28T08:54:13.922021+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "实测输出：duration=40, loop=true",
+                    "exception": {
+                      "expected": "判定播放配置不合格",
+                      "handling": "检查音频文件与 bgm.js 设置后复测",
+                      "scenario": "时长不符或未开启循环"
+                    },
+                    "expected": "duration 为 40（±0.05 秒），loop 属性为 true",
+                    "id": "AC-000015",
+                    "input": "无输入",
+                    "method": "在浏览器控制台读取 window.__bgm.audio.duration 与 loop",
+                    "operation": "读取音频元素的时长与 loop 属性",
+                    "preconditions": "页面已打开且音乐资源加载完成",
+                    "role": "音频验收者",
+                    "scenario": "核对时长与循环设置"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "实测 0.0019 / 0.413 = 0.005",
+                    "exception": {
+                      "expected": "判定会爆音",
+                      "handling": "重新做无缝处理或改用取模合成",
+                      "scenario": "接缝处跳变接近最大值"
+                    },
+                    "expected": "首尾跳变远小于普通相邻差值（比值 \u003c 0.1），听感上无咔哒",
+                    "id": "AC-000016",
+                    "input": "无输入",
+                    "method": "用脚本读取 PCM，计算 |x[0]-x[-1]| 与相邻差值分布的 p99.9 之比",
+                    "operation": "比较首尾采样跳变与整体相邻采样差值",
+                    "preconditions": "已拿到音频文件",
+                    "role": "音频验收者",
+                    "scenario": "核对接缝无断音爆音"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "操作前后 muted 状态记录",
+                    "exception": {
+                      "expected": "判定静音功能不合格",
+                      "handling": "修正 localStorage 读写与 muted 绑定后复测",
+                      "scenario": "点击无效或刷新后自动恢复播放"
+                    },
+                    "expected": "点击后立即静音且按钮变为静音态；刷新后仍为静音",
+                    "id": "AC-000017",
+                    "input": "点击右上角音乐按钮，然后刷新页面",
+                    "method": "读取 window.__bgm.muted 与按钮文案，刷新后再读一次",
+                    "operation": "观察按钮文案、音频 muted 状态与刷新后的状态",
+                    "preconditions": "音乐正在播放",
+                    "role": "音频验收者",
+                    "scenario": "核对静音开关与记忆"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "页面不报错，音乐保持静默直到用户第一次按键或点击",
+                    "handling": "监听首次交互事件后再调用播放，被拒绝时不清除监听",
+                    "scenario": "浏览器拦截自动播放"
+                  },
+                  {
+                    "expected": "游戏画面正常，音乐开关按钮自动隐藏",
+                    "handling": "监听音频错误事件，隐藏按钮并继续运行",
+                    "scenario": "音频文件缺失或路径错误"
+                  },
+                  {
+                    "expected": "刷新后仍保持静音",
+                    "handling": "静音状态写入 localStorage 并在初始化时读取",
+                    "scenario": "用户静音后刷新页面"
+                  }
+                ],
+                "created_at": "2026-10-28T08:54:12.200904+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "页面加载后提供一段 40 秒整、能够无缝循环的海边休闲风格背景音乐。受浏览器自动播放策略限制，首次按键或点击后开始播放；播放中不出现接缝断音或爆音。右上角提供音乐开关，键盘 M 键也可切换，静音状态记在本地，刷新后保持。音乐文件与页面同在一个文件夹内，断网可用；切换到 mp3 版本时行为不变。",
+                "digest": "a5f9a8c76d9e09e77cc22bded06a02ca129928d59b5dcbd0416f6f5c51a1282a",
+                "event_id": "EVT-000051",
+                "excluded": [
+                  "脚步、水声等环境音效",
+                  "多曲目切换与音量滑动条",
+                  "在线流媒体或版权音乐接入"
+                ],
+                "id": "REQ-000005",
+                "included": [
+                  "40.000 秒、首尾无缝衔接的循环音频",
+                  "首次按键或点击后自动开始播放",
+                  "右上角按钮与 M 键切换静音，状态写入 localStorage",
+                  "音乐文件随页面同目录存放，离线可用"
+                ],
+                "module": "音频",
+                "necessity": "没有背景音乐时场景偏“静”，用户明确要求补一段海边悠闲向、可循环的电子音乐。",
+                "normal_behavior": {
+                  "behavior": "背景音乐从当前循环位置开始播放，音量淡入到设定值",
+                  "expected": "能听到连续不断的音乐；走到 40 秒末尾时直接接回开头，没有静音空档或爆音",
+                  "scenario": "用户打开页面并按下任意方向键"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0002"
+                  }
+                },
+                "priority": "P1",
+                "purpose": "给静止或行走中的场景提供持续的氛围声，让页面像一个完整的小游戏而不是一张会动的图。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "播放可无缝循环的海岸背景音乐并支持静音",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0002",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000006": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000133",
+                "review_id": "REV-000019",
+                "time": "2026-10-28T09:12:14.221013+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "实测 7 次序列：24,48,96,48,24,48,96（含 小/中/大 标签）",
+                    "exception": {
+                      "expected": "判定反弹逻辑或标签绑定有误",
+                      "handling": "修正方向翻转与文案刷新后复测",
+                      "scenario": "出现 96 直接跳到 24、或文案与尺寸不符"
+                    },
+                    "expected": "序列为 48(中)→24(小)→48(中)→96(大)→48(中)→24(小)→48(中)；按钮依次显示「尺寸 小 24 / 中 48 / 大 96 …」",
+                    "id": "AC-000024",
+                    "input": "连续按 T 键 7 次",
+                    "method": "点击按钮并读取 window.__probe.state().size 与按钮 textContent",
+                    "operation": "记录每次的尺寸与按钮文案",
+                    "preconditions": "页面已加载三套表，默认中档",
+                    "role": "尺寸验收者",
+                    "scenario": "核对反弹序列与标签"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "实测 24 → 48、96 → 48",
+                    "exception": {
+                      "expected": "判定仍在绕回",
+                      "handling": "检查方向变量是否在越界时翻转",
+                      "scenario": "24 跳到 96 或 96 跳到 24"
+                    },
+                    "expected": "24 的下一档是 48；96 的下一档也是 48",
+                    "id": "AC-000025",
+                    "input": "在端点再按一次 T",
+                    "method": "把档位切到端点后按一次 T，读取结果",
+                    "operation": "观察下一档",
+                    "preconditions": "已停在最小档 24 或最大档 96",
+                    "role": "尺寸验收者",
+                    "scenario": "核对两端不互跳"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "三档基线 86/43/21，朝向行一致",
+                    "exception": {
+                      "expected": "判定该档基线或行映射有问题",
+                      "handling": "修正后复测",
+                      "scenario": "某档悬空或朝向错乱"
+                    },
+                    "expected": "三档脚底分别落在 86/43/21 基线上，朝向仍为右→正面行、上→侧视行",
+                    "id": "AC-000026",
+                    "input": "每档按住右键后改按上键",
+                    "method": "读取角色坐标与该档基线核对偏移",
+                    "operation": "核对脚底贴地与朝向行",
+                    "preconditions": "分别切到三档",
+                    "role": "尺寸验收者",
+                    "scenario": "核对三档脚底与朝向不受切换逻辑影响"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "回到中档（而不是跳到大档）",
+                    "handling": "索引越界时翻转方向再前进一步",
+                    "scenario": "在最小档继续按 T"
+                  },
+                  {
+                    "expected": "回到中档（而不是跳到小档）",
+                    "handling": "同上",
+                    "scenario": "在最大档继续按 T"
+                  },
+                  {
+                    "expected": "位置、碰撞与帧序都不受影响",
+                    "handling": "切换只改绘制用的表与基线",
+                    "scenario": "角色移动过程中切换"
+                  }
+                ],
+                "created_at": "2026-10-28T09:12:07.880416+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "螃蟹保留 96（大）、48（中）、24（小）三套精灵表，由同一张动作卡逐级派生，共用朝向状态机、行走帧序与脚底对齐规则；三档都做了侧视按行缩放 90%。T 键或左上角按钮采用**反弹式**切换：从中档出发先变小，到最小档后掉头变大，到最大档后再掉头变小，形成 中→小→中→大→中→小… 的往复，而不是跳回另一端。按钮显示当前档位的中文标签与像素尺寸（如「尺寸 中 48」）。",
+                "digest": "73343bc0b56bfe6235c12b2c0a1c7b735f114b2ca045861226dab93197d893d8",
+                "event_id": "EVT-000130",
+                "excluded": [
+                  "绕回式（一端的下一档直接跳到另一端）切换",
+                  "尺寸滑块或自定义尺寸",
+                  "按距离自动切换尺寸"
+                ],
+                "id": "REQ-000006",
+                "included": [
+                  "96/48/24 三套精灵表同时存在且都可加载",
+                  "T 键与按钮按反弹方式切换：中→小→中→大→中…",
+                  "按钮显示「尺寸 大/中/小 + 像素值」",
+                  "三档共用朝向状态机与行走帧序，侧视均缩 90%"
+                ],
+                "module": "角色渲染",
+                "necessity": "用户明确要求把绕回式切换改成反弹式，并要求用 小/中/大 表达档位。",
+                "normal_behavior": {
+                  "behavior": "每按一次 T 或点一次按钮，档位沿当前方向走一格；走到端点则反向",
+                  "expected": "序列为 中→小→中→大→中→小…，按钮文案随之更新，且不会出现两端直接互跳",
+                  "scenario": "页面加载完成，默认停在中档 48"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P1",
+                "purpose": "让调节尺寸的过程连续、可预期：越按越接近想要的大小，不会在两端之间突然跳变。",
+                "questions": [],
+                "revision": 3,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "同一角色三档尺寸按 T 键反弹切换（小↔中↔大）",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 3,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000007": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000153",
+                "review_id": "REV-000023",
+                "time": "2026-10-28T10:25:08.580419+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图",
+                    "exception": {
+                      "expected": "判定不通过并记录 fitCount 未增长",
+                      "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460",
+                      "scenario": "静置超过 1 秒画布尺寸仍未变化"
+                    },
+                    "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+                    "id": "AC-000027",
+                    "input": "把可见高度由 390 改为 460，不派发任何事件",
+                    "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+                    "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                    "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+                    "role": "移动端验收者",
+                    "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "前后画布尺寸数值与 fitCount 变化",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向",
+                      "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉"
+                    },
+                    "expected": "画布自动回到 693×390，fitCount 再增加 1",
+                    "id": "AC-000028",
+                    "input": "把可见高度由 460 改回 390，不派发任何事件",
+                    "method": "与上一条同一套模拟手段，反向修改高度",
+                    "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                    "preconditions": "承接上一条，画布当前为 818×460",
+                    "role": "移动端验收者",
+                    "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "三次事件与静置期的 fitCount 数值",
+                    "exception": {
+                      "expected": "判定不通过，说明存在空转",
+                      "handling": "检查轮询是否在尺寸未变时仍调用 fit()",
+                      "scenario": "静置期间 fitCount 持续增长"
+                    },
+                    "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+                    "id": "AC-000029",
+                    "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+                    "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+                    "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+                    "preconditions": "页面稳定，画布尺寸已确定",
+                    "role": "移动端验收者",
+                    "scenario": "核对各事件通道与空闲开销"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名",
+                      "scenario": "画布仍保留 2% / 6% 边距"
+                    },
+                    "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+                    "id": "AC-000030",
+                    "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+                    "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+                    "operation": "读取画布尺寸与可见区域尺寸",
+                    "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+                    "role": "移动端验收者",
+                    "scenario": "触屏设备上画布铺满可见区域"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "视口尺寸、画布尺寸与公式计算值",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏",
+                      "scenario": "桌面画布被拉伸到 929 以上或出现裁剪"
+                    },
+                    "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+                    "id": "AC-000031",
+                    "input": "视口 947×972",
+                    "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+                    "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+                    "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+                    "role": "桌面验收者",
+                    "scenario": "桌面端不出现铺满带来的回归"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "画布的 CSS 尺寸保持不变",
+                    "handling": "viewBox() 退回 innerWidth / innerHeight，跳过本次重排，避免放大过程中画面跳动",
+                    "scenario": "用户正在双指放大（visualViewport.scale 大于 1）"
+                  }
+                ],
+                "created_at": "2026-10-28T10:24:35.811740+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "手机浏览器的工具栏（地址栏、底部导航）收起或展开会改变页面可见高度，但部分浏览器在此时不派发 window.resize（iOS Safari 尤其常见）。当前实现只监听 window.resize，所以可见区域变大后画布仍保持旧尺寸，必须等其它事件（例如点击「收起按键」触发的那一次 resize）才会重排。本需求要求以真实可见区域（visualViewport）为准，在可见区域变化后自动重算画布尺寸，把它放大到当前可见区域内能放下的最大值，并在触屏设备上去掉原来预留的 2% / 6% 边距。",
+                "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+                "event_id": "EVT-000150",
+                "excluded": [
+                  "双指放大（visualViewport.scale 大于 1）过程中的重新排版",
+                  "桌面端留边距策略的变更，桌面仍保持 0.98 / 0.94",
+                  "虚拟按键的位置、显隐与输入通道逻辑"
+                ],
+                "id": "REQ-000007",
+                "included": [
+                  "以 visualViewport 的宽高作为可见区域，在工具栏收起或展开后自动重算画布尺寸",
+                  "触屏设备上画布铺满可见区域，不再保留原来的 2% 宽度与 6% 高度边距",
+                  "同时监听 window resize、visualViewport resize、visualViewport scroll、orientationchange、pageshow、visibilitychange 六条来源",
+                  "增加 400ms 的可见区域尺寸比对兜底，应对浏览器完全不发事件的情况"
+                ],
+                "module": "画面自适应（可见区域适配）",
+                "necessity": "去掉本项，画面会在工具栏收起后长期偏小：横屏实测少用约 6% 的高度（693×390 而非应有的 818×460），竖屏少用 8px 宽度；且表现为“点了某个按钮才放大”的怪异时序，用户会以为页面卡住。",
+                "normal_behavior": {
+                  "behavior": "页面以 visualViewport 为准重新计算画布缩放",
+                  "expected": "画布在一个 400ms 轮询周期内由 693×390 自动变为 818×460，全程无需用户点击任何按钮",
+                  "scenario": "手机横屏下收起浏览器工具栏，可见高度由 390 变为 460，浏览器没有派发 resize"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P1",
+                "purpose": "让手机玩家收起浏览器工具栏后立刻得到更大的画面，不需要手动触发任何按钮。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000003",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": "实现位于 main.js：viewBox() 在 visualViewport.scale 约等于 1 时取 visualViewport 的宽高，否则退回 innerWidth/innerHeight；fit() 依据 html.touch-mode 决定铺满还是保留边距；事件监听与 400ms 轮询兜底同在 fit() 附近注册；另暴露 __probe.fitCount() 与 __probe.viewBox() 供验收读取。",
+                "title": "手机隐藏浏览器工具栏后画面自动放大到最大",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-28T10:24:10.851262+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户消息",
+                    "digest": "ddf640df9e4d1bbd434e4ab85bd1e7ac6d19794064dd9c94565faa4675a8fbd2",
+                    "event_id": "EVT-000149",
+                    "id": "SRC-000003",
+                    "kind": "用户消息",
+                    "location": null,
+                    "manual_note": "用户在本次会话中以文字直接提出的原始需求，未经整理",
+                    "name": "用户提出画面自适应需求（手机隐藏工具栏后自动放大）",
+                    "quote": "手机浏览器有一个问题就是，刚开始的时候如果游戏页面小，我隐藏工具栏之后页面不会自动放大，而是点收起按钮的时候才会自适应放大，让页面自动放大最大，新需求创建修改",
+                    "revision": 1,
+                    "summary": "用户指出：手机隐藏浏览器工具栏后可见区域变大，画面却不会自动放大，要点「收起按键」才重排；要求画面自动放大到最大。"
+                  },
+                  "source_id": "SRC-000003",
+                  "source_revision": 1
+                }
+              ]
+            }
+          },
+          "created_at": "2026-10-28T10:25:50.883955+00:00",
+          "created_by": "octie-agent",
+          "digest": "ea172f2a692d679024b59f612fd1241d308fc7ff08614b04a4ffe7e7cfe228b5",
+          "evaluation": {
+            "affected_members": [
+              {
+                "requirement_id": "REQ-000001",
+                "revision": 1
+              },
+              {
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              },
+              {
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              }
+            ],
+            "empty_retests_reason": null,
+            "impact_analysis": "本次变更只新增一条需求（REQ-000007 手机隐藏工具栏后画面自动放大到最大），落地改动集中在 main.js 的画布尺寸计算：新增 viewBox() 取 visualViewport、fit() 增加触屏铺满分支、注册 resize / visualViewport.resize / visualViewport.scroll / orientationchange / pageshow / visibilitychange 六条监听与 400ms 轮询兜底。不涉及场景贴图、角色精灵、朝向状态机、碰撞网格、帧序与音频，因此这些既有需求的内容不需要修改。仍然受影响的点有三类：一是画布缩放比例发生变化后，场景是否仍完整呈现且不变形（REQ-000001）；二是触屏上画布被放大到铺满后，帧率与像素硬边是否仍然达标（REQ-000004）；三是新需求自身的五条验收条件需要逐条实测（REQ-000007）。已排除的虚拟按键显隐与输入通道、双指放大过程中的重排，均不在本次差异内。",
+            "obligations": [
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "初始画面截图 + 七类元素勾选清单（含各自大致坐标）",
+                  "exception": {
+                    "expected": "某类元素缺失或颜色与同类无法区分",
+                    "handling": "记为不通过，补画该类元素后重新截图核对",
+                    "scenario": "某类元素缺失或与同类无法区分"
+                  },
+                  "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+                  "id": "AC-000001",
+                  "input": "无输入，仅观察初始画面",
+                  "method": "对初始画面截图，按七类元素清单逐项勾选并标注位置",
+                  "operation": "打开 index.html 并等待加载提示消失",
+                  "preconditions": "资源已加载完成，页面处于初始状态",
+                  "role": "场景验收者",
+                  "scenario": "核对七类海岸元素是否齐全"
+                },
+                "condition_id": "AC-000001",
+                "requirement_id": "REQ-000001",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "性能面板截图或帧率统计数值",
+                  "exception": {
+                    "expected": "判定为不流畅",
+                    "handling": "减少每帧重绘区域或缓存背景图层后复测",
+                    "scenario": "平均帧率低于 55 或出现超过 50 毫秒的长帧"
+                  },
+                  "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+                  "id": "AC-000013",
+                  "input": "按住 → 键移动角色 5 秒",
+                  "method": "录制性能时间线，统计移动期间的帧率均值与最长帧间隔",
+                  "operation": "用浏览器性能面板记录该时段的帧率",
+                  "preconditions": "页面运行在本机 Edge 浏览器",
+                  "role": "交付验收者",
+                  "scenario": "核对渲染帧率"
+                },
+                "condition_id": "AC-000013",
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "角色局部放大截图",
+                  "exception": {
+                    "expected": "判定像素渲染不合格",
+                    "handling": "补充 image-rendering 与关闭图像平滑后复测",
+                    "scenario": "出现模糊或彩色边缘"
+                  },
+                  "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+                  "id": "AC-000014",
+                  "input": "无输入",
+                  "method": "对角色局部区域截图并放大观察边缘像素",
+                  "operation": "放大查看角色与背景边缘",
+                  "preconditions": "页面已打开并显示角色",
+                  "role": "交付验收者",
+                  "scenario": "核对像素清晰度"
+                },
+                "condition_id": "AC-000014",
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图",
+                  "exception": {
+                    "expected": "判定不通过并记录 fitCount 未增长",
+                    "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460",
+                    "scenario": "静置超过 1 秒画布尺寸仍未变化"
+                  },
+                  "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+                  "id": "AC-000027",
+                  "input": "把可见高度由 390 改为 460，不派发任何事件",
+                  "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+                  "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                  "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+                  "role": "移动端验收者",
+                  "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件"
+                },
+                "condition_id": "AC-000027",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "前后画布尺寸数值与 fitCount 变化",
+                  "exception": {
+                    "expected": "判定不通过",
+                    "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向",
+                    "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉"
+                  },
+                  "expected": "画布自动回到 693×390，fitCount 再增加 1",
+                  "id": "AC-000028",
+                  "input": "把可见高度由 460 改回 390，不派发任何事件",
+                  "method": "与上一条同一套模拟手段，反向修改高度",
+                  "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                  "preconditions": "承接上一条，画布当前为 818×460",
+                  "role": "移动端验收者",
+                  "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件"
+                },
+                "condition_id": "AC-000028",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "三次事件与静置期的 fitCount 数值",
+                  "exception": {
+                    "expected": "判定不通过，说明存在空转",
+                    "handling": "检查轮询是否在尺寸未变时仍调用 fit()",
+                    "scenario": "静置期间 fitCount 持续增长"
+                  },
+                  "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+                  "id": "AC-000029",
+                  "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+                  "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+                  "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+                  "preconditions": "页面稳定，画布尺寸已确定",
+                  "role": "移动端验收者",
+                  "scenario": "核对各事件通道与空闲开销"
+                },
+                "condition_id": "AC-000029",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图",
+                  "exception": {
+                    "expected": "判定不通过",
+                    "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名",
+                    "scenario": "画布仍保留 2% / 6% 边距"
+                  },
+                  "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+                  "id": "AC-000030",
+                  "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+                  "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+                  "operation": "读取画布尺寸与可见区域尺寸",
+                  "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+                  "role": "移动端验收者",
+                  "scenario": "触屏设备上画布铺满可见区域"
+                },
+                "condition_id": "AC-000030",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "视口尺寸、画布尺寸与公式计算值",
+                  "exception": {
+                    "expected": "判定不通过",
+                    "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏",
+                    "scenario": "桌面画布被拉伸到 929 以上或出现裁剪"
+                  },
+                  "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+                  "id": "AC-000031",
+                  "input": "视口 947×972",
+                  "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+                  "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+                  "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+                  "role": "桌面验收者",
+                  "scenario": "桌面端不出现铺满带来的回归"
+                },
+                "condition_id": "AC-000031",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              }
+            ],
+            "retests": [
+              {
+                "condition_id": "AC-000001",
+                "requirement_id": "REQ-000001",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000013",
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000014",
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000027",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000028",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000029",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000030",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000031",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              }
+            ],
+            "supersessions": []
+          },
+          "event_id": "EVT-000154",
+          "id": "CHG-000005",
+          "impact_objects": [
+            "REQ-000001",
+            "REQ-000004",
+            "REQ-000007"
+          ],
+          "latest_review": {
+            "acceptance_review": "评估给出 8 项精确重验义务，逐条对照候选纳入条件：REQ-000001 的 AC-000001（场景仍完整呈现、不变形）、REQ-000004 的 AC-000013 与 AC-000014（放大后帧率与像素硬边）、REQ-000007 的 AC-000027 至 AC-000031（自动放大、自动缩回、事件通道与空闲、触屏铺满、桌面不回归）。条数与重验清单一致，均为可执行的具体条件，没有用“整体回归”这类笼统说法替代。",
+            "basis": "依据 target_digest ea172f2a 指向的 CHG-000005 第 1 修订（propose 后经 evaluate 的当前摘要，非 propose 时的 fa5f6f11），结合 REQ-000007 已确认事件与 BASE-000005 成员快照审阅。声明式审核，Agent 身份仅作操作归因。",
+            "completeness_review": "差异完整：actions 仅一条 {新增, REQ-000007, old_revision=null, new_revision=1}，恰好对应已确认的 REQ-000007 第 1 修订；predecessor 指向当前有效基线 BASE-000005；候选成员为原 6 条加新增 1 条，其余成员保持原修订未动。impact_objects 列出 REQ-000001 / REQ-000004 / REQ-000007，覆盖了受画布缩放影响的既有需求与新需求本身。",
+            "conclusion": "通过",
+            "created_at": "2026-10-28T10:26:36.861548+00:00",
+            "created_by": "review-agent",
+            "event_id": "EVT-000156",
+            "event_sequence": 156,
+            "id": "REV-000024",
+            "necessity_review": "必要性核对：REQ-000007 已确认纳入，而基线 BASE-000005 的成员集合不含它，若直接封新基线会被“非初始成员差异须经变更”这道门禁拦住；走 CHG-000005 是唯一合规路径，且差异确实只有一条新增，没有夹带替换或移除。",
+            "target_digest": "ea172f2a692d679024b59f612fd1241d308fc7ff08614b04a4ffe7e7cfe228b5",
+            "target_id": "CHG-000005",
+            "target_revision": 1,
+            "target_type": "change"
+          },
+          "ledger_id": "LED-19d840367862455889aebf797805ea48",
+          "predecessor": "BASE-000005",
+          "revision": 1,
+          "status": "已批准"
+        },
+        "previous_content_revision": null,
+        "target": "CHG-000005",
+        "type": "success"
+      },
+      "sequence": 157,
+      "time": "2026-10-28T10:26:47.084697+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "change apply",
+      "fingerprint": "7478820cb4cdd0e9b77943613c6c128c1f897d64e0ee95f1ebc8ebf5e46cb885",
+      "id": "EVT-000158",
+      "operation_id": "crab-chg5-apply",
+      "reason": "按批准差异生成候选基线（不自动激活）",
+      "request": {
+        "agent": "octie-agent",
+        "command": "change apply",
+        "data": {
+          "digest": "ea172f2a692d679024b59f612fd1241d308fc7ff08614b04a4ffe7e7cfe228b5",
+          "id": "CHG-000005",
+          "revision": 1
+        },
+        "reason": "按批准差异生成候选基线（不自动激活）"
+      },
+      "result": {
+        "command": "change apply",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 158,
+        "document_revision": 158,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000158",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:26:58.491736+00:00"
+        },
+        "object": {
+          "actions": [
+            {
+              "new_revision": 1,
+              "old_revision": null,
+              "requirement_id": "REQ-000007",
+              "type": "新增"
+            }
+          ],
+          "application": {
+            "agent": "octie-agent",
+            "baseline_digest": "29ff1fe352b768deddffe0178f94864d266b72557fd5189b4a5ed6ce218ff046",
+            "baseline_id": "BASE-000006",
+            "event_id": "EVT-000158",
+            "review_id": "REV-000024",
+            "time": "2026-10-28T10:26:58.491736+00:00"
+          },
+          "application_candidate": {
+            "change": {
+              "actions": [
+                {
+                  "new_revision": 1,
+                  "old_revision": null,
+                  "requirement_id": "REQ-000007",
+                  "type": "新增"
+                }
+              ],
+              "application_event_id": "EVT-000158",
+              "approval_event_id": "EVT-000157",
+              "digest": "ea172f2a692d679024b59f612fd1241d308fc7ff08614b04a4ffe7e7cfe228b5",
+              "evaluation": {
+                "affected_members": [
+                  {
+                    "requirement_id": "REQ-000001",
+                    "revision": 1
+                  },
+                  {
+                    "requirement_id": "REQ-000004",
+                    "revision": 1
+                  },
+                  {
+                    "requirement_id": "REQ-000007",
+                    "revision": 1
+                  }
+                ],
+                "empty_retests_reason": null,
+                "impact_analysis": "本次变更只新增一条需求（REQ-000007 手机隐藏工具栏后画面自动放大到最大），落地改动集中在 main.js 的画布尺寸计算：新增 viewBox() 取 visualViewport、fit() 增加触屏铺满分支、注册 resize / visualViewport.resize / visualViewport.scroll / orientationchange / pageshow / visibilitychange 六条监听与 400ms 轮询兜底。不涉及场景贴图、角色精灵、朝向状态机、碰撞网格、帧序与音频，因此这些既有需求的内容不需要修改。仍然受影响的点有三类：一是画布缩放比例发生变化后，场景是否仍完整呈现且不变形（REQ-000001）；二是触屏上画布被放大到铺满后，帧率与像素硬边是否仍然达标（REQ-000004）；三是新需求自身的五条验收条件需要逐条实测（REQ-000007）。已排除的虚拟按键显隐与输入通道、双指放大过程中的重排，均不在本次差异内。",
+                "obligations": [
+                  {
+                    "change_id": "CHG-000005",
+                    "change_revision": 1,
+                    "condition": {
+                      "allow_na": false,
+                      "evidence": "初始画面截图 + 七类元素勾选清单（含各自大致坐标）",
+                      "exception": {
+                        "expected": "某类元素缺失或颜色与同类无法区分",
+                        "handling": "记为不通过，补画该类元素后重新截图核对",
+                        "scenario": "某类元素缺失或与同类无法区分"
+                      },
+                      "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+                      "id": "AC-000001",
+                      "input": "无输入，仅观察初始画面",
+                      "method": "对初始画面截图，按七类元素清单逐项勾选并标注位置",
+                      "operation": "打开 index.html 并等待加载提示消失",
+                      "preconditions": "资源已加载完成，页面处于初始状态",
+                      "role": "场景验收者",
+                      "scenario": "核对七类海岸元素是否齐全"
+                    },
+                    "condition_id": "AC-000001",
+                    "requirement_id": "REQ-000001",
+                    "revision": 1
+                  },
+                  {
+                    "change_id": "CHG-000005",
+                    "change_revision": 1,
+                    "condition": {
+                      "allow_na": false,
+                      "evidence": "性能面板截图或帧率统计数值",
+                      "exception": {
+                        "expected": "判定为不流畅",
+                        "handling": "减少每帧重绘区域或缓存背景图层后复测",
+                        "scenario": "平均帧率低于 55 或出现超过 50 毫秒的长帧"
+                      },
+                      "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+                      "id": "AC-000013",
+                      "input": "按住 → 键移动角色 5 秒",
+                      "method": "录制性能时间线，统计移动期间的帧率均值与最长帧间隔",
+                      "operation": "用浏览器性能面板记录该时段的帧率",
+                      "preconditions": "页面运行在本机 Edge 浏览器",
+                      "role": "交付验收者",
+                      "scenario": "核对渲染帧率"
+                    },
+                    "condition_id": "AC-000013",
+                    "requirement_id": "REQ-000004",
+                    "revision": 1
+                  },
+                  {
+                    "change_id": "CHG-000005",
+                    "change_revision": 1,
+                    "condition": {
+                      "allow_na": false,
+                      "evidence": "角色局部放大截图",
+                      "exception": {
+                        "expected": "判定像素渲染不合格",
+                        "handling": "补充 image-rendering 与关闭图像平滑后复测",
+                        "scenario": "出现模糊或彩色边缘"
+                      },
+                      "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+                      "id": "AC-000014",
+                      "input": "无输入",
+                      "method": "对角色局部区域截图并放大观察边缘像素",
+                      "operation": "放大查看角色与背景边缘",
+                      "preconditions": "页面已打开并显示角色",
+                      "role": "交付验收者",
+                      "scenario": "核对像素清晰度"
+                    },
+                    "condition_id": "AC-000014",
+                    "requirement_id": "REQ-000004",
+                    "revision": 1
+                  },
+                  {
+                    "change_id": "CHG-000005",
+                    "change_revision": 1,
+                    "condition": {
+                      "allow_na": false,
+                      "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图",
+                      "exception": {
+                        "expected": "判定不通过并记录 fitCount 未增长",
+                        "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460",
+                        "scenario": "静置超过 1 秒画布尺寸仍未变化"
+                      },
+                      "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+                      "id": "AC-000027",
+                      "input": "把可见高度由 390 改为 460，不派发任何事件",
+                      "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+                      "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                      "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+                      "role": "移动端验收者",
+                      "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件"
+                    },
+                    "condition_id": "AC-000027",
+                    "requirement_id": "REQ-000007",
+                    "revision": 1
+                  },
+                  {
+                    "change_id": "CHG-000005",
+                    "change_revision": 1,
+                    "condition": {
+                      "allow_na": false,
+                      "evidence": "前后画布尺寸数值与 fitCount 变化",
+                      "exception": {
+                        "expected": "判定不通过",
+                        "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向",
+                        "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉"
+                      },
+                      "expected": "画布自动回到 693×390，fitCount 再增加 1",
+                      "id": "AC-000028",
+                      "input": "把可见高度由 460 改回 390，不派发任何事件",
+                      "method": "与上一条同一套模拟手段，反向修改高度",
+                      "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                      "preconditions": "承接上一条，画布当前为 818×460",
+                      "role": "移动端验收者",
+                      "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件"
+                    },
+                    "condition_id": "AC-000028",
+                    "requirement_id": "REQ-000007",
+                    "revision": 1
+                  },
+                  {
+                    "change_id": "CHG-000005",
+                    "change_revision": 1,
+                    "condition": {
+                      "allow_na": false,
+                      "evidence": "三次事件与静置期的 fitCount 数值",
+                      "exception": {
+                        "expected": "判定不通过，说明存在空转",
+                        "handling": "检查轮询是否在尺寸未变时仍调用 fit()",
+                        "scenario": "静置期间 fitCount 持续增长"
+                      },
+                      "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+                      "id": "AC-000029",
+                      "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+                      "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+                      "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+                      "preconditions": "页面稳定，画布尺寸已确定",
+                      "role": "移动端验收者",
+                      "scenario": "核对各事件通道与空闲开销"
+                    },
+                    "condition_id": "AC-000029",
+                    "requirement_id": "REQ-000007",
+                    "revision": 1
+                  },
+                  {
+                    "change_id": "CHG-000005",
+                    "change_revision": 1,
+                    "condition": {
+                      "allow_na": false,
+                      "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图",
+                      "exception": {
+                        "expected": "判定不通过",
+                        "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名",
+                        "scenario": "画布仍保留 2% / 6% 边距"
+                      },
+                      "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+                      "id": "AC-000030",
+                      "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+                      "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+                      "operation": "读取画布尺寸与可见区域尺寸",
+                      "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+                      "role": "移动端验收者",
+                      "scenario": "触屏设备上画布铺满可见区域"
+                    },
+                    "condition_id": "AC-000030",
+                    "requirement_id": "REQ-000007",
+                    "revision": 1
+                  },
+                  {
+                    "change_id": "CHG-000005",
+                    "change_revision": 1,
+                    "condition": {
+                      "allow_na": false,
+                      "evidence": "视口尺寸、画布尺寸与公式计算值",
+                      "exception": {
+                        "expected": "判定不通过",
+                        "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏",
+                        "scenario": "桌面画布被拉伸到 929 以上或出现裁剪"
+                      },
+                      "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+                      "id": "AC-000031",
+                      "input": "视口 947×972",
+                      "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+                      "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+                      "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+                      "role": "桌面验收者",
+                      "scenario": "桌面端不出现铺满带来的回归"
+                    },
+                    "condition_id": "AC-000031",
+                    "requirement_id": "REQ-000007",
+                    "revision": 1
+                  }
+                ],
+                "retests": [
+                  {
+                    "condition_id": "AC-000001",
+                    "requirement_id": "REQ-000001",
+                    "revision": 1
+                  },
+                  {
+                    "condition_id": "AC-000013",
+                    "requirement_id": "REQ-000004",
+                    "revision": 1
+                  },
+                  {
+                    "condition_id": "AC-000014",
+                    "requirement_id": "REQ-000004",
+                    "revision": 1
+                  },
+                  {
+                    "condition_id": "AC-000027",
+                    "requirement_id": "REQ-000007",
+                    "revision": 1
+                  },
+                  {
+                    "condition_id": "AC-000028",
+                    "requirement_id": "REQ-000007",
+                    "revision": 1
+                  },
+                  {
+                    "condition_id": "AC-000029",
+                    "requirement_id": "REQ-000007",
+                    "revision": 1
+                  },
+                  {
+                    "condition_id": "AC-000030",
+                    "requirement_id": "REQ-000007",
+                    "revision": 1
+                  },
+                  {
+                    "condition_id": "AC-000031",
+                    "requirement_id": "REQ-000007",
+                    "revision": 1
+                  }
+                ],
+                "supersessions": []
+              },
+              "id": "CHG-000005",
+              "revision": 1
+            },
+            "created_at": "2026-10-28T10:26:58.491736+00:00",
+            "created_by": "octie-agent",
+            "digest": "29ff1fe352b768deddffe0178f94864d266b72557fd5189b4a5ed6ce218ff046",
+            "event_id": "EVT-000158",
+            "id": "BASE-000006",
+            "ledger_id": "LED-19d840367862455889aebf797805ea48",
+            "members": {
+              "REQ-000001": {
+                "confirmation": {
+                  "agent": "octie-agent",
+                  "event_id": "EVT-000011",
+                  "review_id": "REV-000001",
+                  "time": "2026-10-27T20:19:33.136841+00:00"
+                },
+                "content": {
+                  "acceptance": [
+                    {
+                      "allow_na": false,
+                      "evidence": "初始画面截图 + 七类元素勾选清单（含各自大致坐标）",
+                      "exception": {
+                        "expected": "某类元素缺失或颜色与同类无法区分",
+                        "handling": "记为不通过，补画该类元素后重新截图核对",
+                        "scenario": "某类元素缺失或与同类无法区分"
+                      },
+                      "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+                      "id": "AC-000001",
+                      "input": "无输入，仅观察初始画面",
+                      "method": "对初始画面截图，按七类元素清单逐项勾选并标注位置",
+                      "operation": "打开 index.html 并等待加载提示消失",
+                      "preconditions": "资源已加载完成，页面处于初始状态",
+                      "role": "场景验收者",
+                      "scenario": "核对七类海岸元素是否齐全"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "移动前后两张截图 + 背景区域差异率数值",
+                      "exception": {
+                        "expected": "背景出现任何平移或缩放跳动",
+                        "handling": "判定为不通过，移除背景位移逻辑",
+                        "scenario": "角色移动过程中背景发生位移"
+                      },
+                      "expected": "除角色精灵所在区域外，背景像素与移动前一致，背景位移为 0 像素",
+                      "id": "AC-000002",
+                      "input": "按住右方向键持续 3 秒，再按住左方向键持续 3 秒",
+                      "method": "移动前后各截一张图，用像素差分统计背景区域差异率",
+                      "operation": "移动角色后回到起始位置附近，比较背景像素",
+                      "preconditions": "页面已进入且背景渲染完成",
+                      "role": "场景验收者",
+                      "scenario": "验证背景不随角色移动"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "连续 3 帧截图",
+                      "exception": {
+                        "expected": "海面完全静止或每帧出现大面积跳变",
+                        "handling": "记为不通过，调整波浪相位与循环周期后复测",
+                        "scenario": "海面静止或帧间跳变过大"
+                      },
+                      "expected": "三帧海浪纹理位置不同，循环周期内无整幅跳动或闪烁",
+                      "id": "AC-000003",
+                      "input": "无输入",
+                      "method": "间隔 1 秒连续截 3 帧，比对海浪纹理位移",
+                      "operation": "静置观察海面 3 秒并连续截取 3 帧",
+                      "preconditions": "页面静止无角色输入",
+                      "role": "场景验收者",
+                      "scenario": "验证海面循环动画存在且连贯"
+                    }
+                  ],
+                  "boundaries": [
+                    {
+                      "expected": "场景等比缩放并居中，四周留出底色，不拉伸不变形",
+                      "handling": "按 min(宽比, 高比) 等比缩放后居中绘制，留边填深色",
+                      "scenario": "浏览器窗口宽高比与场景原始比例不一致"
+                    },
+                    {
+                      "expected": "仍能看完整幅场景与角色，元素不变形",
+                      "handling": "继续等比缩放至适配宽度，允许整体变小但不裁切",
+                      "scenario": "窗口宽度小于 480px 的窄屏"
+                    }
+                  ],
+                  "created_at": "2026-10-27T19:58:51.627651+00:00",
+                  "created_by": "octie-agent",
+                  "dependencies": [],
+                  "description": "页面打开后在画布上绘制一幅完整的深圳海岸场景：海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋。背景是一整张固定的 2.5D 平面图，角色在其上方行走时背景像素位置保持不变，不做相机跟随与地图滚动。海水部分带持续的循环动画（波浪流动），让画面不是死图。",
+                  "digest": "2310b3e8c298e8c9a0645878ccae71b3e32c822529ee1675b0ddce9d973bbed4",
+                  "event_id": "EVT-000004",
+                  "excluded": [
+                    "视差滚动、相机跟随与地图平移",
+                    "多场景或关卡切换",
+                    "玩家侧的场景缩放与旋转"
+                  ],
+                  "id": "REQ-000001",
+                  "included": [
+                    "海水区与沙滩区上固定绘制的一整幅海岸背景",
+                    "红树林、海藻床、珊瑚礁三类深圳典型海岸元素的可见呈现",
+                    "台阶与房屋等场景道具的可见呈现",
+                    "海面波浪的循环动画"
+                  ],
+                  "module": "场景渲染",
+                  "necessity": "没有背景就没有场景可言：用户明确要求网站带海洋、沙滩与深圳典型海岸元素，且背景必须固定不动，否则就不是他要的“大地图一站到底”的观感。",
+                  "normal_behavior": {
+                    "behavior": "画布按场景原始比例等比绘制完整海岸背景，海面开始循环波浪动画",
+                    "expected": "画面同时可见海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋共七类元素，且背景在角色移动前后像素位置不变",
+                    "scenario": "用户打开本地页面且资产已就绪"
+                  },
+                  "placement": {
+                    "kind": "页面",
+                    "other": [],
+                    "primary": {
+                      "page_id": "PAGE-000001",
+                      "page_revision": 1,
+                      "region_id": "REG-000001-0001-0001"
+                    }
+                  },
+                  "priority": "P0",
+                  "purpose": "给螃蟹角色提供一个可辨认的深圳海岸小世界作为舞台，让用户一眼看出这是海藻床、红树林、珊瑚礁构成的真实海岸场景。",
+                  "questions": [],
+                  "revision": 1,
+                  "sources": [
+                    {
+                      "source_id": "SRC-000001",
+                      "source_revision": 1
+                    }
+                  ],
+                  "tags": [],
+                  "technical": null,
+                  "title": "呈现固定不滚动的深圳海岸 2.5D 场景背景",
+                  "type": "功能"
+                },
+                "pages": [
+                  {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001",
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:11.769250+00:00",
+                      "created_by": "octie-agent",
+                      "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                      "event_id": "EVT-000002",
+                      "id": "PAGE-000001",
+                      "location": "crab-coast/index.html 单页应用",
+                      "name": "深圳海岸小世界主页",
+                      "regions": [
+                        {
+                          "id": "REG-000001-0001-0001",
+                          "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                          "name": "场景画布区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0002",
+                          "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                          "name": "方向控制提示区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0003",
+                          "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                          "name": "资源加载提示区"
+                        }
+                      ],
+                      "revision": 1
+                    }
+                  }
+                ],
+                "revision": 1,
+                "scope": {
+                  "decision": "纳入",
+                  "reason": null
+                },
+                "sources": [
+                  {
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:28.507590+00:00",
+                      "created_by": "octie-agent",
+                      "date_note": "2026-10-28 用户在会话中的原始消息",
+                      "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                      "event_id": "EVT-000003",
+                      "id": "SRC-000001",
+                      "kind": "用户消息",
+                      "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                      "manual_note": null,
+                      "name": "用户口述需求：深圳海岸螃蟹小世界",
+                      "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                      "revision": 1,
+                      "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                    },
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ]
+              },
+              "REQ-000002": {
+                "confirmation": {
+                  "agent": "octie-agent",
+                  "event_id": "EVT-000014",
+                  "review_id": "REV-000002",
+                  "time": "2026-10-27T20:19:33.931717+00:00"
+                },
+                "content": {
+                  "acceptance": [
+                    {
+                      "allow_na": false,
+                      "evidence": "四次按键的起点终点坐标记录表（含 dx、dy 数值）",
+                      "exception": {
+                        "expected": "该方向判定不通过",
+                        "handling": "修正该方向的输入映射后复测",
+                        "scenario": "某个方向位移方向相反或出现斜向偏移"
+                      },
+                      "expected": "↑ 的 y 减小且 x 不变，↓ 的 y 增大且 x 不变，← 的 x 减小且 y 不变，→ 的 x 增大且 y 不变，四次的垂直轴偏移均为 0 像素",
+                      "id": "AC-000004",
+                      "input": "依次单独按住 ↑、↓、←、→ 各 1 秒",
+                      "method": "在页面中暴露角色坐标并逐次记录，比对 dx 与 dy 的正负和零值",
+                      "operation": "每次按键后记录角色起点与终点坐标",
+                      "preconditions": "角色位于场景中央，四个方向均有足够空间",
+                      "role": "操作验收者",
+                      "scenario": "逐个方向核对移动方向正确"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "三组位移量原始数值与相对差计算结果",
+                      "exception": {
+                        "expected": "判定速度不稳定",
+                        "handling": "改为按时间增量累加位移后复测",
+                        "scenario": "三次位移差异超过 10% 或位移接近 0"
+                      },
+                      "expected": "三次位移量的最大值与最小值相对差不超过 10%",
+                      "id": "AC-000005",
+                      "input": "连续 3 次按住 → 各 1 秒后松开",
+                      "method": "同一方向的 3 组位移量做极差与均值比值计算",
+                      "operation": "记录每次 1 秒内的水平位移量",
+                      "preconditions": "角色位于场景中央",
+                      "role": "操作验收者",
+                      "scenario": "核对移动速度稳定"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "最终坐标数值 + 贴边截图",
+                      "exception": {
+                        "expected": "判定边界处理不通过",
+                        "handling": "修正钳制范围并复测",
+                        "scenario": "角色移出画面或贴在边缘抖动"
+                      },
+                      "expected": "角色整体仍在可视区域内，其右边缘不超过场景右内边距，坐标被钳制在允许范围",
+                      "id": "AC-000006",
+                      "input": "持续按住 → 5 秒",
+                      "method": "持续按键后读取角色最终坐标与场景边界值做比较",
+                      "operation": "观察角色最终位置与画面右边缘的关系",
+                      "preconditions": "角色靠近右侧边界",
+                      "role": "操作验收者",
+                      "scenario": "核对边界限制"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "松键时刻与最后一帧位移的时间差记录",
+                      "exception": {
+                        "expected": "判定为未立即停止",
+                        "handling": "移除速度衰减逻辑，改为松键直接归零",
+                        "scenario": "松键后角色继续滑行超过 100 毫秒"
+                      },
+                      "expected": "松键后 100 毫秒内水平位移归零，角色不再移动",
+                      "id": "AC-000007",
+                      "input": "松开 → 键",
+                      "method": "松键后按帧记录坐标，找出最后一次位移的帧号与时间差",
+                      "operation": "松键后连续观察 0.5 秒",
+                      "preconditions": "角色正在向右移动",
+                      "role": "操作验收者",
+                      "scenario": "核对松键立即停止"
+                    }
+                  ],
+                  "boundaries": [
+                    {
+                      "expected": "角色只沿最后按下的那个方向移动，不同时产生斜向位移",
+                      "handling": "以最后一次按下的方向键为准，忽略先前仍按住的轴",
+                      "scenario": "同时按住两个方向键（例如右键与上键）"
+                    },
+                    {
+                      "expected": "角色停在边界内侧，不越出画面",
+                      "handling": "对坐标做上下限钳制，越界时保留在允许范围内",
+                      "scenario": "角色持续朝同一个方向移动到场景边缘"
+                    },
+                    {
+                      "expected": "角色停止移动，不出现卡住持续漂移",
+                      "handling": "监听失焦事件清空按键状态",
+                      "scenario": "按住方向键时浏览器窗口失去焦点"
+                    }
+                  ],
+                  "created_at": "2026-10-27T19:59:07.557201+00:00",
+                  "created_by": "octie-agent",
+                  "dependencies": [],
+                  "description": "用户按下 W/A/S/D 或键盘方向键时，螃蟹角色在固定场景内沿对应方向匀速移动；松开按键立即停止。移动只在上下左右四个轴方向发生，不产生斜向位移，角色始终被限制在场景可视范围内。",
+                  "digest": "433c05bb460b38b24a3f7879d6b4fe2d1231808c67f52164bd721002d7614d6a",
+                  "event_id": "EVT-000005",
+                  "excluded": [
+                    "斜向八方向自由移动",
+                    "跳跃、攻击、拾取等额外动作",
+                    "身体惯性、摩擦滑行与加速缓冲"
+                  ],
+                  "id": "REQ-000002",
+                  "included": [
+                    "W 与 ↑ 向上移动，S 与 ↓ 向下移动，A 与 ← 向左移动，D 与 → 向右移动",
+                    "恒定速度的水平与垂直位移",
+                    "角色位置限制在场景可视区域内",
+                    "松开按键后立即停止"
+                  ],
+                  "module": "角色控制",
+                  "necessity": "没有四向移动就没有交互，整个场景退化为一张静止图片；用户原话明确这是当前唯一必须实现的功能。",
+                  "normal_behavior": {
+                    "behavior": "按住某一个方向键，角色沿该轴方向持续移动并播放行走动画，松开按键后停住",
+                    "expected": "位移方向与按键方向一致，单位时间位移量保持稳定",
+                    "scenario": "角色位于场景中央且没有触达边界"
+                  },
+                  "placement": {
+                    "kind": "页面",
+                    "other": [],
+                    "primary": {
+                      "page_id": "PAGE-000001",
+                      "page_revision": 1,
+                      "region_id": "REG-000001-0001-0001"
+                    }
+                  },
+                  "priority": "P0",
+                  "purpose": "这是用户唯一要求现在必须完成的操作能力：用四个方向键驱动小螃蟹在海岸场景里走动。",
+                  "questions": [],
+                  "revision": 1,
+                  "sources": [
+                    {
+                      "source_id": "SRC-000001",
+                      "source_revision": 1
+                    }
+                  ],
+                  "tags": [],
+                  "technical": null,
+                  "title": "支持键盘四向移动螃蟹角色",
+                  "type": "功能"
+                },
+                "pages": [
+                  {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001",
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:11.769250+00:00",
+                      "created_by": "octie-agent",
+                      "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                      "event_id": "EVT-000002",
+                      "id": "PAGE-000001",
+                      "location": "crab-coast/index.html 单页应用",
+                      "name": "深圳海岸小世界主页",
+                      "regions": [
+                        {
+                          "id": "REG-000001-0001-0001",
+                          "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                          "name": "场景画布区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0002",
+                          "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                          "name": "方向控制提示区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0003",
+                          "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                          "name": "资源加载提示区"
+                        }
+                      ],
+                      "revision": 1
+                    }
+                  }
+                ],
+                "revision": 1,
+                "scope": {
+                  "decision": "纳入",
+                  "reason": null
+                },
+                "sources": [
+                  {
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:28.507590+00:00",
+                      "created_by": "octie-agent",
+                      "date_note": "2026-10-28 用户在会话中的原始消息",
+                      "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                      "event_id": "EVT-000003",
+                      "id": "SRC-000001",
+                      "kind": "用户消息",
+                      "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                      "manual_note": null,
+                      "name": "用户口述需求：深圳海岸螃蟹小世界",
+                      "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                      "revision": 1,
+                      "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                    },
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ]
+              },
+              "REQ-000003": {
+                "confirmation": {
+                  "agent": "octie-agent",
+                  "event_id": "EVT-000050",
+                  "review_id": "REV-000006",
+                  "time": "2026-10-28T08:54:11.706903+00:00"
+                },
+                "content": {
+                  "acceptance": [
+                    {
+                      "allow_na": false,
+                      "evidence": "帧索引序列日志 + 行走中截图 evidence/03~06",
+                      "exception": {
+                        "expected": "判定动画不连通",
+                        "handling": "修正帧推进逻辑与计时基准后复测",
+                        "scenario": "帧序出现跳跃、倒退或长时间停在同帧"
+                      },
+                      "expected": "帧索引按 0、1、2、3 循环推进，无跳帧与倒序",
+                      "id": "AC-000008",
+                      "input": "按住右方向键持续 1 秒",
+                      "method": "在渲染循环中记录每次帧切换的时间戳与索引，导出序列后检查连续性",
+                      "operation": "记录这 1 秒内实际绘制的帧索引序列",
+                      "preconditions": "角色在可行走沙地上，四个方向的帧组已加载",
+                      "role": "动画验收者",
+                      "scenario": "核对单一方向的帧循环连通"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "切向前后帧组标识日志 + 切向瞬间截图",
+                      "exception": {
+                        "expected": "判定动作组切换失败",
+                        "handling": "修正方向到帧组的映射后复测",
+                        "scenario": "切向后仍显示向右的帧或出现空白帧"
+                      },
+                      "expected": "切向后绘制的是向上动作组的帧，切换发生在 1 个渲染帧之内",
+                      "id": "AC-000009",
+                      "input": "按住右方向键后改为按住上方向键",
+                      "method": "记录切向前后各 5 帧的帧组标识与索引",
+                      "operation": "观察切向瞬间的画面并记录所用帧组",
+                      "preconditions": "角色正在向右行走",
+                      "role": "动画验收者",
+                      "scenario": "核对方向切换动作组"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "松键后 1 秒内的帧索引记录",
+                      "exception": {
+                        "expected": "判定为动画未停止",
+                        "handling": "静止态改为只绘制第 0 帧后复测",
+                        "scenario": "松键后仍在空转播放行走帧"
+                      },
+                      "expected": "帧索引保持不变并停在 0，画面稳定显示该方向的待机帧",
+                      "id": "AC-000010",
+                      "input": "松开所有方向键",
+                      "method": "松键后连续记录帧索引，确认数值不再变化",
+                      "operation": "松键后观察 1 秒",
+                      "preconditions": "角色正在移动",
+                      "role": "动画验收者",
+                      "scenario": "核对静止时停止推进"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "python tools/check_sheet.py 输出 + evidence/33_side_scale_preview.png",
+                      "exception": {
+                        "expected": "判定资产不合格",
+                        "handling": "重新跑切帧与对齐脚本后复检",
+                        "scenario": "存在尺寸不一致、底色残留或帧间跳动"
+                      },
+                      "expected": "16 帧全部 48×48，四角 alpha 为 0，同方向帧间横向漂移不超过 2 像素，脚底基线一致",
+                      "id": "AC-000011",
+                      "input": "无输入",
+                      "method": "用脚本遍历 16 帧，统计尺寸、透明角落与包围盒中心偏移；帧尺寸从 scene.json 读取",
+                      "operation": "运行自检脚本检查 16 帧的尺寸、透明角、帧间漂移与脚底基线",
+                      "preconditions": "动作卡已生成在 assets/crab_sheet.png",
+                      "role": "动画验收者",
+                      "scenario": "核对动作卡资产一致性与尺寸"
+                    }
+                  ],
+                  "boundaries": [
+                    {
+                      "expected": "帧序号重置到新方向动作组的第 0 帧，不出现两个方向帧混用的错位画面",
+                      "handling": "方向变化即重置动画计时器与帧索引",
+                      "scenario": "移动过程中快速改变方向"
+                    },
+                    {
+                      "expected": "保持在当前面向方向的第 0 帧，不继续推进动画",
+                      "handling": "无输入时冻结帧索引",
+                      "scenario": "角色静止不动"
+                    },
+                    {
+                      "expected": "侧身行的显示尺寸比正面小约 10%，切换瞬间不出现明显的“变大”跳变",
+                      "handling": "切片阶段按行缩放，并把缩放后的脚底回拉到同一基线",
+                      "scenario": "从正面切到侧身"
+                    }
+                  ],
+                  "created_at": "2026-10-28T08:54:10.386122+00:00",
+                  "created_by": "octie-agent",
+                  "dependencies": [],
+                  "description": "螃蟹为四个方向（下、左、右、上）各准备一组走路帧，方向切换时立即切换动作组，移动过程中按固定帧率循环播放，静止时停在该方向的待机帧。动作卡由图片生成模型直接产出 4×4 卡片（绿幕），再由代码完成：等分切格 → 软阈值抠绿 → 按包围盒归一化（脚底对齐同一基线）→ 整表统一调色板量化。当前成品为半尺寸：单帧 48×48、整表 192×192、32 色；其中左侧与右侧两行额外缩放到 90%，避免侧身时视觉上比正面显大。",
+                  "digest": "9eb3d2fa058fc7d4588a0382fce3f699fabf2129c3badef805ae216396ebdcf3",
+                  "event_id": "EVT-000047",
+                  "excluded": [
+                    "斜向与八方向的独立动作组",
+                    "攻击、跳跃、死亡等战斗动作",
+                    "帧间插值生成的补间画面",
+                    "静止时的呼吸/眨眼等二次动作（试做过，已移除）"
+                  ],
+                  "id": "REQ-000003",
+                  "included": [
+                    "上、下、左、右四个方向的独立走路帧组，每组 4 帧",
+                    "按 8 帧每秒循环推进帧序号",
+                    "方向切换时同步切换动作组",
+                    "松开方向键后停在该方向待机帧（第 0 帧）",
+                    "16 帧统一 48×48 尺寸、透明背景、同一套 32 色调色板",
+                    "侧视两行按行缩放到 90%，脚底与正面行保持同一基线"
+                  ],
+                  "module": "角色动画",
+                  "necessity": "只有位移没有帧动画，角色会表现为贴图滑动，用户会直接判定不合格；动作卡是该需求的核心交付物。",
+                  "normal_behavior": {
+                    "behavior": "每经过 125 毫秒切换到该方向动作组的下一个帧，四帧结束后回到第一帧继续循环",
+                    "expected": "画面中的螃蟹腿部姿态逐帧变化，形成持续步行动作",
+                    "scenario": "角色正在向右移动"
+                  },
+                  "placement": {
+                    "kind": "页面",
+                    "other": [],
+                    "primary": {
+                      "page_id": "PAGE-000001",
+                      "page_revision": 1,
+                      "region_id": "REG-000001-0001-0001"
+                    }
+                  },
+                  "priority": "P0",
+                  "purpose": "让螃蟹的移动看起来是一只活物在走，而不是一张贴图在平移；这也是用户反复强调的“动作卡连续播放”。",
+                  "questions": [],
+                  "revision": 2,
+                  "sources": [
+                    {
+                      "source_id": "SRC-000001",
+                      "source_revision": 1
+                    },
+                    {
+                      "source_id": "SRC-000002",
+                      "source_revision": 1
+                    }
+                  ],
+                  "tags": [],
+                  "technical": null,
+                  "title": "播放四向走路动作卡的连续帧动画",
+                  "type": "功能"
+                },
+                "pages": [
+                  {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001",
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:11.769250+00:00",
+                      "created_by": "octie-agent",
+                      "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                      "event_id": "EVT-000002",
+                      "id": "PAGE-000001",
+                      "location": "crab-coast/index.html 单页应用",
+                      "name": "深圳海岸小世界主页",
+                      "regions": [
+                        {
+                          "id": "REG-000001-0001-0001",
+                          "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                          "name": "场景画布区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0002",
+                          "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                          "name": "方向控制提示区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0003",
+                          "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                          "name": "资源加载提示区"
+                        }
+                      ],
+                      "revision": 1
+                    }
+                  }
+                ],
+                "revision": 2,
+                "scope": {
+                  "decision": "纳入",
+                  "reason": null
+                },
+                "sources": [
+                  {
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:28.507590+00:00",
+                      "created_by": "octie-agent",
+                      "date_note": "2026-10-28 用户在会话中的原始消息",
+                      "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                      "event_id": "EVT-000003",
+                      "id": "SRC-000001",
+                      "kind": "用户消息",
+                      "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                      "manual_note": null,
+                      "name": "用户口述需求：深圳海岸螃蟹小世界",
+                      "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                      "revision": 1,
+                      "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                    },
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  },
+                  {
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:59:22.515291+00:00",
+                      "created_by": "octie-agent",
+                      "date_note": "2026-10-28 通过 Edge CDP 在 chatgpt.com 发起的技术咨询",
+                      "digest": "526cf481c8592bf102dac7430092a1f929638f4a83987b5b8e77e65d0a36e982",
+                      "event_id": "EVT-000006",
+                      "id": "SRC-000002",
+                      "kind": "链接",
+                      "location": "https://chatgpt.com/c/6ae10247-06f0-83ee-80ae-b56b5c95a4ff",
+                      "manual_note": null,
+                      "name": "ChatGPT 咨询：深圳海岸像素小游戏最短可行资产方案",
+                      "quote": "推荐技术栈：AI 生图 + Python Pillow + HTML5 Canvas 2D。整体采用三个独立层：固定背景、循环环境特效、角色精灵。不要让 AI 一次生成整张背景和全部角色动作后直接投入使用。游戏逻辑画布 960 × 540 px；背景 960 × 540 PNG；角色逻辑帧 64 × 64 px；四向动画 Down / Left / Right / Up，每方向 4 帧，总帧数 16 帧，最终 Sprite Sheet 256 × 256 PNG；行走动画 8 FPS；游戏渲染 requestAnimationFrame，通常目标 60 FPS；移动速度 110 px/s。推荐先生成一张角色母版（Character Reference），确认角色外观后，再生成四个方向的动作。不要首先要求模型直接输出 256 × 256 的成品 Sheet，更稳妥的方法是生成较大的 4 × 4 等分网格，再用代码裁切。",
+                      "revision": 1,
+                      "summary": "建议采用固定背景层 + 循环环境特效层 + 角色精灵层三层结构，画布 960×540、单帧 64×64、四向各 4 帧共 16 帧、8fps 行走、110px/s 移动；AI 先出角色母版与 4×4 网格大图，再用 Pillow 裁切、抠底、统一对齐得到可用 sprite sheet。"
+                    },
+                    "source_id": "SRC-000002",
+                    "source_revision": 1
+                  }
+                ]
+              },
+              "REQ-000004": {
+                "confirmation": {
+                  "agent": "octie-agent",
+                  "event_id": "EVT-000020",
+                  "review_id": "REV-000004",
+                  "time": "2026-10-27T20:19:35.854973+00:00"
+                },
+                "content": {
+                  "acceptance": [
+                    {
+                      "allow_na": false,
+                      "evidence": "Network 请求列表截图（含域名列）+ 离线状态下的页面截图",
+                      "exception": {
+                        "expected": "判定不自包含",
+                        "handling": "把所需资源下载到本地目录并改为相对路径后复测",
+                        "scenario": "出现外部域名请求或页面白屏"
+                      },
+                      "expected": "页面完整显示场景与角色，Network 面板中没有任何指向本机以外域名的请求，全部请求为 file:// 或 localhost 本地路径",
+                      "id": "AC-000012",
+                      "input": "无网络",
+                      "method": "断网打开页面并导出 Network 请求列表，逐条检查域名",
+                      "operation": "断开网络后双击 index.html，并查看开发者工具的 Network 面板",
+                      "preconditions": "已拿到 crab-coast 文件夹，网络已断开",
+                      "role": "交付验收者",
+                      "scenario": "核对文件夹自包含与离线可运行"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "性能面板截图或帧率统计数值",
+                      "exception": {
+                        "expected": "判定为不流畅",
+                        "handling": "减少每帧重绘区域或缓存背景图层后复测",
+                        "scenario": "平均帧率低于 55 或出现超过 50 毫秒的长帧"
+                      },
+                      "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+                      "id": "AC-000013",
+                      "input": "按住 → 键移动角色 5 秒",
+                      "method": "录制性能时间线，统计移动期间的帧率均值与最长帧间隔",
+                      "operation": "用浏览器性能面板记录该时段的帧率",
+                      "preconditions": "页面运行在本机 Edge 浏览器",
+                      "role": "交付验收者",
+                      "scenario": "核对渲染帧率"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "角色局部放大截图",
+                      "exception": {
+                        "expected": "判定像素渲染不合格",
+                        "handling": "补充 image-rendering 与关闭图像平滑后复测",
+                        "scenario": "出现模糊或彩色边缘"
+                      },
+                      "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+                      "id": "AC-000014",
+                      "input": "无输入",
+                      "method": "对角色局部区域截图并放大观察边缘像素",
+                      "operation": "放大查看角色与背景边缘",
+                      "preconditions": "页面已打开并显示角色",
+                      "role": "交付验收者",
+                      "scenario": "核对像素清晰度"
+                    }
+                  ],
+                  "boundaries": [
+                    {
+                      "expected": "角色移动速度与动画节拍保持与时间一致，不出现慢动作",
+                      "handling": "位移与帧推进都按真实时间增量计算，不按固定步数",
+                      "scenario": "运行在性能较弱的机器上，帧率降到 30 帧每秒"
+                    },
+                    {
+                      "expected": "场景等比缩放，像素边缘保持锐利不模糊",
+                      "handling": "canvas 使用 image-rendering: pixelated，并按整数或等比缩放绘制",
+                      "scenario": "浏览器窗口被缩放到很小或很大"
+                    }
+                  ],
+                  "created_at": "2026-10-27T19:59:41.739698+00:00",
+                  "created_by": "octie-agent",
+                  "dependencies": [],
+                  "description": "整站所有文件（页面、脚本、样式、背景图、动作卡、生成脚本、需求台账）只存在于 crab-coast 一个文件夹内，不引用任何外部 CDN、字体或接口；断网状态下双击 index.html 即可运行。渲染使用 requestAnimationFrame 加时间增量推进，画面按 60 帧每秒目标运行，像素素材放大时使用最近邻插值保持锐利。",
+                  "digest": "ebe38c666d0ea584981c3f07bf4467a6f41bd9664d7b76fece4d2e3c81292687",
+                  "event_id": "EVT-000008",
+                  "excluded": [
+                    "后端服务、数据库与账号体系",
+                    "外部 CDN 资源与在线字体",
+                    "移动端触屏手势（当前迭代不做）"
+                  ],
+                  "id": "REQ-000004",
+                  "included": [
+                    "全部代码与资产位于 crab-coast 文件夹内",
+                    "离线可运行的本地静态页面",
+                    "基于时间增量的稳定渲染循环",
+                    "像素素材放大时的最近邻插值"
+                  ],
+                  "module": "交付与性能",
+                  "necessity": "资产散落在多个目录或依赖外部网络会让这份交付在离线环境下不可用，也无法满足“一个文件夹搞定”的明确约束。",
+                  "normal_behavior": {
+                    "behavior": "页面加载本地素材并开始渲染，方向键控制正常，动画连续",
+                    "expected": "无任何外部网络请求，画面帧率维持在 60 帧每秒附近",
+                    "scenario": "用户在本机双击打开页面，且当前没有联网"
+                  },
+                  "placement": {
+                    "kind": "页面",
+                    "other": [],
+                    "primary": {
+                      "page_id": "PAGE-000001",
+                      "page_revision": 1,
+                      "region_id": "REG-000001-0001-0001"
+                    }
+                  },
+                  "priority": "P0",
+                  "purpose": "用户要求所有产物收在一个文件夹里不外流，并且动画要顺滑、看得出是精心做的像素游戏而不是卡顿的贴图滑动。",
+                  "questions": [],
+                  "revision": 1,
+                  "sources": [
+                    {
+                      "source_id": "SRC-000001",
+                      "source_revision": 1
+                    },
+                    {
+                      "source_id": "SRC-000002",
+                      "source_revision": 1
+                    }
+                  ],
+                  "tags": [],
+                  "technical": null,
+                  "title": "单文件夹自包含交付并保持流畅渲染",
+                  "type": "非功能"
+                },
+                "pages": [
+                  {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001",
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:11.769250+00:00",
+                      "created_by": "octie-agent",
+                      "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                      "event_id": "EVT-000002",
+                      "id": "PAGE-000001",
+                      "location": "crab-coast/index.html 单页应用",
+                      "name": "深圳海岸小世界主页",
+                      "regions": [
+                        {
+                          "id": "REG-000001-0001-0001",
+                          "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                          "name": "场景画布区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0002",
+                          "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                          "name": "方向控制提示区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0003",
+                          "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                          "name": "资源加载提示区"
+                        }
+                      ],
+                      "revision": 1
+                    }
+                  }
+                ],
+                "revision": 1,
+                "scope": {
+                  "decision": "纳入",
+                  "reason": null
+                },
+                "sources": [
+                  {
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:28.507590+00:00",
+                      "created_by": "octie-agent",
+                      "date_note": "2026-10-28 用户在会话中的原始消息",
+                      "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                      "event_id": "EVT-000003",
+                      "id": "SRC-000001",
+                      "kind": "用户消息",
+                      "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                      "manual_note": null,
+                      "name": "用户口述需求：深圳海岸螃蟹小世界",
+                      "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                      "revision": 1,
+                      "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                    },
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  },
+                  {
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:59:22.515291+00:00",
+                      "created_by": "octie-agent",
+                      "date_note": "2026-10-28 通过 Edge CDP 在 chatgpt.com 发起的技术咨询",
+                      "digest": "526cf481c8592bf102dac7430092a1f929638f4a83987b5b8e77e65d0a36e982",
+                      "event_id": "EVT-000006",
+                      "id": "SRC-000002",
+                      "kind": "链接",
+                      "location": "https://chatgpt.com/c/6ae10247-06f0-83ee-80ae-b56b5c95a4ff",
+                      "manual_note": null,
+                      "name": "ChatGPT 咨询：深圳海岸像素小游戏最短可行资产方案",
+                      "quote": "推荐技术栈：AI 生图 + Python Pillow + HTML5 Canvas 2D。整体采用三个独立层：固定背景、循环环境特效、角色精灵。不要让 AI 一次生成整张背景和全部角色动作后直接投入使用。游戏逻辑画布 960 × 540 px；背景 960 × 540 PNG；角色逻辑帧 64 × 64 px；四向动画 Down / Left / Right / Up，每方向 4 帧，总帧数 16 帧，最终 Sprite Sheet 256 × 256 PNG；行走动画 8 FPS；游戏渲染 requestAnimationFrame，通常目标 60 FPS；移动速度 110 px/s。推荐先生成一张角色母版（Character Reference），确认角色外观后，再生成四个方向的动作。不要首先要求模型直接输出 256 × 256 的成品 Sheet，更稳妥的方法是生成较大的 4 × 4 等分网格，再用代码裁切。",
+                      "revision": 1,
+                      "summary": "建议采用固定背景层 + 循环环境特效层 + 角色精灵层三层结构，画布 960×540、单帧 64×64、四向各 4 帧共 16 帧、8fps 行走、110px/s 移动；AI 先出角色母版与 4×4 网格大图，再用 Pillow 裁切、抠底、统一对齐得到可用 sprite sheet。"
+                    },
+                    "source_id": "SRC-000002",
+                    "source_revision": 1
+                  }
+                ]
+              },
+              "REQ-000005": {
+                "confirmation": {
+                  "agent": "octie-agent",
+                  "event_id": "EVT-000054",
+                  "review_id": "REV-000007",
+                  "time": "2026-10-28T08:54:13.922021+00:00"
+                },
+                "content": {
+                  "acceptance": [
+                    {
+                      "allow_na": false,
+                      "evidence": "实测输出：duration=40, loop=true",
+                      "exception": {
+                        "expected": "判定播放配置不合格",
+                        "handling": "检查音频文件与 bgm.js 设置后复测",
+                        "scenario": "时长不符或未开启循环"
+                      },
+                      "expected": "duration 为 40（±0.05 秒），loop 属性为 true",
+                      "id": "AC-000015",
+                      "input": "无输入",
+                      "method": "在浏览器控制台读取 window.__bgm.audio.duration 与 loop",
+                      "operation": "读取音频元素的时长与 loop 属性",
+                      "preconditions": "页面已打开且音乐资源加载完成",
+                      "role": "音频验收者",
+                      "scenario": "核对时长与循环设置"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "实测 0.0019 / 0.413 = 0.005",
+                      "exception": {
+                        "expected": "判定会爆音",
+                        "handling": "重新做无缝处理或改用取模合成",
+                        "scenario": "接缝处跳变接近最大值"
+                      },
+                      "expected": "首尾跳变远小于普通相邻差值（比值 \u003c 0.1），听感上无咔哒",
+                      "id": "AC-000016",
+                      "input": "无输入",
+                      "method": "用脚本读取 PCM，计算 |x[0]-x[-1]| 与相邻差值分布的 p99.9 之比",
+                      "operation": "比较首尾采样跳变与整体相邻采样差值",
+                      "preconditions": "已拿到音频文件",
+                      "role": "音频验收者",
+                      "scenario": "核对接缝无断音爆音"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "操作前后 muted 状态记录",
+                      "exception": {
+                        "expected": "判定静音功能不合格",
+                        "handling": "修正 localStorage 读写与 muted 绑定后复测",
+                        "scenario": "点击无效或刷新后自动恢复播放"
+                      },
+                      "expected": "点击后立即静音且按钮变为静音态；刷新后仍为静音",
+                      "id": "AC-000017",
+                      "input": "点击右上角音乐按钮，然后刷新页面",
+                      "method": "读取 window.__bgm.muted 与按钮文案，刷新后再读一次",
+                      "operation": "观察按钮文案、音频 muted 状态与刷新后的状态",
+                      "preconditions": "音乐正在播放",
+                      "role": "音频验收者",
+                      "scenario": "核对静音开关与记忆"
+                    }
+                  ],
+                  "boundaries": [
+                    {
+                      "expected": "页面不报错，音乐保持静默直到用户第一次按键或点击",
+                      "handling": "监听首次交互事件后再调用播放，被拒绝时不清除监听",
+                      "scenario": "浏览器拦截自动播放"
+                    },
+                    {
+                      "expected": "游戏画面正常，音乐开关按钮自动隐藏",
+                      "handling": "监听音频错误事件，隐藏按钮并继续运行",
+                      "scenario": "音频文件缺失或路径错误"
+                    },
+                    {
+                      "expected": "刷新后仍保持静音",
+                      "handling": "静音状态写入 localStorage 并在初始化时读取",
+                      "scenario": "用户静音后刷新页面"
+                    }
+                  ],
+                  "created_at": "2026-10-28T08:54:12.200904+00:00",
+                  "created_by": "octie-agent",
+                  "dependencies": [],
+                  "description": "页面加载后提供一段 40 秒整、能够无缝循环的海边休闲风格背景音乐。受浏览器自动播放策略限制，首次按键或点击后开始播放；播放中不出现接缝断音或爆音。右上角提供音乐开关，键盘 M 键也可切换，静音状态记在本地，刷新后保持。音乐文件与页面同在一个文件夹内，断网可用；切换到 mp3 版本时行为不变。",
+                  "digest": "a5f9a8c76d9e09e77cc22bded06a02ca129928d59b5dcbd0416f6f5c51a1282a",
+                  "event_id": "EVT-000051",
+                  "excluded": [
+                    "脚步、水声等环境音效",
+                    "多曲目切换与音量滑动条",
+                    "在线流媒体或版权音乐接入"
+                  ],
+                  "id": "REQ-000005",
+                  "included": [
+                    "40.000 秒、首尾无缝衔接的循环音频",
+                    "首次按键或点击后自动开始播放",
+                    "右上角按钮与 M 键切换静音，状态写入 localStorage",
+                    "音乐文件随页面同目录存放，离线可用"
+                  ],
+                  "module": "音频",
+                  "necessity": "没有背景音乐时场景偏“静”，用户明确要求补一段海边悠闲向、可循环的电子音乐。",
+                  "normal_behavior": {
+                    "behavior": "背景音乐从当前循环位置开始播放，音量淡入到设定值",
+                    "expected": "能听到连续不断的音乐；走到 40 秒末尾时直接接回开头，没有静音空档或爆音",
+                    "scenario": "用户打开页面并按下任意方向键"
+                  },
+                  "placement": {
+                    "kind": "页面",
+                    "other": [],
+                    "primary": {
+                      "page_id": "PAGE-000001",
+                      "page_revision": 1,
+                      "region_id": "REG-000001-0001-0002"
+                    }
+                  },
+                  "priority": "P1",
+                  "purpose": "给静止或行走中的场景提供持续的氛围声，让页面像一个完整的小游戏而不是一张会动的图。",
+                  "questions": [],
+                  "revision": 1,
+                  "sources": [
+                    {
+                      "source_id": "SRC-000001",
+                      "source_revision": 1
+                    }
+                  ],
+                  "tags": [],
+                  "technical": null,
+                  "title": "播放可无缝循环的海岸背景音乐并支持静音",
+                  "type": "功能"
+                },
+                "pages": [
+                  {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0002",
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:11.769250+00:00",
+                      "created_by": "octie-agent",
+                      "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                      "event_id": "EVT-000002",
+                      "id": "PAGE-000001",
+                      "location": "crab-coast/index.html 单页应用",
+                      "name": "深圳海岸小世界主页",
+                      "regions": [
+                        {
+                          "id": "REG-000001-0001-0001",
+                          "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                          "name": "场景画布区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0002",
+                          "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                          "name": "方向控制提示区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0003",
+                          "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                          "name": "资源加载提示区"
+                        }
+                      ],
+                      "revision": 1
+                    }
+                  }
+                ],
+                "revision": 1,
+                "scope": {
+                  "decision": "纳入",
+                  "reason": null
+                },
+                "sources": [
+                  {
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:28.507590+00:00",
+                      "created_by": "octie-agent",
+                      "date_note": "2026-10-28 用户在会话中的原始消息",
+                      "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                      "event_id": "EVT-000003",
+                      "id": "SRC-000001",
+                      "kind": "用户消息",
+                      "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                      "manual_note": null,
+                      "name": "用户口述需求：深圳海岸螃蟹小世界",
+                      "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                      "revision": 1,
+                      "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                    },
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ]
+              },
+              "REQ-000006": {
+                "confirmation": {
+                  "agent": "octie-agent",
+                  "event_id": "EVT-000133",
+                  "review_id": "REV-000019",
+                  "time": "2026-10-28T09:12:14.221013+00:00"
+                },
+                "content": {
+                  "acceptance": [
+                    {
+                      "allow_na": false,
+                      "evidence": "实测 7 次序列：24,48,96,48,24,48,96（含 小/中/大 标签）",
+                      "exception": {
+                        "expected": "判定反弹逻辑或标签绑定有误",
+                        "handling": "修正方向翻转与文案刷新后复测",
+                        "scenario": "出现 96 直接跳到 24、或文案与尺寸不符"
+                      },
+                      "expected": "序列为 48(中)→24(小)→48(中)→96(大)→48(中)→24(小)→48(中)；按钮依次显示「尺寸 小 24 / 中 48 / 大 96 …」",
+                      "id": "AC-000024",
+                      "input": "连续按 T 键 7 次",
+                      "method": "点击按钮并读取 window.__probe.state().size 与按钮 textContent",
+                      "operation": "记录每次的尺寸与按钮文案",
+                      "preconditions": "页面已加载三套表，默认中档",
+                      "role": "尺寸验收者",
+                      "scenario": "核对反弹序列与标签"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "实测 24 → 48、96 → 48",
+                      "exception": {
+                        "expected": "判定仍在绕回",
+                        "handling": "检查方向变量是否在越界时翻转",
+                        "scenario": "24 跳到 96 或 96 跳到 24"
+                      },
+                      "expected": "24 的下一档是 48；96 的下一档也是 48",
+                      "id": "AC-000025",
+                      "input": "在端点再按一次 T",
+                      "method": "把档位切到端点后按一次 T，读取结果",
+                      "operation": "观察下一档",
+                      "preconditions": "已停在最小档 24 或最大档 96",
+                      "role": "尺寸验收者",
+                      "scenario": "核对两端不互跳"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "三档基线 86/43/21，朝向行一致",
+                      "exception": {
+                        "expected": "判定该档基线或行映射有问题",
+                        "handling": "修正后复测",
+                        "scenario": "某档悬空或朝向错乱"
+                      },
+                      "expected": "三档脚底分别落在 86/43/21 基线上，朝向仍为右→正面行、上→侧视行",
+                      "id": "AC-000026",
+                      "input": "每档按住右键后改按上键",
+                      "method": "读取角色坐标与该档基线核对偏移",
+                      "operation": "核对脚底贴地与朝向行",
+                      "preconditions": "分别切到三档",
+                      "role": "尺寸验收者",
+                      "scenario": "核对三档脚底与朝向不受切换逻辑影响"
+                    }
+                  ],
+                  "boundaries": [
+                    {
+                      "expected": "回到中档（而不是跳到大档）",
+                      "handling": "索引越界时翻转方向再前进一步",
+                      "scenario": "在最小档继续按 T"
+                    },
+                    {
+                      "expected": "回到中档（而不是跳到小档）",
+                      "handling": "同上",
+                      "scenario": "在最大档继续按 T"
+                    },
+                    {
+                      "expected": "位置、碰撞与帧序都不受影响",
+                      "handling": "切换只改绘制用的表与基线",
+                      "scenario": "角色移动过程中切换"
+                    }
+                  ],
+                  "created_at": "2026-10-28T09:12:07.880416+00:00",
+                  "created_by": "octie-agent",
+                  "dependencies": [],
+                  "description": "螃蟹保留 96（大）、48（中）、24（小）三套精灵表，由同一张动作卡逐级派生，共用朝向状态机、行走帧序与脚底对齐规则；三档都做了侧视按行缩放 90%。T 键或左上角按钮采用**反弹式**切换：从中档出发先变小，到最小档后掉头变大，到最大档后再掉头变小，形成 中→小→中→大→中→小… 的往复，而不是跳回另一端。按钮显示当前档位的中文标签与像素尺寸（如「尺寸 中 48」）。",
+                  "digest": "73343bc0b56bfe6235c12b2c0a1c7b735f114b2ca045861226dab93197d893d8",
+                  "event_id": "EVT-000130",
+                  "excluded": [
+                    "绕回式（一端的下一档直接跳到另一端）切换",
+                    "尺寸滑块或自定义尺寸",
+                    "按距离自动切换尺寸"
+                  ],
+                  "id": "REQ-000006",
+                  "included": [
+                    "96/48/24 三套精灵表同时存在且都可加载",
+                    "T 键与按钮按反弹方式切换：中→小→中→大→中…",
+                    "按钮显示「尺寸 大/中/小 + 像素值」",
+                    "三档共用朝向状态机与行走帧序，侧视均缩 90%"
+                  ],
+                  "module": "角色渲染",
+                  "necessity": "用户明确要求把绕回式切换改成反弹式，并要求用 小/中/大 表达档位。",
+                  "normal_behavior": {
+                    "behavior": "每按一次 T 或点一次按钮，档位沿当前方向走一格；走到端点则反向",
+                    "expected": "序列为 中→小→中→大→中→小…，按钮文案随之更新，且不会出现两端直接互跳",
+                    "scenario": "页面加载完成，默认停在中档 48"
+                  },
+                  "placement": {
+                    "kind": "页面",
+                    "other": [],
+                    "primary": {
+                      "page_id": "PAGE-000001",
+                      "page_revision": 1,
+                      "region_id": "REG-000001-0001-0001"
+                    }
+                  },
+                  "priority": "P1",
+                  "purpose": "让调节尺寸的过程连续、可预期：越按越接近想要的大小，不会在两端之间突然跳变。",
+                  "questions": [],
+                  "revision": 3,
+                  "sources": [
+                    {
+                      "source_id": "SRC-000001",
+                      "source_revision": 1
+                    }
+                  ],
+                  "tags": [],
+                  "technical": null,
+                  "title": "同一角色三档尺寸按 T 键反弹切换（小↔中↔大）",
+                  "type": "功能"
+                },
+                "pages": [
+                  {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001",
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:11.769250+00:00",
+                      "created_by": "octie-agent",
+                      "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                      "event_id": "EVT-000002",
+                      "id": "PAGE-000001",
+                      "location": "crab-coast/index.html 单页应用",
+                      "name": "深圳海岸小世界主页",
+                      "regions": [
+                        {
+                          "id": "REG-000001-0001-0001",
+                          "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                          "name": "场景画布区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0002",
+                          "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                          "name": "方向控制提示区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0003",
+                          "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                          "name": "资源加载提示区"
+                        }
+                      ],
+                      "revision": 1
+                    }
+                  }
+                ],
+                "revision": 3,
+                "scope": {
+                  "decision": "纳入",
+                  "reason": null
+                },
+                "sources": [
+                  {
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:28.507590+00:00",
+                      "created_by": "octie-agent",
+                      "date_note": "2026-10-28 用户在会话中的原始消息",
+                      "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                      "event_id": "EVT-000003",
+                      "id": "SRC-000001",
+                      "kind": "用户消息",
+                      "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                      "manual_note": null,
+                      "name": "用户口述需求：深圳海岸螃蟹小世界",
+                      "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                      "revision": 1,
+                      "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                    },
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ]
+              },
+              "REQ-000007": {
+                "confirmation": {
+                  "agent": "octie-agent",
+                  "event_id": "EVT-000153",
+                  "review_id": "REV-000023",
+                  "time": "2026-10-28T10:25:08.580419+00:00"
+                },
+                "content": {
+                  "acceptance": [
+                    {
+                      "allow_na": false,
+                      "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图",
+                      "exception": {
+                        "expected": "判定不通过并记录 fitCount 未增长",
+                        "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460",
+                        "scenario": "静置超过 1 秒画布尺寸仍未变化"
+                      },
+                      "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+                      "id": "AC-000027",
+                      "input": "把可见高度由 390 改为 460，不派发任何事件",
+                      "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+                      "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                      "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+                      "role": "移动端验收者",
+                      "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "前后画布尺寸数值与 fitCount 变化",
+                      "exception": {
+                        "expected": "判定不通过",
+                        "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向",
+                        "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉"
+                      },
+                      "expected": "画布自动回到 693×390，fitCount 再增加 1",
+                      "id": "AC-000028",
+                      "input": "把可见高度由 460 改回 390，不派发任何事件",
+                      "method": "与上一条同一套模拟手段，反向修改高度",
+                      "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                      "preconditions": "承接上一条，画布当前为 818×460",
+                      "role": "移动端验收者",
+                      "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "三次事件与静置期的 fitCount 数值",
+                      "exception": {
+                        "expected": "判定不通过，说明存在空转",
+                        "handling": "检查轮询是否在尺寸未变时仍调用 fit()",
+                        "scenario": "静置期间 fitCount 持续增长"
+                      },
+                      "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+                      "id": "AC-000029",
+                      "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+                      "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+                      "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+                      "preconditions": "页面稳定，画布尺寸已确定",
+                      "role": "移动端验收者",
+                      "scenario": "核对各事件通道与空闲开销"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图",
+                      "exception": {
+                        "expected": "判定不通过",
+                        "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名",
+                        "scenario": "画布仍保留 2% / 6% 边距"
+                      },
+                      "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+                      "id": "AC-000030",
+                      "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+                      "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+                      "operation": "读取画布尺寸与可见区域尺寸",
+                      "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+                      "role": "移动端验收者",
+                      "scenario": "触屏设备上画布铺满可见区域"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "视口尺寸、画布尺寸与公式计算值",
+                      "exception": {
+                        "expected": "判定不通过",
+                        "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏",
+                        "scenario": "桌面画布被拉伸到 929 以上或出现裁剪"
+                      },
+                      "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+                      "id": "AC-000031",
+                      "input": "视口 947×972",
+                      "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+                      "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+                      "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+                      "role": "桌面验收者",
+                      "scenario": "桌面端不出现铺满带来的回归"
+                    }
+                  ],
+                  "boundaries": [
+                    {
+                      "expected": "画布的 CSS 尺寸保持不变",
+                      "handling": "viewBox() 退回 innerWidth / innerHeight，跳过本次重排，避免放大过程中画面跳动",
+                      "scenario": "用户正在双指放大（visualViewport.scale 大于 1）"
+                    }
+                  ],
+                  "created_at": "2026-10-28T10:24:35.811740+00:00",
+                  "created_by": "octie-agent",
+                  "dependencies": [],
+                  "description": "手机浏览器的工具栏（地址栏、底部导航）收起或展开会改变页面可见高度，但部分浏览器在此时不派发 window.resize（iOS Safari 尤其常见）。当前实现只监听 window.resize，所以可见区域变大后画布仍保持旧尺寸，必须等其它事件（例如点击「收起按键」触发的那一次 resize）才会重排。本需求要求以真实可见区域（visualViewport）为准，在可见区域变化后自动重算画布尺寸，把它放大到当前可见区域内能放下的最大值，并在触屏设备上去掉原来预留的 2% / 6% 边距。",
+                  "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+                  "event_id": "EVT-000150",
+                  "excluded": [
+                    "双指放大（visualViewport.scale 大于 1）过程中的重新排版",
+                    "桌面端留边距策略的变更，桌面仍保持 0.98 / 0.94",
+                    "虚拟按键的位置、显隐与输入通道逻辑"
+                  ],
+                  "id": "REQ-000007",
+                  "included": [
+                    "以 visualViewport 的宽高作为可见区域，在工具栏收起或展开后自动重算画布尺寸",
+                    "触屏设备上画布铺满可见区域，不再保留原来的 2% 宽度与 6% 高度边距",
+                    "同时监听 window resize、visualViewport resize、visualViewport scroll、orientationchange、pageshow、visibilitychange 六条来源",
+                    "增加 400ms 的可见区域尺寸比对兜底，应对浏览器完全不发事件的情况"
+                  ],
+                  "module": "画面自适应（可见区域适配）",
+                  "necessity": "去掉本项，画面会在工具栏收起后长期偏小：横屏实测少用约 6% 的高度（693×390 而非应有的 818×460），竖屏少用 8px 宽度；且表现为“点了某个按钮才放大”的怪异时序，用户会以为页面卡住。",
+                  "normal_behavior": {
+                    "behavior": "页面以 visualViewport 为准重新计算画布缩放",
+                    "expected": "画布在一个 400ms 轮询周期内由 693×390 自动变为 818×460，全程无需用户点击任何按钮",
+                    "scenario": "手机横屏下收起浏览器工具栏，可见高度由 390 变为 460，浏览器没有派发 resize"
+                  },
+                  "placement": {
+                    "kind": "页面",
+                    "other": [],
+                    "primary": {
+                      "page_id": "PAGE-000001",
+                      "page_revision": 1,
+                      "region_id": "REG-000001-0001-0001"
+                    }
+                  },
+                  "priority": "P1",
+                  "purpose": "让手机玩家收起浏览器工具栏后立刻得到更大的画面，不需要手动触发任何按钮。",
+                  "questions": [],
+                  "revision": 1,
+                  "sources": [
+                    {
+                      "source_id": "SRC-000003",
+                      "source_revision": 1
+                    }
+                  ],
+                  "tags": [],
+                  "technical": "实现位于 main.js：viewBox() 在 visualViewport.scale 约等于 1 时取 visualViewport 的宽高，否则退回 innerWidth/innerHeight；fit() 依据 html.touch-mode 决定铺满还是保留边距；事件监听与 400ms 轮询兜底同在 fit() 附近注册；另暴露 __probe.fitCount() 与 __probe.viewBox() 供验收读取。",
+                  "title": "手机隐藏浏览器工具栏后画面自动放大到最大",
+                  "type": "功能"
+                },
+                "pages": [
+                  {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001",
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:11.769250+00:00",
+                      "created_by": "octie-agent",
+                      "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                      "event_id": "EVT-000002",
+                      "id": "PAGE-000001",
+                      "location": "crab-coast/index.html 单页应用",
+                      "name": "深圳海岸小世界主页",
+                      "regions": [
+                        {
+                          "id": "REG-000001-0001-0001",
+                          "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                          "name": "场景画布区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0002",
+                          "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                          "name": "方向控制提示区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0003",
+                          "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                          "name": "资源加载提示区"
+                        }
+                      ],
+                      "revision": 1
+                    }
+                  }
+                ],
+                "revision": 1,
+                "scope": {
+                  "decision": "纳入",
+                  "reason": null
+                },
+                "sources": [
+                  {
+                    "snapshot": {
+                      "created_at": "2026-10-28T10:24:10.851262+00:00",
+                      "created_by": "octie-agent",
+                      "date_note": "2026-10-28 用户消息",
+                      "digest": "ddf640df9e4d1bbd434e4ab85bd1e7ac6d19794064dd9c94565faa4675a8fbd2",
+                      "event_id": "EVT-000149",
+                      "id": "SRC-000003",
+                      "kind": "用户消息",
+                      "location": null,
+                      "manual_note": "用户在本次会话中以文字直接提出的原始需求，未经整理",
+                      "name": "用户提出画面自适应需求（手机隐藏工具栏后自动放大）",
+                      "quote": "手机浏览器有一个问题就是，刚开始的时候如果游戏页面小，我隐藏工具栏之后页面不会自动放大，而是点收起按钮的时候才会自适应放大，让页面自动放大最大，新需求创建修改",
+                      "revision": 1,
+                      "summary": "用户指出：手机隐藏浏览器工具栏后可见区域变大，画面却不会自动放大，要点「收起按键」才重排；要求画面自动放大到最大。"
+                    },
+                    "source_id": "SRC-000003",
+                    "source_revision": 1
+                  }
+                ]
+              }
+            },
+            "predecessor": "BASE-000005",
+            "revision": 1,
+            "status": "候选",
+            "version": "V1.5"
+          },
+          "approval": {
+            "agent": "octie-agent",
+            "event_id": "EVT-000157",
+            "review_id": "REV-000024",
+            "time": "2026-10-28T10:26:47.084697+00:00"
+          },
+          "candidate_members": {
+            "REQ-000001": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000011",
+                "review_id": "REV-000001",
+                "time": "2026-10-27T20:19:33.136841+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "初始画面截图 + 七类元素勾选清单（含各自大致坐标）",
+                    "exception": {
+                      "expected": "某类元素缺失或颜色与同类无法区分",
+                      "handling": "记为不通过，补画该类元素后重新截图核对",
+                      "scenario": "某类元素缺失或与同类无法区分"
+                    },
+                    "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+                    "id": "AC-000001",
+                    "input": "无输入，仅观察初始画面",
+                    "method": "对初始画面截图，按七类元素清单逐项勾选并标注位置",
+                    "operation": "打开 index.html 并等待加载提示消失",
+                    "preconditions": "资源已加载完成，页面处于初始状态",
+                    "role": "场景验收者",
+                    "scenario": "核对七类海岸元素是否齐全"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "移动前后两张截图 + 背景区域差异率数值",
+                    "exception": {
+                      "expected": "背景出现任何平移或缩放跳动",
+                      "handling": "判定为不通过，移除背景位移逻辑",
+                      "scenario": "角色移动过程中背景发生位移"
+                    },
+                    "expected": "除角色精灵所在区域外，背景像素与移动前一致，背景位移为 0 像素",
+                    "id": "AC-000002",
+                    "input": "按住右方向键持续 3 秒，再按住左方向键持续 3 秒",
+                    "method": "移动前后各截一张图，用像素差分统计背景区域差异率",
+                    "operation": "移动角色后回到起始位置附近，比较背景像素",
+                    "preconditions": "页面已进入且背景渲染完成",
+                    "role": "场景验收者",
+                    "scenario": "验证背景不随角色移动"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "连续 3 帧截图",
+                    "exception": {
+                      "expected": "海面完全静止或每帧出现大面积跳变",
+                      "handling": "记为不通过，调整波浪相位与循环周期后复测",
+                      "scenario": "海面静止或帧间跳变过大"
+                    },
+                    "expected": "三帧海浪纹理位置不同，循环周期内无整幅跳动或闪烁",
+                    "id": "AC-000003",
+                    "input": "无输入",
+                    "method": "间隔 1 秒连续截 3 帧，比对海浪纹理位移",
+                    "operation": "静置观察海面 3 秒并连续截取 3 帧",
+                    "preconditions": "页面静止无角色输入",
+                    "role": "场景验收者",
+                    "scenario": "验证海面循环动画存在且连贯"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "场景等比缩放并居中，四周留出底色，不拉伸不变形",
+                    "handling": "按 min(宽比, 高比) 等比缩放后居中绘制，留边填深色",
+                    "scenario": "浏览器窗口宽高比与场景原始比例不一致"
+                  },
+                  {
+                    "expected": "仍能看完整幅场景与角色，元素不变形",
+                    "handling": "继续等比缩放至适配宽度，允许整体变小但不裁切",
+                    "scenario": "窗口宽度小于 480px 的窄屏"
+                  }
+                ],
+                "created_at": "2026-10-27T19:58:51.627651+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "页面打开后在画布上绘制一幅完整的深圳海岸场景：海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋。背景是一整张固定的 2.5D 平面图，角色在其上方行走时背景像素位置保持不变，不做相机跟随与地图滚动。海水部分带持续的循环动画（波浪流动），让画面不是死图。",
+                "digest": "2310b3e8c298e8c9a0645878ccae71b3e32c822529ee1675b0ddce9d973bbed4",
+                "event_id": "EVT-000004",
+                "excluded": [
+                  "视差滚动、相机跟随与地图平移",
+                  "多场景或关卡切换",
+                  "玩家侧的场景缩放与旋转"
+                ],
+                "id": "REQ-000001",
+                "included": [
+                  "海水区与沙滩区上固定绘制的一整幅海岸背景",
+                  "红树林、海藻床、珊瑚礁三类深圳典型海岸元素的可见呈现",
+                  "台阶与房屋等场景道具的可见呈现",
+                  "海面波浪的循环动画"
+                ],
+                "module": "场景渲染",
+                "necessity": "没有背景就没有场景可言：用户明确要求网站带海洋、沙滩与深圳典型海岸元素，且背景必须固定不动，否则就不是他要的“大地图一站到底”的观感。",
+                "normal_behavior": {
+                  "behavior": "画布按场景原始比例等比绘制完整海岸背景，海面开始循环波浪动画",
+                  "expected": "画面同时可见海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋共七类元素，且背景在角色移动前后像素位置不变",
+                  "scenario": "用户打开本地页面且资产已就绪"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "给螃蟹角色提供一个可辨认的深圳海岸小世界作为舞台，让用户一眼看出这是海藻床、红树林、珊瑚礁构成的真实海岸场景。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "呈现固定不滚动的深圳海岸 2.5D 场景背景",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000002": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000014",
+                "review_id": "REV-000002",
+                "time": "2026-10-27T20:19:33.931717+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "四次按键的起点终点坐标记录表（含 dx、dy 数值）",
+                    "exception": {
+                      "expected": "该方向判定不通过",
+                      "handling": "修正该方向的输入映射后复测",
+                      "scenario": "某个方向位移方向相反或出现斜向偏移"
+                    },
+                    "expected": "↑ 的 y 减小且 x 不变，↓ 的 y 增大且 x 不变，← 的 x 减小且 y 不变，→ 的 x 增大且 y 不变，四次的垂直轴偏移均为 0 像素",
+                    "id": "AC-000004",
+                    "input": "依次单独按住 ↑、↓、←、→ 各 1 秒",
+                    "method": "在页面中暴露角色坐标并逐次记录，比对 dx 与 dy 的正负和零值",
+                    "operation": "每次按键后记录角色起点与终点坐标",
+                    "preconditions": "角色位于场景中央，四个方向均有足够空间",
+                    "role": "操作验收者",
+                    "scenario": "逐个方向核对移动方向正确"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "三组位移量原始数值与相对差计算结果",
+                    "exception": {
+                      "expected": "判定速度不稳定",
+                      "handling": "改为按时间增量累加位移后复测",
+                      "scenario": "三次位移差异超过 10% 或位移接近 0"
+                    },
+                    "expected": "三次位移量的最大值与最小值相对差不超过 10%",
+                    "id": "AC-000005",
+                    "input": "连续 3 次按住 → 各 1 秒后松开",
+                    "method": "同一方向的 3 组位移量做极差与均值比值计算",
+                    "operation": "记录每次 1 秒内的水平位移量",
+                    "preconditions": "角色位于场景中央",
+                    "role": "操作验收者",
+                    "scenario": "核对移动速度稳定"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "最终坐标数值 + 贴边截图",
+                    "exception": {
+                      "expected": "判定边界处理不通过",
+                      "handling": "修正钳制范围并复测",
+                      "scenario": "角色移出画面或贴在边缘抖动"
+                    },
+                    "expected": "角色整体仍在可视区域内，其右边缘不超过场景右内边距，坐标被钳制在允许范围",
+                    "id": "AC-000006",
+                    "input": "持续按住 → 5 秒",
+                    "method": "持续按键后读取角色最终坐标与场景边界值做比较",
+                    "operation": "观察角色最终位置与画面右边缘的关系",
+                    "preconditions": "角色靠近右侧边界",
+                    "role": "操作验收者",
+                    "scenario": "核对边界限制"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "松键时刻与最后一帧位移的时间差记录",
+                    "exception": {
+                      "expected": "判定为未立即停止",
+                      "handling": "移除速度衰减逻辑，改为松键直接归零",
+                      "scenario": "松键后角色继续滑行超过 100 毫秒"
+                    },
+                    "expected": "松键后 100 毫秒内水平位移归零，角色不再移动",
+                    "id": "AC-000007",
+                    "input": "松开 → 键",
+                    "method": "松键后按帧记录坐标，找出最后一次位移的帧号与时间差",
+                    "operation": "松键后连续观察 0.5 秒",
+                    "preconditions": "角色正在向右移动",
+                    "role": "操作验收者",
+                    "scenario": "核对松键立即停止"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "角色只沿最后按下的那个方向移动，不同时产生斜向位移",
+                    "handling": "以最后一次按下的方向键为准，忽略先前仍按住的轴",
+                    "scenario": "同时按住两个方向键（例如右键与上键）"
+                  },
+                  {
+                    "expected": "角色停在边界内侧，不越出画面",
+                    "handling": "对坐标做上下限钳制，越界时保留在允许范围内",
+                    "scenario": "角色持续朝同一个方向移动到场景边缘"
+                  },
+                  {
+                    "expected": "角色停止移动，不出现卡住持续漂移",
+                    "handling": "监听失焦事件清空按键状态",
+                    "scenario": "按住方向键时浏览器窗口失去焦点"
+                  }
+                ],
+                "created_at": "2026-10-27T19:59:07.557201+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "用户按下 W/A/S/D 或键盘方向键时，螃蟹角色在固定场景内沿对应方向匀速移动；松开按键立即停止。移动只在上下左右四个轴方向发生，不产生斜向位移，角色始终被限制在场景可视范围内。",
+                "digest": "433c05bb460b38b24a3f7879d6b4fe2d1231808c67f52164bd721002d7614d6a",
+                "event_id": "EVT-000005",
+                "excluded": [
+                  "斜向八方向自由移动",
+                  "跳跃、攻击、拾取等额外动作",
+                  "身体惯性、摩擦滑行与加速缓冲"
+                ],
+                "id": "REQ-000002",
+                "included": [
+                  "W 与 ↑ 向上移动，S 与 ↓ 向下移动，A 与 ← 向左移动，D 与 → 向右移动",
+                  "恒定速度的水平与垂直位移",
+                  "角色位置限制在场景可视区域内",
+                  "松开按键后立即停止"
+                ],
+                "module": "角色控制",
+                "necessity": "没有四向移动就没有交互，整个场景退化为一张静止图片；用户原话明确这是当前唯一必须实现的功能。",
+                "normal_behavior": {
+                  "behavior": "按住某一个方向键，角色沿该轴方向持续移动并播放行走动画，松开按键后停住",
+                  "expected": "位移方向与按键方向一致，单位时间位移量保持稳定",
+                  "scenario": "角色位于场景中央且没有触达边界"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "这是用户唯一要求现在必须完成的操作能力：用四个方向键驱动小螃蟹在海岸场景里走动。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "支持键盘四向移动螃蟹角色",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000003": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000050",
+                "review_id": "REV-000006",
+                "time": "2026-10-28T08:54:11.706903+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "帧索引序列日志 + 行走中截图 evidence/03~06",
+                    "exception": {
+                      "expected": "判定动画不连通",
+                      "handling": "修正帧推进逻辑与计时基准后复测",
+                      "scenario": "帧序出现跳跃、倒退或长时间停在同帧"
+                    },
+                    "expected": "帧索引按 0、1、2、3 循环推进，无跳帧与倒序",
+                    "id": "AC-000008",
+                    "input": "按住右方向键持续 1 秒",
+                    "method": "在渲染循环中记录每次帧切换的时间戳与索引，导出序列后检查连续性",
+                    "operation": "记录这 1 秒内实际绘制的帧索引序列",
+                    "preconditions": "角色在可行走沙地上，四个方向的帧组已加载",
+                    "role": "动画验收者",
+                    "scenario": "核对单一方向的帧循环连通"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "切向前后帧组标识日志 + 切向瞬间截图",
+                    "exception": {
+                      "expected": "判定动作组切换失败",
+                      "handling": "修正方向到帧组的映射后复测",
+                      "scenario": "切向后仍显示向右的帧或出现空白帧"
+                    },
+                    "expected": "切向后绘制的是向上动作组的帧，切换发生在 1 个渲染帧之内",
+                    "id": "AC-000009",
+                    "input": "按住右方向键后改为按住上方向键",
+                    "method": "记录切向前后各 5 帧的帧组标识与索引",
+                    "operation": "观察切向瞬间的画面并记录所用帧组",
+                    "preconditions": "角色正在向右行走",
+                    "role": "动画验收者",
+                    "scenario": "核对方向切换动作组"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "松键后 1 秒内的帧索引记录",
+                    "exception": {
+                      "expected": "判定为动画未停止",
+                      "handling": "静止态改为只绘制第 0 帧后复测",
+                      "scenario": "松键后仍在空转播放行走帧"
+                    },
+                    "expected": "帧索引保持不变并停在 0，画面稳定显示该方向的待机帧",
+                    "id": "AC-000010",
+                    "input": "松开所有方向键",
+                    "method": "松键后连续记录帧索引，确认数值不再变化",
+                    "operation": "松键后观察 1 秒",
+                    "preconditions": "角色正在移动",
+                    "role": "动画验收者",
+                    "scenario": "核对静止时停止推进"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "python tools/check_sheet.py 输出 + evidence/33_side_scale_preview.png",
+                    "exception": {
+                      "expected": "判定资产不合格",
+                      "handling": "重新跑切帧与对齐脚本后复检",
+                      "scenario": "存在尺寸不一致、底色残留或帧间跳动"
+                    },
+                    "expected": "16 帧全部 48×48，四角 alpha 为 0，同方向帧间横向漂移不超过 2 像素，脚底基线一致",
+                    "id": "AC-000011",
+                    "input": "无输入",
+                    "method": "用脚本遍历 16 帧，统计尺寸、透明角落与包围盒中心偏移；帧尺寸从 scene.json 读取",
+                    "operation": "运行自检脚本检查 16 帧的尺寸、透明角、帧间漂移与脚底基线",
+                    "preconditions": "动作卡已生成在 assets/crab_sheet.png",
+                    "role": "动画验收者",
+                    "scenario": "核对动作卡资产一致性与尺寸"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "帧序号重置到新方向动作组的第 0 帧，不出现两个方向帧混用的错位画面",
+                    "handling": "方向变化即重置动画计时器与帧索引",
+                    "scenario": "移动过程中快速改变方向"
+                  },
+                  {
+                    "expected": "保持在当前面向方向的第 0 帧，不继续推进动画",
+                    "handling": "无输入时冻结帧索引",
+                    "scenario": "角色静止不动"
+                  },
+                  {
+                    "expected": "侧身行的显示尺寸比正面小约 10%，切换瞬间不出现明显的“变大”跳变",
+                    "handling": "切片阶段按行缩放，并把缩放后的脚底回拉到同一基线",
+                    "scenario": "从正面切到侧身"
+                  }
+                ],
+                "created_at": "2026-10-28T08:54:10.386122+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "螃蟹为四个方向（下、左、右、上）各准备一组走路帧，方向切换时立即切换动作组，移动过程中按固定帧率循环播放，静止时停在该方向的待机帧。动作卡由图片生成模型直接产出 4×4 卡片（绿幕），再由代码完成：等分切格 → 软阈值抠绿 → 按包围盒归一化（脚底对齐同一基线）→ 整表统一调色板量化。当前成品为半尺寸：单帧 48×48、整表 192×192、32 色；其中左侧与右侧两行额外缩放到 90%，避免侧身时视觉上比正面显大。",
+                "digest": "9eb3d2fa058fc7d4588a0382fce3f699fabf2129c3badef805ae216396ebdcf3",
+                "event_id": "EVT-000047",
+                "excluded": [
+                  "斜向与八方向的独立动作组",
+                  "攻击、跳跃、死亡等战斗动作",
+                  "帧间插值生成的补间画面",
+                  "静止时的呼吸/眨眼等二次动作（试做过，已移除）"
+                ],
+                "id": "REQ-000003",
+                "included": [
+                  "上、下、左、右四个方向的独立走路帧组，每组 4 帧",
+                  "按 8 帧每秒循环推进帧序号",
+                  "方向切换时同步切换动作组",
+                  "松开方向键后停在该方向待机帧（第 0 帧）",
+                  "16 帧统一 48×48 尺寸、透明背景、同一套 32 色调色板",
+                  "侧视两行按行缩放到 90%，脚底与正面行保持同一基线"
+                ],
+                "module": "角色动画",
+                "necessity": "只有位移没有帧动画，角色会表现为贴图滑动，用户会直接判定不合格；动作卡是该需求的核心交付物。",
+                "normal_behavior": {
+                  "behavior": "每经过 125 毫秒切换到该方向动作组的下一个帧，四帧结束后回到第一帧继续循环",
+                  "expected": "画面中的螃蟹腿部姿态逐帧变化，形成持续步行动作",
+                  "scenario": "角色正在向右移动"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "让螃蟹的移动看起来是一只活物在走，而不是一张贴图在平移；这也是用户反复强调的“动作卡连续播放”。",
+                "questions": [],
+                "revision": 2,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  },
+                  {
+                    "source_id": "SRC-000002",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "播放四向走路动作卡的连续帧动画",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 2,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                },
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:59:22.515291+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 通过 Edge CDP 在 chatgpt.com 发起的技术咨询",
+                    "digest": "526cf481c8592bf102dac7430092a1f929638f4a83987b5b8e77e65d0a36e982",
+                    "event_id": "EVT-000006",
+                    "id": "SRC-000002",
+                    "kind": "链接",
+                    "location": "https://chatgpt.com/c/6ae10247-06f0-83ee-80ae-b56b5c95a4ff",
+                    "manual_note": null,
+                    "name": "ChatGPT 咨询：深圳海岸像素小游戏最短可行资产方案",
+                    "quote": "推荐技术栈：AI 生图 + Python Pillow + HTML5 Canvas 2D。整体采用三个独立层：固定背景、循环环境特效、角色精灵。不要让 AI 一次生成整张背景和全部角色动作后直接投入使用。游戏逻辑画布 960 × 540 px；背景 960 × 540 PNG；角色逻辑帧 64 × 64 px；四向动画 Down / Left / Right / Up，每方向 4 帧，总帧数 16 帧，最终 Sprite Sheet 256 × 256 PNG；行走动画 8 FPS；游戏渲染 requestAnimationFrame，通常目标 60 FPS；移动速度 110 px/s。推荐先生成一张角色母版（Character Reference），确认角色外观后，再生成四个方向的动作。不要首先要求模型直接输出 256 × 256 的成品 Sheet，更稳妥的方法是生成较大的 4 × 4 等分网格，再用代码裁切。",
+                    "revision": 1,
+                    "summary": "建议采用固定背景层 + 循环环境特效层 + 角色精灵层三层结构，画布 960×540、单帧 64×64、四向各 4 帧共 16 帧、8fps 行走、110px/s 移动；AI 先出角色母版与 4×4 网格大图，再用 Pillow 裁切、抠底、统一对齐得到可用 sprite sheet。"
+                  },
+                  "source_id": "SRC-000002",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000004": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000020",
+                "review_id": "REV-000004",
+                "time": "2026-10-27T20:19:35.854973+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "Network 请求列表截图（含域名列）+ 离线状态下的页面截图",
+                    "exception": {
+                      "expected": "判定不自包含",
+                      "handling": "把所需资源下载到本地目录并改为相对路径后复测",
+                      "scenario": "出现外部域名请求或页面白屏"
+                    },
+                    "expected": "页面完整显示场景与角色，Network 面板中没有任何指向本机以外域名的请求，全部请求为 file:// 或 localhost 本地路径",
+                    "id": "AC-000012",
+                    "input": "无网络",
+                    "method": "断网打开页面并导出 Network 请求列表，逐条检查域名",
+                    "operation": "断开网络后双击 index.html，并查看开发者工具的 Network 面板",
+                    "preconditions": "已拿到 crab-coast 文件夹，网络已断开",
+                    "role": "交付验收者",
+                    "scenario": "核对文件夹自包含与离线可运行"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "性能面板截图或帧率统计数值",
+                    "exception": {
+                      "expected": "判定为不流畅",
+                      "handling": "减少每帧重绘区域或缓存背景图层后复测",
+                      "scenario": "平均帧率低于 55 或出现超过 50 毫秒的长帧"
+                    },
+                    "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+                    "id": "AC-000013",
+                    "input": "按住 → 键移动角色 5 秒",
+                    "method": "录制性能时间线，统计移动期间的帧率均值与最长帧间隔",
+                    "operation": "用浏览器性能面板记录该时段的帧率",
+                    "preconditions": "页面运行在本机 Edge 浏览器",
+                    "role": "交付验收者",
+                    "scenario": "核对渲染帧率"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "角色局部放大截图",
+                    "exception": {
+                      "expected": "判定像素渲染不合格",
+                      "handling": "补充 image-rendering 与关闭图像平滑后复测",
+                      "scenario": "出现模糊或彩色边缘"
+                    },
+                    "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+                    "id": "AC-000014",
+                    "input": "无输入",
+                    "method": "对角色局部区域截图并放大观察边缘像素",
+                    "operation": "放大查看角色与背景边缘",
+                    "preconditions": "页面已打开并显示角色",
+                    "role": "交付验收者",
+                    "scenario": "核对像素清晰度"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "角色移动速度与动画节拍保持与时间一致，不出现慢动作",
+                    "handling": "位移与帧推进都按真实时间增量计算，不按固定步数",
+                    "scenario": "运行在性能较弱的机器上，帧率降到 30 帧每秒"
+                  },
+                  {
+                    "expected": "场景等比缩放，像素边缘保持锐利不模糊",
+                    "handling": "canvas 使用 image-rendering: pixelated，并按整数或等比缩放绘制",
+                    "scenario": "浏览器窗口被缩放到很小或很大"
+                  }
+                ],
+                "created_at": "2026-10-27T19:59:41.739698+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "整站所有文件（页面、脚本、样式、背景图、动作卡、生成脚本、需求台账）只存在于 crab-coast 一个文件夹内，不引用任何外部 CDN、字体或接口；断网状态下双击 index.html 即可运行。渲染使用 requestAnimationFrame 加时间增量推进，画面按 60 帧每秒目标运行，像素素材放大时使用最近邻插值保持锐利。",
+                "digest": "ebe38c666d0ea584981c3f07bf4467a6f41bd9664d7b76fece4d2e3c81292687",
+                "event_id": "EVT-000008",
+                "excluded": [
+                  "后端服务、数据库与账号体系",
+                  "外部 CDN 资源与在线字体",
+                  "移动端触屏手势（当前迭代不做）"
+                ],
+                "id": "REQ-000004",
+                "included": [
+                  "全部代码与资产位于 crab-coast 文件夹内",
+                  "离线可运行的本地静态页面",
+                  "基于时间增量的稳定渲染循环",
+                  "像素素材放大时的最近邻插值"
+                ],
+                "module": "交付与性能",
+                "necessity": "资产散落在多个目录或依赖外部网络会让这份交付在离线环境下不可用，也无法满足“一个文件夹搞定”的明确约束。",
+                "normal_behavior": {
+                  "behavior": "页面加载本地素材并开始渲染，方向键控制正常，动画连续",
+                  "expected": "无任何外部网络请求，画面帧率维持在 60 帧每秒附近",
+                  "scenario": "用户在本机双击打开页面，且当前没有联网"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "用户要求所有产物收在一个文件夹里不外流，并且动画要顺滑、看得出是精心做的像素游戏而不是卡顿的贴图滑动。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  },
+                  {
+                    "source_id": "SRC-000002",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "单文件夹自包含交付并保持流畅渲染",
+                "type": "非功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                },
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:59:22.515291+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 通过 Edge CDP 在 chatgpt.com 发起的技术咨询",
+                    "digest": "526cf481c8592bf102dac7430092a1f929638f4a83987b5b8e77e65d0a36e982",
+                    "event_id": "EVT-000006",
+                    "id": "SRC-000002",
+                    "kind": "链接",
+                    "location": "https://chatgpt.com/c/6ae10247-06f0-83ee-80ae-b56b5c95a4ff",
+                    "manual_note": null,
+                    "name": "ChatGPT 咨询：深圳海岸像素小游戏最短可行资产方案",
+                    "quote": "推荐技术栈：AI 生图 + Python Pillow + HTML5 Canvas 2D。整体采用三个独立层：固定背景、循环环境特效、角色精灵。不要让 AI 一次生成整张背景和全部角色动作后直接投入使用。游戏逻辑画布 960 × 540 px；背景 960 × 540 PNG；角色逻辑帧 64 × 64 px；四向动画 Down / Left / Right / Up，每方向 4 帧，总帧数 16 帧，最终 Sprite Sheet 256 × 256 PNG；行走动画 8 FPS；游戏渲染 requestAnimationFrame，通常目标 60 FPS；移动速度 110 px/s。推荐先生成一张角色母版（Character Reference），确认角色外观后，再生成四个方向的动作。不要首先要求模型直接输出 256 × 256 的成品 Sheet，更稳妥的方法是生成较大的 4 × 4 等分网格，再用代码裁切。",
+                    "revision": 1,
+                    "summary": "建议采用固定背景层 + 循环环境特效层 + 角色精灵层三层结构，画布 960×540、单帧 64×64、四向各 4 帧共 16 帧、8fps 行走、110px/s 移动；AI 先出角色母版与 4×4 网格大图，再用 Pillow 裁切、抠底、统一对齐得到可用 sprite sheet。"
+                  },
+                  "source_id": "SRC-000002",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000005": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000054",
+                "review_id": "REV-000007",
+                "time": "2026-10-28T08:54:13.922021+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "实测输出：duration=40, loop=true",
+                    "exception": {
+                      "expected": "判定播放配置不合格",
+                      "handling": "检查音频文件与 bgm.js 设置后复测",
+                      "scenario": "时长不符或未开启循环"
+                    },
+                    "expected": "duration 为 40（±0.05 秒），loop 属性为 true",
+                    "id": "AC-000015",
+                    "input": "无输入",
+                    "method": "在浏览器控制台读取 window.__bgm.audio.duration 与 loop",
+                    "operation": "读取音频元素的时长与 loop 属性",
+                    "preconditions": "页面已打开且音乐资源加载完成",
+                    "role": "音频验收者",
+                    "scenario": "核对时长与循环设置"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "实测 0.0019 / 0.413 = 0.005",
+                    "exception": {
+                      "expected": "判定会爆音",
+                      "handling": "重新做无缝处理或改用取模合成",
+                      "scenario": "接缝处跳变接近最大值"
+                    },
+                    "expected": "首尾跳变远小于普通相邻差值（比值 \u003c 0.1），听感上无咔哒",
+                    "id": "AC-000016",
+                    "input": "无输入",
+                    "method": "用脚本读取 PCM，计算 |x[0]-x[-1]| 与相邻差值分布的 p99.9 之比",
+                    "operation": "比较首尾采样跳变与整体相邻采样差值",
+                    "preconditions": "已拿到音频文件",
+                    "role": "音频验收者",
+                    "scenario": "核对接缝无断音爆音"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "操作前后 muted 状态记录",
+                    "exception": {
+                      "expected": "判定静音功能不合格",
+                      "handling": "修正 localStorage 读写与 muted 绑定后复测",
+                      "scenario": "点击无效或刷新后自动恢复播放"
+                    },
+                    "expected": "点击后立即静音且按钮变为静音态；刷新后仍为静音",
+                    "id": "AC-000017",
+                    "input": "点击右上角音乐按钮，然后刷新页面",
+                    "method": "读取 window.__bgm.muted 与按钮文案，刷新后再读一次",
+                    "operation": "观察按钮文案、音频 muted 状态与刷新后的状态",
+                    "preconditions": "音乐正在播放",
+                    "role": "音频验收者",
+                    "scenario": "核对静音开关与记忆"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "页面不报错，音乐保持静默直到用户第一次按键或点击",
+                    "handling": "监听首次交互事件后再调用播放，被拒绝时不清除监听",
+                    "scenario": "浏览器拦截自动播放"
+                  },
+                  {
+                    "expected": "游戏画面正常，音乐开关按钮自动隐藏",
+                    "handling": "监听音频错误事件，隐藏按钮并继续运行",
+                    "scenario": "音频文件缺失或路径错误"
+                  },
+                  {
+                    "expected": "刷新后仍保持静音",
+                    "handling": "静音状态写入 localStorage 并在初始化时读取",
+                    "scenario": "用户静音后刷新页面"
+                  }
+                ],
+                "created_at": "2026-10-28T08:54:12.200904+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "页面加载后提供一段 40 秒整、能够无缝循环的海边休闲风格背景音乐。受浏览器自动播放策略限制，首次按键或点击后开始播放；播放中不出现接缝断音或爆音。右上角提供音乐开关，键盘 M 键也可切换，静音状态记在本地，刷新后保持。音乐文件与页面同在一个文件夹内，断网可用；切换到 mp3 版本时行为不变。",
+                "digest": "a5f9a8c76d9e09e77cc22bded06a02ca129928d59b5dcbd0416f6f5c51a1282a",
+                "event_id": "EVT-000051",
+                "excluded": [
+                  "脚步、水声等环境音效",
+                  "多曲目切换与音量滑动条",
+                  "在线流媒体或版权音乐接入"
+                ],
+                "id": "REQ-000005",
+                "included": [
+                  "40.000 秒、首尾无缝衔接的循环音频",
+                  "首次按键或点击后自动开始播放",
+                  "右上角按钮与 M 键切换静音，状态写入 localStorage",
+                  "音乐文件随页面同目录存放，离线可用"
+                ],
+                "module": "音频",
+                "necessity": "没有背景音乐时场景偏“静”，用户明确要求补一段海边悠闲向、可循环的电子音乐。",
+                "normal_behavior": {
+                  "behavior": "背景音乐从当前循环位置开始播放，音量淡入到设定值",
+                  "expected": "能听到连续不断的音乐；走到 40 秒末尾时直接接回开头，没有静音空档或爆音",
+                  "scenario": "用户打开页面并按下任意方向键"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0002"
+                  }
+                },
+                "priority": "P1",
+                "purpose": "给静止或行走中的场景提供持续的氛围声，让页面像一个完整的小游戏而不是一张会动的图。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "播放可无缝循环的海岸背景音乐并支持静音",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0002",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000006": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000133",
+                "review_id": "REV-000019",
+                "time": "2026-10-28T09:12:14.221013+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "实测 7 次序列：24,48,96,48,24,48,96（含 小/中/大 标签）",
+                    "exception": {
+                      "expected": "判定反弹逻辑或标签绑定有误",
+                      "handling": "修正方向翻转与文案刷新后复测",
+                      "scenario": "出现 96 直接跳到 24、或文案与尺寸不符"
+                    },
+                    "expected": "序列为 48(中)→24(小)→48(中)→96(大)→48(中)→24(小)→48(中)；按钮依次显示「尺寸 小 24 / 中 48 / 大 96 …」",
+                    "id": "AC-000024",
+                    "input": "连续按 T 键 7 次",
+                    "method": "点击按钮并读取 window.__probe.state().size 与按钮 textContent",
+                    "operation": "记录每次的尺寸与按钮文案",
+                    "preconditions": "页面已加载三套表，默认中档",
+                    "role": "尺寸验收者",
+                    "scenario": "核对反弹序列与标签"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "实测 24 → 48、96 → 48",
+                    "exception": {
+                      "expected": "判定仍在绕回",
+                      "handling": "检查方向变量是否在越界时翻转",
+                      "scenario": "24 跳到 96 或 96 跳到 24"
+                    },
+                    "expected": "24 的下一档是 48；96 的下一档也是 48",
+                    "id": "AC-000025",
+                    "input": "在端点再按一次 T",
+                    "method": "把档位切到端点后按一次 T，读取结果",
+                    "operation": "观察下一档",
+                    "preconditions": "已停在最小档 24 或最大档 96",
+                    "role": "尺寸验收者",
+                    "scenario": "核对两端不互跳"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "三档基线 86/43/21，朝向行一致",
+                    "exception": {
+                      "expected": "判定该档基线或行映射有问题",
+                      "handling": "修正后复测",
+                      "scenario": "某档悬空或朝向错乱"
+                    },
+                    "expected": "三档脚底分别落在 86/43/21 基线上，朝向仍为右→正面行、上→侧视行",
+                    "id": "AC-000026",
+                    "input": "每档按住右键后改按上键",
+                    "method": "读取角色坐标与该档基线核对偏移",
+                    "operation": "核对脚底贴地与朝向行",
+                    "preconditions": "分别切到三档",
+                    "role": "尺寸验收者",
+                    "scenario": "核对三档脚底与朝向不受切换逻辑影响"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "回到中档（而不是跳到大档）",
+                    "handling": "索引越界时翻转方向再前进一步",
+                    "scenario": "在最小档继续按 T"
+                  },
+                  {
+                    "expected": "回到中档（而不是跳到小档）",
+                    "handling": "同上",
+                    "scenario": "在最大档继续按 T"
+                  },
+                  {
+                    "expected": "位置、碰撞与帧序都不受影响",
+                    "handling": "切换只改绘制用的表与基线",
+                    "scenario": "角色移动过程中切换"
+                  }
+                ],
+                "created_at": "2026-10-28T09:12:07.880416+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "螃蟹保留 96（大）、48（中）、24（小）三套精灵表，由同一张动作卡逐级派生，共用朝向状态机、行走帧序与脚底对齐规则；三档都做了侧视按行缩放 90%。T 键或左上角按钮采用**反弹式**切换：从中档出发先变小，到最小档后掉头变大，到最大档后再掉头变小，形成 中→小→中→大→中→小… 的往复，而不是跳回另一端。按钮显示当前档位的中文标签与像素尺寸（如「尺寸 中 48」）。",
+                "digest": "73343bc0b56bfe6235c12b2c0a1c7b735f114b2ca045861226dab93197d893d8",
+                "event_id": "EVT-000130",
+                "excluded": [
+                  "绕回式（一端的下一档直接跳到另一端）切换",
+                  "尺寸滑块或自定义尺寸",
+                  "按距离自动切换尺寸"
+                ],
+                "id": "REQ-000006",
+                "included": [
+                  "96/48/24 三套精灵表同时存在且都可加载",
+                  "T 键与按钮按反弹方式切换：中→小→中→大→中…",
+                  "按钮显示「尺寸 大/中/小 + 像素值」",
+                  "三档共用朝向状态机与行走帧序，侧视均缩 90%"
+                ],
+                "module": "角色渲染",
+                "necessity": "用户明确要求把绕回式切换改成反弹式，并要求用 小/中/大 表达档位。",
+                "normal_behavior": {
+                  "behavior": "每按一次 T 或点一次按钮，档位沿当前方向走一格；走到端点则反向",
+                  "expected": "序列为 中→小→中→大→中→小…，按钮文案随之更新，且不会出现两端直接互跳",
+                  "scenario": "页面加载完成，默认停在中档 48"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P1",
+                "purpose": "让调节尺寸的过程连续、可预期：越按越接近想要的大小，不会在两端之间突然跳变。",
+                "questions": [],
+                "revision": 3,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "同一角色三档尺寸按 T 键反弹切换（小↔中↔大）",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 3,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000007": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000153",
+                "review_id": "REV-000023",
+                "time": "2026-10-28T10:25:08.580419+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图",
+                    "exception": {
+                      "expected": "判定不通过并记录 fitCount 未增长",
+                      "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460",
+                      "scenario": "静置超过 1 秒画布尺寸仍未变化"
+                    },
+                    "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+                    "id": "AC-000027",
+                    "input": "把可见高度由 390 改为 460，不派发任何事件",
+                    "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+                    "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                    "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+                    "role": "移动端验收者",
+                    "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "前后画布尺寸数值与 fitCount 变化",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向",
+                      "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉"
+                    },
+                    "expected": "画布自动回到 693×390，fitCount 再增加 1",
+                    "id": "AC-000028",
+                    "input": "把可见高度由 460 改回 390，不派发任何事件",
+                    "method": "与上一条同一套模拟手段，反向修改高度",
+                    "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                    "preconditions": "承接上一条，画布当前为 818×460",
+                    "role": "移动端验收者",
+                    "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "三次事件与静置期的 fitCount 数值",
+                    "exception": {
+                      "expected": "判定不通过，说明存在空转",
+                      "handling": "检查轮询是否在尺寸未变时仍调用 fit()",
+                      "scenario": "静置期间 fitCount 持续增长"
+                    },
+                    "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+                    "id": "AC-000029",
+                    "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+                    "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+                    "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+                    "preconditions": "页面稳定，画布尺寸已确定",
+                    "role": "移动端验收者",
+                    "scenario": "核对各事件通道与空闲开销"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名",
+                      "scenario": "画布仍保留 2% / 6% 边距"
+                    },
+                    "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+                    "id": "AC-000030",
+                    "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+                    "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+                    "operation": "读取画布尺寸与可见区域尺寸",
+                    "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+                    "role": "移动端验收者",
+                    "scenario": "触屏设备上画布铺满可见区域"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "视口尺寸、画布尺寸与公式计算值",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏",
+                      "scenario": "桌面画布被拉伸到 929 以上或出现裁剪"
+                    },
+                    "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+                    "id": "AC-000031",
+                    "input": "视口 947×972",
+                    "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+                    "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+                    "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+                    "role": "桌面验收者",
+                    "scenario": "桌面端不出现铺满带来的回归"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "画布的 CSS 尺寸保持不变",
+                    "handling": "viewBox() 退回 innerWidth / innerHeight，跳过本次重排，避免放大过程中画面跳动",
+                    "scenario": "用户正在双指放大（visualViewport.scale 大于 1）"
+                  }
+                ],
+                "created_at": "2026-10-28T10:24:35.811740+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "手机浏览器的工具栏（地址栏、底部导航）收起或展开会改变页面可见高度，但部分浏览器在此时不派发 window.resize（iOS Safari 尤其常见）。当前实现只监听 window.resize，所以可见区域变大后画布仍保持旧尺寸，必须等其它事件（例如点击「收起按键」触发的那一次 resize）才会重排。本需求要求以真实可见区域（visualViewport）为准，在可见区域变化后自动重算画布尺寸，把它放大到当前可见区域内能放下的最大值，并在触屏设备上去掉原来预留的 2% / 6% 边距。",
+                "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+                "event_id": "EVT-000150",
+                "excluded": [
+                  "双指放大（visualViewport.scale 大于 1）过程中的重新排版",
+                  "桌面端留边距策略的变更，桌面仍保持 0.98 / 0.94",
+                  "虚拟按键的位置、显隐与输入通道逻辑"
+                ],
+                "id": "REQ-000007",
+                "included": [
+                  "以 visualViewport 的宽高作为可见区域，在工具栏收起或展开后自动重算画布尺寸",
+                  "触屏设备上画布铺满可见区域，不再保留原来的 2% 宽度与 6% 高度边距",
+                  "同时监听 window resize、visualViewport resize、visualViewport scroll、orientationchange、pageshow、visibilitychange 六条来源",
+                  "增加 400ms 的可见区域尺寸比对兜底，应对浏览器完全不发事件的情况"
+                ],
+                "module": "画面自适应（可见区域适配）",
+                "necessity": "去掉本项，画面会在工具栏收起后长期偏小：横屏实测少用约 6% 的高度（693×390 而非应有的 818×460），竖屏少用 8px 宽度；且表现为“点了某个按钮才放大”的怪异时序，用户会以为页面卡住。",
+                "normal_behavior": {
+                  "behavior": "页面以 visualViewport 为准重新计算画布缩放",
+                  "expected": "画布在一个 400ms 轮询周期内由 693×390 自动变为 818×460，全程无需用户点击任何按钮",
+                  "scenario": "手机横屏下收起浏览器工具栏，可见高度由 390 变为 460，浏览器没有派发 resize"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P1",
+                "purpose": "让手机玩家收起浏览器工具栏后立刻得到更大的画面，不需要手动触发任何按钮。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000003",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": "实现位于 main.js：viewBox() 在 visualViewport.scale 约等于 1 时取 visualViewport 的宽高，否则退回 innerWidth/innerHeight；fit() 依据 html.touch-mode 决定铺满还是保留边距；事件监听与 400ms 轮询兜底同在 fit() 附近注册；另暴露 __probe.fitCount() 与 __probe.viewBox() 供验收读取。",
+                "title": "手机隐藏浏览器工具栏后画面自动放大到最大",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-28T10:24:10.851262+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户消息",
+                    "digest": "ddf640df9e4d1bbd434e4ab85bd1e7ac6d19794064dd9c94565faa4675a8fbd2",
+                    "event_id": "EVT-000149",
+                    "id": "SRC-000003",
+                    "kind": "用户消息",
+                    "location": null,
+                    "manual_note": "用户在本次会话中以文字直接提出的原始需求，未经整理",
+                    "name": "用户提出画面自适应需求（手机隐藏工具栏后自动放大）",
+                    "quote": "手机浏览器有一个问题就是，刚开始的时候如果游戏页面小，我隐藏工具栏之后页面不会自动放大，而是点收起按钮的时候才会自适应放大，让页面自动放大最大，新需求创建修改",
+                    "revision": 1,
+                    "summary": "用户指出：手机隐藏浏览器工具栏后可见区域变大，画面却不会自动放大，要点「收起按键」才重排；要求画面自动放大到最大。"
+                  },
+                  "source_id": "SRC-000003",
+                  "source_revision": 1
+                }
+              ]
+            }
+          },
+          "created_at": "2026-10-28T10:25:50.883955+00:00",
+          "created_by": "octie-agent",
+          "digest": "ea172f2a692d679024b59f612fd1241d308fc7ff08614b04a4ffe7e7cfe228b5",
+          "evaluation": {
+            "affected_members": [
+              {
+                "requirement_id": "REQ-000001",
+                "revision": 1
+              },
+              {
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              },
+              {
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              }
+            ],
+            "empty_retests_reason": null,
+            "impact_analysis": "本次变更只新增一条需求（REQ-000007 手机隐藏工具栏后画面自动放大到最大），落地改动集中在 main.js 的画布尺寸计算：新增 viewBox() 取 visualViewport、fit() 增加触屏铺满分支、注册 resize / visualViewport.resize / visualViewport.scroll / orientationchange / pageshow / visibilitychange 六条监听与 400ms 轮询兜底。不涉及场景贴图、角色精灵、朝向状态机、碰撞网格、帧序与音频，因此这些既有需求的内容不需要修改。仍然受影响的点有三类：一是画布缩放比例发生变化后，场景是否仍完整呈现且不变形（REQ-000001）；二是触屏上画布被放大到铺满后，帧率与像素硬边是否仍然达标（REQ-000004）；三是新需求自身的五条验收条件需要逐条实测（REQ-000007）。已排除的虚拟按键显隐与输入通道、双指放大过程中的重排，均不在本次差异内。",
+            "obligations": [
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "初始画面截图 + 七类元素勾选清单（含各自大致坐标）",
+                  "exception": {
+                    "expected": "某类元素缺失或颜色与同类无法区分",
+                    "handling": "记为不通过，补画该类元素后重新截图核对",
+                    "scenario": "某类元素缺失或与同类无法区分"
+                  },
+                  "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+                  "id": "AC-000001",
+                  "input": "无输入，仅观察初始画面",
+                  "method": "对初始画面截图，按七类元素清单逐项勾选并标注位置",
+                  "operation": "打开 index.html 并等待加载提示消失",
+                  "preconditions": "资源已加载完成，页面处于初始状态",
+                  "role": "场景验收者",
+                  "scenario": "核对七类海岸元素是否齐全"
+                },
+                "condition_id": "AC-000001",
+                "requirement_id": "REQ-000001",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "性能面板截图或帧率统计数值",
+                  "exception": {
+                    "expected": "判定为不流畅",
+                    "handling": "减少每帧重绘区域或缓存背景图层后复测",
+                    "scenario": "平均帧率低于 55 或出现超过 50 毫秒的长帧"
+                  },
+                  "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+                  "id": "AC-000013",
+                  "input": "按住 → 键移动角色 5 秒",
+                  "method": "录制性能时间线，统计移动期间的帧率均值与最长帧间隔",
+                  "operation": "用浏览器性能面板记录该时段的帧率",
+                  "preconditions": "页面运行在本机 Edge 浏览器",
+                  "role": "交付验收者",
+                  "scenario": "核对渲染帧率"
+                },
+                "condition_id": "AC-000013",
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "角色局部放大截图",
+                  "exception": {
+                    "expected": "判定像素渲染不合格",
+                    "handling": "补充 image-rendering 与关闭图像平滑后复测",
+                    "scenario": "出现模糊或彩色边缘"
+                  },
+                  "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+                  "id": "AC-000014",
+                  "input": "无输入",
+                  "method": "对角色局部区域截图并放大观察边缘像素",
+                  "operation": "放大查看角色与背景边缘",
+                  "preconditions": "页面已打开并显示角色",
+                  "role": "交付验收者",
+                  "scenario": "核对像素清晰度"
+                },
+                "condition_id": "AC-000014",
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图",
+                  "exception": {
+                    "expected": "判定不通过并记录 fitCount 未增长",
+                    "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460",
+                    "scenario": "静置超过 1 秒画布尺寸仍未变化"
+                  },
+                  "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+                  "id": "AC-000027",
+                  "input": "把可见高度由 390 改为 460，不派发任何事件",
+                  "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+                  "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                  "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+                  "role": "移动端验收者",
+                  "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件"
+                },
+                "condition_id": "AC-000027",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "前后画布尺寸数值与 fitCount 变化",
+                  "exception": {
+                    "expected": "判定不通过",
+                    "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向",
+                    "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉"
+                  },
+                  "expected": "画布自动回到 693×390，fitCount 再增加 1",
+                  "id": "AC-000028",
+                  "input": "把可见高度由 460 改回 390，不派发任何事件",
+                  "method": "与上一条同一套模拟手段，反向修改高度",
+                  "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                  "preconditions": "承接上一条，画布当前为 818×460",
+                  "role": "移动端验收者",
+                  "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件"
+                },
+                "condition_id": "AC-000028",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "三次事件与静置期的 fitCount 数值",
+                  "exception": {
+                    "expected": "判定不通过，说明存在空转",
+                    "handling": "检查轮询是否在尺寸未变时仍调用 fit()",
+                    "scenario": "静置期间 fitCount 持续增长"
+                  },
+                  "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+                  "id": "AC-000029",
+                  "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+                  "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+                  "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+                  "preconditions": "页面稳定，画布尺寸已确定",
+                  "role": "移动端验收者",
+                  "scenario": "核对各事件通道与空闲开销"
+                },
+                "condition_id": "AC-000029",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图",
+                  "exception": {
+                    "expected": "判定不通过",
+                    "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名",
+                    "scenario": "画布仍保留 2% / 6% 边距"
+                  },
+                  "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+                  "id": "AC-000030",
+                  "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+                  "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+                  "operation": "读取画布尺寸与可见区域尺寸",
+                  "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+                  "role": "移动端验收者",
+                  "scenario": "触屏设备上画布铺满可见区域"
+                },
+                "condition_id": "AC-000030",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "视口尺寸、画布尺寸与公式计算值",
+                  "exception": {
+                    "expected": "判定不通过",
+                    "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏",
+                    "scenario": "桌面画布被拉伸到 929 以上或出现裁剪"
+                  },
+                  "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+                  "id": "AC-000031",
+                  "input": "视口 947×972",
+                  "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+                  "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+                  "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+                  "role": "桌面验收者",
+                  "scenario": "桌面端不出现铺满带来的回归"
+                },
+                "condition_id": "AC-000031",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              }
+            ],
+            "retests": [
+              {
+                "condition_id": "AC-000001",
+                "requirement_id": "REQ-000001",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000013",
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000014",
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000027",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000028",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000029",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000030",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000031",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              }
+            ],
+            "supersessions": []
+          },
+          "event_id": "EVT-000154",
+          "id": "CHG-000005",
+          "impact_objects": [
+            "REQ-000001",
+            "REQ-000004",
+            "REQ-000007"
+          ],
+          "latest_review": {
+            "acceptance_review": "评估给出 8 项精确重验义务，逐条对照候选纳入条件：REQ-000001 的 AC-000001（场景仍完整呈现、不变形）、REQ-000004 的 AC-000013 与 AC-000014（放大后帧率与像素硬边）、REQ-000007 的 AC-000027 至 AC-000031（自动放大、自动缩回、事件通道与空闲、触屏铺满、桌面不回归）。条数与重验清单一致，均为可执行的具体条件，没有用“整体回归”这类笼统说法替代。",
+            "basis": "依据 target_digest ea172f2a 指向的 CHG-000005 第 1 修订（propose 后经 evaluate 的当前摘要，非 propose 时的 fa5f6f11），结合 REQ-000007 已确认事件与 BASE-000005 成员快照审阅。声明式审核，Agent 身份仅作操作归因。",
+            "completeness_review": "差异完整：actions 仅一条 {新增, REQ-000007, old_revision=null, new_revision=1}，恰好对应已确认的 REQ-000007 第 1 修订；predecessor 指向当前有效基线 BASE-000005；候选成员为原 6 条加新增 1 条，其余成员保持原修订未动。impact_objects 列出 REQ-000001 / REQ-000004 / REQ-000007，覆盖了受画布缩放影响的既有需求与新需求本身。",
+            "conclusion": "通过",
+            "created_at": "2026-10-28T10:26:36.861548+00:00",
+            "created_by": "review-agent",
+            "event_id": "EVT-000156",
+            "event_sequence": 156,
+            "id": "REV-000024",
+            "necessity_review": "必要性核对：REQ-000007 已确认纳入，而基线 BASE-000005 的成员集合不含它，若直接封新基线会被“非初始成员差异须经变更”这道门禁拦住；走 CHG-000005 是唯一合规路径，且差异确实只有一条新增，没有夹带替换或移除。",
+            "target_digest": "ea172f2a692d679024b59f612fd1241d308fc7ff08614b04a4ffe7e7cfe228b5",
+            "target_id": "CHG-000005",
+            "target_revision": 1,
+            "target_type": "change"
+          },
+          "ledger_id": "LED-19d840367862455889aebf797805ea48",
+          "predecessor": "BASE-000005",
+          "revision": 1,
+          "status": "已应用"
+        },
+        "previous_content_revision": null,
+        "target": "CHG-000005",
+        "type": "success"
+      },
+      "sequence": 158,
+      "time": "2026-10-28T10:26:58.491736+00:00"
+    },
+    {
+      "agent": "review-agent",
+      "command": "review add",
+      "fingerprint": "a2aa601892f15e978553cbaae221d62b3aa889e00c607f5fbf33ab00a9019a95",
+      "id": "EVT-000159",
+      "operation_id": "crab-base6-review",
+      "reason": "对候选基线 BASE-000006 做封存审核",
+      "request": {
+        "agent": "review-agent",
+        "command": "review add",
+        "data": {
+          "acceptance_review": "该基线对应的重验义务来自 CHG-000005 的 8 项清单（AC-000001、AC-000013、AC-000014、AC-000027 至 AC-000031），均可执行且与本次差异相关；这些义务尚未登记执行结果，属于后续开发与验收环节，不在本审核中声称已通过。",
+          "basis": "依据 BASE-000006 第 1 修订摘要 29ff1fe3 与 CHG-000005 已应用后的候选成员映射审阅。声明式审核，Agent 身份仅作操作归因。",
+          "completeness_review": "成员完整：在原 6 条（REQ-000001 r1、REQ-000002 r1、REQ-000003 r2、REQ-000004 r1、REQ-000005 r1、REQ-000006 r3）之上新增 REQ-000007 r1，未变成员一律保留原修订；版本自 V1.4 递增为 V1.5，前驱 BASE-000005，页面与来源快照随封存一并固定。",
+          "conclusion": "通过",
+          "necessity_review": "必要性核对：REQ-000007 已确认纳入且不在 BASE-000005 成员内，需要一个新的基线版本来固定“七条需求一起成立”的这份快照；候选由 CHG-000005 按批准差异生成，前驱正确指向当前有效基线。",
+          "target_digest": "29ff1fe352b768deddffe0178f94864d266b72557fd5189b4a5ed6ce218ff046",
+          "target_id": "BASE-000006",
+          "target_revision": 1,
+          "target_type": "baseline"
+        },
+        "reason": "对候选基线 BASE-000006 做封存审核"
+      },
+      "result": {
+        "command": "review add",
+        "commit_status": "committed",
+        "content_revision": null,
+        "current_document_revision": 159,
+        "document_revision": 159,
+        "issues": [],
+        "meta": {
+          "agent": "review-agent",
+          "event_id": "EVT-000159",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:27:19.179482+00:00"
+        },
+        "object": {
+          "acceptance_review": "该基线对应的重验义务来自 CHG-000005 的 8 项清单（AC-000001、AC-000013、AC-000014、AC-000027 至 AC-000031），均可执行且与本次差异相关；这些义务尚未登记执行结果，属于后续开发与验收环节，不在本审核中声称已通过。",
+          "basis": "依据 BASE-000006 第 1 修订摘要 29ff1fe3 与 CHG-000005 已应用后的候选成员映射审阅。声明式审核，Agent 身份仅作操作归因。",
+          "completeness_review": "成员完整：在原 6 条（REQ-000001 r1、REQ-000002 r1、REQ-000003 r2、REQ-000004 r1、REQ-000005 r1、REQ-000006 r3）之上新增 REQ-000007 r1，未变成员一律保留原修订；版本自 V1.4 递增为 V1.5，前驱 BASE-000005，页面与来源快照随封存一并固定。",
+          "conclusion": "通过",
+          "created_at": "2026-10-28T10:27:19.179482+00:00",
+          "created_by": "review-agent",
+          "event_id": "EVT-000159",
+          "event_sequence": 159,
+          "id": "REV-000025",
+          "necessity_review": "必要性核对：REQ-000007 已确认纳入且不在 BASE-000005 成员内，需要一个新的基线版本来固定“七条需求一起成立”的这份快照；候选由 CHG-000005 按批准差异生成，前驱正确指向当前有效基线。",
+          "target_digest": "29ff1fe352b768deddffe0178f94864d266b72557fd5189b4a5ed6ce218ff046",
+          "target_id": "BASE-000006",
+          "target_revision": 1,
+          "target_type": "baseline"
+        },
+        "previous_content_revision": null,
+        "target": "REV-000025",
+        "type": "success"
+      },
+      "sequence": 159,
+      "time": "2026-10-28T10:27:19.179482+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "baseline activate",
+      "fingerprint": "80cfed6bc27ac398feb3c62294801b32ec015e0b15f78aad2ea950d5269a61eb",
+      "id": "EVT-000160",
+      "operation_id": "crab-base6-activate",
+      "reason": "候选基线已审核通过，激活为当前有效基线",
+      "request": {
+        "agent": "octie-agent",
+        "command": "baseline activate",
+        "data": {
+          "digest": "29ff1fe352b768deddffe0178f94864d266b72557fd5189b4a5ed6ce218ff046",
+          "id": "BASE-000006",
+          "revision": 1
+        },
+        "reason": "候选基线已审核通过，激活为当前有效基线"
+      },
+      "result": {
+        "command": "baseline activate",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 160,
+        "document_revision": 160,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000160",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:27:27.278915+00:00"
+        },
+        "object": {
+          "activation": {
+            "agent": "octie-agent",
+            "event_id": "EVT-000160",
+            "review_id": "REV-000025",
+            "time": "2026-10-28T10:27:27.278915+00:00"
+          },
+          "change": {
+            "actions": [
+              {
+                "new_revision": 1,
+                "old_revision": null,
+                "requirement_id": "REQ-000007",
+                "type": "新增"
+              }
+            ],
+            "application_event_id": "EVT-000158",
+            "approval_event_id": "EVT-000157",
+            "digest": "ea172f2a692d679024b59f612fd1241d308fc7ff08614b04a4ffe7e7cfe228b5",
+            "evaluation": {
+              "affected_members": [
+                {
+                  "requirement_id": "REQ-000001",
+                  "revision": 1
+                },
+                {
+                  "requirement_id": "REQ-000004",
+                  "revision": 1
+                },
+                {
+                  "requirement_id": "REQ-000007",
+                  "revision": 1
+                }
+              ],
+              "empty_retests_reason": null,
+              "impact_analysis": "本次变更只新增一条需求（REQ-000007 手机隐藏工具栏后画面自动放大到最大），落地改动集中在 main.js 的画布尺寸计算：新增 viewBox() 取 visualViewport、fit() 增加触屏铺满分支、注册 resize / visualViewport.resize / visualViewport.scroll / orientationchange / pageshow / visibilitychange 六条监听与 400ms 轮询兜底。不涉及场景贴图、角色精灵、朝向状态机、碰撞网格、帧序与音频，因此这些既有需求的内容不需要修改。仍然受影响的点有三类：一是画布缩放比例发生变化后，场景是否仍完整呈现且不变形（REQ-000001）；二是触屏上画布被放大到铺满后，帧率与像素硬边是否仍然达标（REQ-000004）；三是新需求自身的五条验收条件需要逐条实测（REQ-000007）。已排除的虚拟按键显隐与输入通道、双指放大过程中的重排，均不在本次差异内。",
+              "obligations": [
+                {
+                  "change_id": "CHG-000005",
+                  "change_revision": 1,
+                  "condition": {
+                    "allow_na": false,
+                    "evidence": "初始画面截图 + 七类元素勾选清单（含各自大致坐标）",
+                    "exception": {
+                      "expected": "某类元素缺失或颜色与同类无法区分",
+                      "handling": "记为不通过，补画该类元素后重新截图核对",
+                      "scenario": "某类元素缺失或与同类无法区分"
+                    },
+                    "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+                    "id": "AC-000001",
+                    "input": "无输入，仅观察初始画面",
+                    "method": "对初始画面截图，按七类元素清单逐项勾选并标注位置",
+                    "operation": "打开 index.html 并等待加载提示消失",
+                    "preconditions": "资源已加载完成，页面处于初始状态",
+                    "role": "场景验收者",
+                    "scenario": "核对七类海岸元素是否齐全"
+                  },
+                  "condition_id": "AC-000001",
+                  "requirement_id": "REQ-000001",
+                  "revision": 1
+                },
+                {
+                  "change_id": "CHG-000005",
+                  "change_revision": 1,
+                  "condition": {
+                    "allow_na": false,
+                    "evidence": "性能面板截图或帧率统计数值",
+                    "exception": {
+                      "expected": "判定为不流畅",
+                      "handling": "减少每帧重绘区域或缓存背景图层后复测",
+                      "scenario": "平均帧率低于 55 或出现超过 50 毫秒的长帧"
+                    },
+                    "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+                    "id": "AC-000013",
+                    "input": "按住 → 键移动角色 5 秒",
+                    "method": "录制性能时间线，统计移动期间的帧率均值与最长帧间隔",
+                    "operation": "用浏览器性能面板记录该时段的帧率",
+                    "preconditions": "页面运行在本机 Edge 浏览器",
+                    "role": "交付验收者",
+                    "scenario": "核对渲染帧率"
+                  },
+                  "condition_id": "AC-000013",
+                  "requirement_id": "REQ-000004",
+                  "revision": 1
+                },
+                {
+                  "change_id": "CHG-000005",
+                  "change_revision": 1,
+                  "condition": {
+                    "allow_na": false,
+                    "evidence": "角色局部放大截图",
+                    "exception": {
+                      "expected": "判定像素渲染不合格",
+                      "handling": "补充 image-rendering 与关闭图像平滑后复测",
+                      "scenario": "出现模糊或彩色边缘"
+                    },
+                    "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+                    "id": "AC-000014",
+                    "input": "无输入",
+                    "method": "对角色局部区域截图并放大观察边缘像素",
+                    "operation": "放大查看角色与背景边缘",
+                    "preconditions": "页面已打开并显示角色",
+                    "role": "交付验收者",
+                    "scenario": "核对像素清晰度"
+                  },
+                  "condition_id": "AC-000014",
+                  "requirement_id": "REQ-000004",
+                  "revision": 1
+                },
+                {
+                  "change_id": "CHG-000005",
+                  "change_revision": 1,
+                  "condition": {
+                    "allow_na": false,
+                    "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图",
+                    "exception": {
+                      "expected": "判定不通过并记录 fitCount 未增长",
+                      "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460",
+                      "scenario": "静置超过 1 秒画布尺寸仍未变化"
+                    },
+                    "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+                    "id": "AC-000027",
+                    "input": "把可见高度由 390 改为 460，不派发任何事件",
+                    "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+                    "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                    "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+                    "role": "移动端验收者",
+                    "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件"
+                  },
+                  "condition_id": "AC-000027",
+                  "requirement_id": "REQ-000007",
+                  "revision": 1
+                },
+                {
+                  "change_id": "CHG-000005",
+                  "change_revision": 1,
+                  "condition": {
+                    "allow_na": false,
+                    "evidence": "前后画布尺寸数值与 fitCount 变化",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向",
+                      "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉"
+                    },
+                    "expected": "画布自动回到 693×390，fitCount 再增加 1",
+                    "id": "AC-000028",
+                    "input": "把可见高度由 460 改回 390，不派发任何事件",
+                    "method": "与上一条同一套模拟手段，反向修改高度",
+                    "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                    "preconditions": "承接上一条，画布当前为 818×460",
+                    "role": "移动端验收者",
+                    "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件"
+                  },
+                  "condition_id": "AC-000028",
+                  "requirement_id": "REQ-000007",
+                  "revision": 1
+                },
+                {
+                  "change_id": "CHG-000005",
+                  "change_revision": 1,
+                  "condition": {
+                    "allow_na": false,
+                    "evidence": "三次事件与静置期的 fitCount 数值",
+                    "exception": {
+                      "expected": "判定不通过，说明存在空转",
+                      "handling": "检查轮询是否在尺寸未变时仍调用 fit()",
+                      "scenario": "静置期间 fitCount 持续增长"
+                    },
+                    "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+                    "id": "AC-000029",
+                    "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+                    "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+                    "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+                    "preconditions": "页面稳定，画布尺寸已确定",
+                    "role": "移动端验收者",
+                    "scenario": "核对各事件通道与空闲开销"
+                  },
+                  "condition_id": "AC-000029",
+                  "requirement_id": "REQ-000007",
+                  "revision": 1
+                },
+                {
+                  "change_id": "CHG-000005",
+                  "change_revision": 1,
+                  "condition": {
+                    "allow_na": false,
+                    "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名",
+                      "scenario": "画布仍保留 2% / 6% 边距"
+                    },
+                    "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+                    "id": "AC-000030",
+                    "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+                    "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+                    "operation": "读取画布尺寸与可见区域尺寸",
+                    "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+                    "role": "移动端验收者",
+                    "scenario": "触屏设备上画布铺满可见区域"
+                  },
+                  "condition_id": "AC-000030",
+                  "requirement_id": "REQ-000007",
+                  "revision": 1
+                },
+                {
+                  "change_id": "CHG-000005",
+                  "change_revision": 1,
+                  "condition": {
+                    "allow_na": false,
+                    "evidence": "视口尺寸、画布尺寸与公式计算值",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏",
+                      "scenario": "桌面画布被拉伸到 929 以上或出现裁剪"
+                    },
+                    "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+                    "id": "AC-000031",
+                    "input": "视口 947×972",
+                    "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+                    "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+                    "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+                    "role": "桌面验收者",
+                    "scenario": "桌面端不出现铺满带来的回归"
+                  },
+                  "condition_id": "AC-000031",
+                  "requirement_id": "REQ-000007",
+                  "revision": 1
+                }
+              ],
+              "retests": [
+                {
+                  "condition_id": "AC-000001",
+                  "requirement_id": "REQ-000001",
+                  "revision": 1
+                },
+                {
+                  "condition_id": "AC-000013",
+                  "requirement_id": "REQ-000004",
+                  "revision": 1
+                },
+                {
+                  "condition_id": "AC-000014",
+                  "requirement_id": "REQ-000004",
+                  "revision": 1
+                },
+                {
+                  "condition_id": "AC-000027",
+                  "requirement_id": "REQ-000007",
+                  "revision": 1
+                },
+                {
+                  "condition_id": "AC-000028",
+                  "requirement_id": "REQ-000007",
+                  "revision": 1
+                },
+                {
+                  "condition_id": "AC-000029",
+                  "requirement_id": "REQ-000007",
+                  "revision": 1
+                },
+                {
+                  "condition_id": "AC-000030",
+                  "requirement_id": "REQ-000007",
+                  "revision": 1
+                },
+                {
+                  "condition_id": "AC-000031",
+                  "requirement_id": "REQ-000007",
+                  "revision": 1
+                }
+              ],
+              "supersessions": []
+            },
+            "id": "CHG-000005",
+            "revision": 1
+          },
+          "created_at": "2026-10-28T10:26:58.491736+00:00",
+          "created_by": "octie-agent",
+          "digest": "29ff1fe352b768deddffe0178f94864d266b72557fd5189b4a5ed6ce218ff046",
+          "event_id": "EVT-000158",
+          "id": "BASE-000006",
+          "latest_review": {
+            "acceptance_review": "该基线对应的重验义务来自 CHG-000005 的 8 项清单（AC-000001、AC-000013、AC-000014、AC-000027 至 AC-000031），均可执行且与本次差异相关；这些义务尚未登记执行结果，属于后续开发与验收环节，不在本审核中声称已通过。",
+            "basis": "依据 BASE-000006 第 1 修订摘要 29ff1fe3 与 CHG-000005 已应用后的候选成员映射审阅。声明式审核，Agent 身份仅作操作归因。",
+            "completeness_review": "成员完整：在原 6 条（REQ-000001 r1、REQ-000002 r1、REQ-000003 r2、REQ-000004 r1、REQ-000005 r1、REQ-000006 r3）之上新增 REQ-000007 r1，未变成员一律保留原修订；版本自 V1.4 递增为 V1.5，前驱 BASE-000005，页面与来源快照随封存一并固定。",
+            "conclusion": "通过",
+            "created_at": "2026-10-28T10:27:19.179482+00:00",
+            "created_by": "review-agent",
+            "event_id": "EVT-000159",
+            "event_sequence": 159,
+            "id": "REV-000025",
+            "necessity_review": "必要性核对：REQ-000007 已确认纳入且不在 BASE-000005 成员内，需要一个新的基线版本来固定“七条需求一起成立”的这份快照；候选由 CHG-000005 按批准差异生成，前驱正确指向当前有效基线。",
+            "target_digest": "29ff1fe352b768deddffe0178f94864d266b72557fd5189b4a5ed6ce218ff046",
+            "target_id": "BASE-000006",
+            "target_revision": 1,
+            "target_type": "baseline"
+          },
+          "ledger_id": "LED-19d840367862455889aebf797805ea48",
+          "members": {
+            "REQ-000001": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000011",
+                "review_id": "REV-000001",
+                "time": "2026-10-27T20:19:33.136841+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "初始画面截图 + 七类元素勾选清单（含各自大致坐标）",
+                    "exception": {
+                      "expected": "某类元素缺失或颜色与同类无法区分",
+                      "handling": "记为不通过，补画该类元素后重新截图核对",
+                      "scenario": "某类元素缺失或与同类无法区分"
+                    },
+                    "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+                    "id": "AC-000001",
+                    "input": "无输入，仅观察初始画面",
+                    "method": "对初始画面截图，按七类元素清单逐项勾选并标注位置",
+                    "operation": "打开 index.html 并等待加载提示消失",
+                    "preconditions": "资源已加载完成，页面处于初始状态",
+                    "role": "场景验收者",
+                    "scenario": "核对七类海岸元素是否齐全"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "移动前后两张截图 + 背景区域差异率数值",
+                    "exception": {
+                      "expected": "背景出现任何平移或缩放跳动",
+                      "handling": "判定为不通过，移除背景位移逻辑",
+                      "scenario": "角色移动过程中背景发生位移"
+                    },
+                    "expected": "除角色精灵所在区域外，背景像素与移动前一致，背景位移为 0 像素",
+                    "id": "AC-000002",
+                    "input": "按住右方向键持续 3 秒，再按住左方向键持续 3 秒",
+                    "method": "移动前后各截一张图，用像素差分统计背景区域差异率",
+                    "operation": "移动角色后回到起始位置附近，比较背景像素",
+                    "preconditions": "页面已进入且背景渲染完成",
+                    "role": "场景验收者",
+                    "scenario": "验证背景不随角色移动"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "连续 3 帧截图",
+                    "exception": {
+                      "expected": "海面完全静止或每帧出现大面积跳变",
+                      "handling": "记为不通过，调整波浪相位与循环周期后复测",
+                      "scenario": "海面静止或帧间跳变过大"
+                    },
+                    "expected": "三帧海浪纹理位置不同，循环周期内无整幅跳动或闪烁",
+                    "id": "AC-000003",
+                    "input": "无输入",
+                    "method": "间隔 1 秒连续截 3 帧，比对海浪纹理位移",
+                    "operation": "静置观察海面 3 秒并连续截取 3 帧",
+                    "preconditions": "页面静止无角色输入",
+                    "role": "场景验收者",
+                    "scenario": "验证海面循环动画存在且连贯"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "场景等比缩放并居中，四周留出底色，不拉伸不变形",
+                    "handling": "按 min(宽比, 高比) 等比缩放后居中绘制，留边填深色",
+                    "scenario": "浏览器窗口宽高比与场景原始比例不一致"
+                  },
+                  {
+                    "expected": "仍能看完整幅场景与角色，元素不变形",
+                    "handling": "继续等比缩放至适配宽度，允许整体变小但不裁切",
+                    "scenario": "窗口宽度小于 480px 的窄屏"
+                  }
+                ],
+                "created_at": "2026-10-27T19:58:51.627651+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "页面打开后在画布上绘制一幅完整的深圳海岸场景：海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋。背景是一整张固定的 2.5D 平面图，角色在其上方行走时背景像素位置保持不变，不做相机跟随与地图滚动。海水部分带持续的循环动画（波浪流动），让画面不是死图。",
+                "digest": "2310b3e8c298e8c9a0645878ccae71b3e32c822529ee1675b0ddce9d973bbed4",
+                "event_id": "EVT-000004",
+                "excluded": [
+                  "视差滚动、相机跟随与地图平移",
+                  "多场景或关卡切换",
+                  "玩家侧的场景缩放与旋转"
+                ],
+                "id": "REQ-000001",
+                "included": [
+                  "海水区与沙滩区上固定绘制的一整幅海岸背景",
+                  "红树林、海藻床、珊瑚礁三类深圳典型海岸元素的可见呈现",
+                  "台阶与房屋等场景道具的可见呈现",
+                  "海面波浪的循环动画"
+                ],
+                "module": "场景渲染",
+                "necessity": "没有背景就没有场景可言：用户明确要求网站带海洋、沙滩与深圳典型海岸元素，且背景必须固定不动，否则就不是他要的“大地图一站到底”的观感。",
+                "normal_behavior": {
+                  "behavior": "画布按场景原始比例等比绘制完整海岸背景，海面开始循环波浪动画",
+                  "expected": "画面同时可见海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋共七类元素，且背景在角色移动前后像素位置不变",
+                  "scenario": "用户打开本地页面且资产已就绪"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "给螃蟹角色提供一个可辨认的深圳海岸小世界作为舞台，让用户一眼看出这是海藻床、红树林、珊瑚礁构成的真实海岸场景。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "呈现固定不滚动的深圳海岸 2.5D 场景背景",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000002": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000014",
+                "review_id": "REV-000002",
+                "time": "2026-10-27T20:19:33.931717+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "四次按键的起点终点坐标记录表（含 dx、dy 数值）",
+                    "exception": {
+                      "expected": "该方向判定不通过",
+                      "handling": "修正该方向的输入映射后复测",
+                      "scenario": "某个方向位移方向相反或出现斜向偏移"
+                    },
+                    "expected": "↑ 的 y 减小且 x 不变，↓ 的 y 增大且 x 不变，← 的 x 减小且 y 不变，→ 的 x 增大且 y 不变，四次的垂直轴偏移均为 0 像素",
+                    "id": "AC-000004",
+                    "input": "依次单独按住 ↑、↓、←、→ 各 1 秒",
+                    "method": "在页面中暴露角色坐标并逐次记录，比对 dx 与 dy 的正负和零值",
+                    "operation": "每次按键后记录角色起点与终点坐标",
+                    "preconditions": "角色位于场景中央，四个方向均有足够空间",
+                    "role": "操作验收者",
+                    "scenario": "逐个方向核对移动方向正确"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "三组位移量原始数值与相对差计算结果",
+                    "exception": {
+                      "expected": "判定速度不稳定",
+                      "handling": "改为按时间增量累加位移后复测",
+                      "scenario": "三次位移差异超过 10% 或位移接近 0"
+                    },
+                    "expected": "三次位移量的最大值与最小值相对差不超过 10%",
+                    "id": "AC-000005",
+                    "input": "连续 3 次按住 → 各 1 秒后松开",
+                    "method": "同一方向的 3 组位移量做极差与均值比值计算",
+                    "operation": "记录每次 1 秒内的水平位移量",
+                    "preconditions": "角色位于场景中央",
+                    "role": "操作验收者",
+                    "scenario": "核对移动速度稳定"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "最终坐标数值 + 贴边截图",
+                    "exception": {
+                      "expected": "判定边界处理不通过",
+                      "handling": "修正钳制范围并复测",
+                      "scenario": "角色移出画面或贴在边缘抖动"
+                    },
+                    "expected": "角色整体仍在可视区域内，其右边缘不超过场景右内边距，坐标被钳制在允许范围",
+                    "id": "AC-000006",
+                    "input": "持续按住 → 5 秒",
+                    "method": "持续按键后读取角色最终坐标与场景边界值做比较",
+                    "operation": "观察角色最终位置与画面右边缘的关系",
+                    "preconditions": "角色靠近右侧边界",
+                    "role": "操作验收者",
+                    "scenario": "核对边界限制"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "松键时刻与最后一帧位移的时间差记录",
+                    "exception": {
+                      "expected": "判定为未立即停止",
+                      "handling": "移除速度衰减逻辑，改为松键直接归零",
+                      "scenario": "松键后角色继续滑行超过 100 毫秒"
+                    },
+                    "expected": "松键后 100 毫秒内水平位移归零，角色不再移动",
+                    "id": "AC-000007",
+                    "input": "松开 → 键",
+                    "method": "松键后按帧记录坐标，找出最后一次位移的帧号与时间差",
+                    "operation": "松键后连续观察 0.5 秒",
+                    "preconditions": "角色正在向右移动",
+                    "role": "操作验收者",
+                    "scenario": "核对松键立即停止"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "角色只沿最后按下的那个方向移动，不同时产生斜向位移",
+                    "handling": "以最后一次按下的方向键为准，忽略先前仍按住的轴",
+                    "scenario": "同时按住两个方向键（例如右键与上键）"
+                  },
+                  {
+                    "expected": "角色停在边界内侧，不越出画面",
+                    "handling": "对坐标做上下限钳制，越界时保留在允许范围内",
+                    "scenario": "角色持续朝同一个方向移动到场景边缘"
+                  },
+                  {
+                    "expected": "角色停止移动，不出现卡住持续漂移",
+                    "handling": "监听失焦事件清空按键状态",
+                    "scenario": "按住方向键时浏览器窗口失去焦点"
+                  }
+                ],
+                "created_at": "2026-10-27T19:59:07.557201+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "用户按下 W/A/S/D 或键盘方向键时，螃蟹角色在固定场景内沿对应方向匀速移动；松开按键立即停止。移动只在上下左右四个轴方向发生，不产生斜向位移，角色始终被限制在场景可视范围内。",
+                "digest": "433c05bb460b38b24a3f7879d6b4fe2d1231808c67f52164bd721002d7614d6a",
+                "event_id": "EVT-000005",
+                "excluded": [
+                  "斜向八方向自由移动",
+                  "跳跃、攻击、拾取等额外动作",
+                  "身体惯性、摩擦滑行与加速缓冲"
+                ],
+                "id": "REQ-000002",
+                "included": [
+                  "W 与 ↑ 向上移动，S 与 ↓ 向下移动，A 与 ← 向左移动，D 与 → 向右移动",
+                  "恒定速度的水平与垂直位移",
+                  "角色位置限制在场景可视区域内",
+                  "松开按键后立即停止"
+                ],
+                "module": "角色控制",
+                "necessity": "没有四向移动就没有交互，整个场景退化为一张静止图片；用户原话明确这是当前唯一必须实现的功能。",
+                "normal_behavior": {
+                  "behavior": "按住某一个方向键，角色沿该轴方向持续移动并播放行走动画，松开按键后停住",
+                  "expected": "位移方向与按键方向一致，单位时间位移量保持稳定",
+                  "scenario": "角色位于场景中央且没有触达边界"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "这是用户唯一要求现在必须完成的操作能力：用四个方向键驱动小螃蟹在海岸场景里走动。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "支持键盘四向移动螃蟹角色",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000003": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000050",
+                "review_id": "REV-000006",
+                "time": "2026-10-28T08:54:11.706903+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "帧索引序列日志 + 行走中截图 evidence/03~06",
+                    "exception": {
+                      "expected": "判定动画不连通",
+                      "handling": "修正帧推进逻辑与计时基准后复测",
+                      "scenario": "帧序出现跳跃、倒退或长时间停在同帧"
+                    },
+                    "expected": "帧索引按 0、1、2、3 循环推进，无跳帧与倒序",
+                    "id": "AC-000008",
+                    "input": "按住右方向键持续 1 秒",
+                    "method": "在渲染循环中记录每次帧切换的时间戳与索引，导出序列后检查连续性",
+                    "operation": "记录这 1 秒内实际绘制的帧索引序列",
+                    "preconditions": "角色在可行走沙地上，四个方向的帧组已加载",
+                    "role": "动画验收者",
+                    "scenario": "核对单一方向的帧循环连通"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "切向前后帧组标识日志 + 切向瞬间截图",
+                    "exception": {
+                      "expected": "判定动作组切换失败",
+                      "handling": "修正方向到帧组的映射后复测",
+                      "scenario": "切向后仍显示向右的帧或出现空白帧"
+                    },
+                    "expected": "切向后绘制的是向上动作组的帧，切换发生在 1 个渲染帧之内",
+                    "id": "AC-000009",
+                    "input": "按住右方向键后改为按住上方向键",
+                    "method": "记录切向前后各 5 帧的帧组标识与索引",
+                    "operation": "观察切向瞬间的画面并记录所用帧组",
+                    "preconditions": "角色正在向右行走",
+                    "role": "动画验收者",
+                    "scenario": "核对方向切换动作组"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "松键后 1 秒内的帧索引记录",
+                    "exception": {
+                      "expected": "判定为动画未停止",
+                      "handling": "静止态改为只绘制第 0 帧后复测",
+                      "scenario": "松键后仍在空转播放行走帧"
+                    },
+                    "expected": "帧索引保持不变并停在 0，画面稳定显示该方向的待机帧",
+                    "id": "AC-000010",
+                    "input": "松开所有方向键",
+                    "method": "松键后连续记录帧索引，确认数值不再变化",
+                    "operation": "松键后观察 1 秒",
+                    "preconditions": "角色正在移动",
+                    "role": "动画验收者",
+                    "scenario": "核对静止时停止推进"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "python tools/check_sheet.py 输出 + evidence/33_side_scale_preview.png",
+                    "exception": {
+                      "expected": "判定资产不合格",
+                      "handling": "重新跑切帧与对齐脚本后复检",
+                      "scenario": "存在尺寸不一致、底色残留或帧间跳动"
+                    },
+                    "expected": "16 帧全部 48×48，四角 alpha 为 0，同方向帧间横向漂移不超过 2 像素，脚底基线一致",
+                    "id": "AC-000011",
+                    "input": "无输入",
+                    "method": "用脚本遍历 16 帧，统计尺寸、透明角落与包围盒中心偏移；帧尺寸从 scene.json 读取",
+                    "operation": "运行自检脚本检查 16 帧的尺寸、透明角、帧间漂移与脚底基线",
+                    "preconditions": "动作卡已生成在 assets/crab_sheet.png",
+                    "role": "动画验收者",
+                    "scenario": "核对动作卡资产一致性与尺寸"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "帧序号重置到新方向动作组的第 0 帧，不出现两个方向帧混用的错位画面",
+                    "handling": "方向变化即重置动画计时器与帧索引",
+                    "scenario": "移动过程中快速改变方向"
+                  },
+                  {
+                    "expected": "保持在当前面向方向的第 0 帧，不继续推进动画",
+                    "handling": "无输入时冻结帧索引",
+                    "scenario": "角色静止不动"
+                  },
+                  {
+                    "expected": "侧身行的显示尺寸比正面小约 10%，切换瞬间不出现明显的“变大”跳变",
+                    "handling": "切片阶段按行缩放，并把缩放后的脚底回拉到同一基线",
+                    "scenario": "从正面切到侧身"
+                  }
+                ],
+                "created_at": "2026-10-28T08:54:10.386122+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "螃蟹为四个方向（下、左、右、上）各准备一组走路帧，方向切换时立即切换动作组，移动过程中按固定帧率循环播放，静止时停在该方向的待机帧。动作卡由图片生成模型直接产出 4×4 卡片（绿幕），再由代码完成：等分切格 → 软阈值抠绿 → 按包围盒归一化（脚底对齐同一基线）→ 整表统一调色板量化。当前成品为半尺寸：单帧 48×48、整表 192×192、32 色；其中左侧与右侧两行额外缩放到 90%，避免侧身时视觉上比正面显大。",
+                "digest": "9eb3d2fa058fc7d4588a0382fce3f699fabf2129c3badef805ae216396ebdcf3",
+                "event_id": "EVT-000047",
+                "excluded": [
+                  "斜向与八方向的独立动作组",
+                  "攻击、跳跃、死亡等战斗动作",
+                  "帧间插值生成的补间画面",
+                  "静止时的呼吸/眨眼等二次动作（试做过，已移除）"
+                ],
+                "id": "REQ-000003",
+                "included": [
+                  "上、下、左、右四个方向的独立走路帧组，每组 4 帧",
+                  "按 8 帧每秒循环推进帧序号",
+                  "方向切换时同步切换动作组",
+                  "松开方向键后停在该方向待机帧（第 0 帧）",
+                  "16 帧统一 48×48 尺寸、透明背景、同一套 32 色调色板",
+                  "侧视两行按行缩放到 90%，脚底与正面行保持同一基线"
+                ],
+                "module": "角色动画",
+                "necessity": "只有位移没有帧动画，角色会表现为贴图滑动，用户会直接判定不合格；动作卡是该需求的核心交付物。",
+                "normal_behavior": {
+                  "behavior": "每经过 125 毫秒切换到该方向动作组的下一个帧，四帧结束后回到第一帧继续循环",
+                  "expected": "画面中的螃蟹腿部姿态逐帧变化，形成持续步行动作",
+                  "scenario": "角色正在向右移动"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "让螃蟹的移动看起来是一只活物在走，而不是一张贴图在平移；这也是用户反复强调的“动作卡连续播放”。",
+                "questions": [],
+                "revision": 2,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  },
+                  {
+                    "source_id": "SRC-000002",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "播放四向走路动作卡的连续帧动画",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 2,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                },
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:59:22.515291+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 通过 Edge CDP 在 chatgpt.com 发起的技术咨询",
+                    "digest": "526cf481c8592bf102dac7430092a1f929638f4a83987b5b8e77e65d0a36e982",
+                    "event_id": "EVT-000006",
+                    "id": "SRC-000002",
+                    "kind": "链接",
+                    "location": "https://chatgpt.com/c/6ae10247-06f0-83ee-80ae-b56b5c95a4ff",
+                    "manual_note": null,
+                    "name": "ChatGPT 咨询：深圳海岸像素小游戏最短可行资产方案",
+                    "quote": "推荐技术栈：AI 生图 + Python Pillow + HTML5 Canvas 2D。整体采用三个独立层：固定背景、循环环境特效、角色精灵。不要让 AI 一次生成整张背景和全部角色动作后直接投入使用。游戏逻辑画布 960 × 540 px；背景 960 × 540 PNG；角色逻辑帧 64 × 64 px；四向动画 Down / Left / Right / Up，每方向 4 帧，总帧数 16 帧，最终 Sprite Sheet 256 × 256 PNG；行走动画 8 FPS；游戏渲染 requestAnimationFrame，通常目标 60 FPS；移动速度 110 px/s。推荐先生成一张角色母版（Character Reference），确认角色外观后，再生成四个方向的动作。不要首先要求模型直接输出 256 × 256 的成品 Sheet，更稳妥的方法是生成较大的 4 × 4 等分网格，再用代码裁切。",
+                    "revision": 1,
+                    "summary": "建议采用固定背景层 + 循环环境特效层 + 角色精灵层三层结构，画布 960×540、单帧 64×64、四向各 4 帧共 16 帧、8fps 行走、110px/s 移动；AI 先出角色母版与 4×4 网格大图，再用 Pillow 裁切、抠底、统一对齐得到可用 sprite sheet。"
+                  },
+                  "source_id": "SRC-000002",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000004": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000020",
+                "review_id": "REV-000004",
+                "time": "2026-10-27T20:19:35.854973+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "Network 请求列表截图（含域名列）+ 离线状态下的页面截图",
+                    "exception": {
+                      "expected": "判定不自包含",
+                      "handling": "把所需资源下载到本地目录并改为相对路径后复测",
+                      "scenario": "出现外部域名请求或页面白屏"
+                    },
+                    "expected": "页面完整显示场景与角色，Network 面板中没有任何指向本机以外域名的请求，全部请求为 file:// 或 localhost 本地路径",
+                    "id": "AC-000012",
+                    "input": "无网络",
+                    "method": "断网打开页面并导出 Network 请求列表，逐条检查域名",
+                    "operation": "断开网络后双击 index.html，并查看开发者工具的 Network 面板",
+                    "preconditions": "已拿到 crab-coast 文件夹，网络已断开",
+                    "role": "交付验收者",
+                    "scenario": "核对文件夹自包含与离线可运行"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "性能面板截图或帧率统计数值",
+                    "exception": {
+                      "expected": "判定为不流畅",
+                      "handling": "减少每帧重绘区域或缓存背景图层后复测",
+                      "scenario": "平均帧率低于 55 或出现超过 50 毫秒的长帧"
+                    },
+                    "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+                    "id": "AC-000013",
+                    "input": "按住 → 键移动角色 5 秒",
+                    "method": "录制性能时间线，统计移动期间的帧率均值与最长帧间隔",
+                    "operation": "用浏览器性能面板记录该时段的帧率",
+                    "preconditions": "页面运行在本机 Edge 浏览器",
+                    "role": "交付验收者",
+                    "scenario": "核对渲染帧率"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "角色局部放大截图",
+                    "exception": {
+                      "expected": "判定像素渲染不合格",
+                      "handling": "补充 image-rendering 与关闭图像平滑后复测",
+                      "scenario": "出现模糊或彩色边缘"
+                    },
+                    "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+                    "id": "AC-000014",
+                    "input": "无输入",
+                    "method": "对角色局部区域截图并放大观察边缘像素",
+                    "operation": "放大查看角色与背景边缘",
+                    "preconditions": "页面已打开并显示角色",
+                    "role": "交付验收者",
+                    "scenario": "核对像素清晰度"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "角色移动速度与动画节拍保持与时间一致，不出现慢动作",
+                    "handling": "位移与帧推进都按真实时间增量计算，不按固定步数",
+                    "scenario": "运行在性能较弱的机器上，帧率降到 30 帧每秒"
+                  },
+                  {
+                    "expected": "场景等比缩放，像素边缘保持锐利不模糊",
+                    "handling": "canvas 使用 image-rendering: pixelated，并按整数或等比缩放绘制",
+                    "scenario": "浏览器窗口被缩放到很小或很大"
+                  }
+                ],
+                "created_at": "2026-10-27T19:59:41.739698+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "整站所有文件（页面、脚本、样式、背景图、动作卡、生成脚本、需求台账）只存在于 crab-coast 一个文件夹内，不引用任何外部 CDN、字体或接口；断网状态下双击 index.html 即可运行。渲染使用 requestAnimationFrame 加时间增量推进，画面按 60 帧每秒目标运行，像素素材放大时使用最近邻插值保持锐利。",
+                "digest": "ebe38c666d0ea584981c3f07bf4467a6f41bd9664d7b76fece4d2e3c81292687",
+                "event_id": "EVT-000008",
+                "excluded": [
+                  "后端服务、数据库与账号体系",
+                  "外部 CDN 资源与在线字体",
+                  "移动端触屏手势（当前迭代不做）"
+                ],
+                "id": "REQ-000004",
+                "included": [
+                  "全部代码与资产位于 crab-coast 文件夹内",
+                  "离线可运行的本地静态页面",
+                  "基于时间增量的稳定渲染循环",
+                  "像素素材放大时的最近邻插值"
+                ],
+                "module": "交付与性能",
+                "necessity": "资产散落在多个目录或依赖外部网络会让这份交付在离线环境下不可用，也无法满足“一个文件夹搞定”的明确约束。",
+                "normal_behavior": {
+                  "behavior": "页面加载本地素材并开始渲染，方向键控制正常，动画连续",
+                  "expected": "无任何外部网络请求，画面帧率维持在 60 帧每秒附近",
+                  "scenario": "用户在本机双击打开页面，且当前没有联网"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "用户要求所有产物收在一个文件夹里不外流，并且动画要顺滑、看得出是精心做的像素游戏而不是卡顿的贴图滑动。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  },
+                  {
+                    "source_id": "SRC-000002",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "单文件夹自包含交付并保持流畅渲染",
+                "type": "非功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                },
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:59:22.515291+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 通过 Edge CDP 在 chatgpt.com 发起的技术咨询",
+                    "digest": "526cf481c8592bf102dac7430092a1f929638f4a83987b5b8e77e65d0a36e982",
+                    "event_id": "EVT-000006",
+                    "id": "SRC-000002",
+                    "kind": "链接",
+                    "location": "https://chatgpt.com/c/6ae10247-06f0-83ee-80ae-b56b5c95a4ff",
+                    "manual_note": null,
+                    "name": "ChatGPT 咨询：深圳海岸像素小游戏最短可行资产方案",
+                    "quote": "推荐技术栈：AI 生图 + Python Pillow + HTML5 Canvas 2D。整体采用三个独立层：固定背景、循环环境特效、角色精灵。不要让 AI 一次生成整张背景和全部角色动作后直接投入使用。游戏逻辑画布 960 × 540 px；背景 960 × 540 PNG；角色逻辑帧 64 × 64 px；四向动画 Down / Left / Right / Up，每方向 4 帧，总帧数 16 帧，最终 Sprite Sheet 256 × 256 PNG；行走动画 8 FPS；游戏渲染 requestAnimationFrame，通常目标 60 FPS；移动速度 110 px/s。推荐先生成一张角色母版（Character Reference），确认角色外观后，再生成四个方向的动作。不要首先要求模型直接输出 256 × 256 的成品 Sheet，更稳妥的方法是生成较大的 4 × 4 等分网格，再用代码裁切。",
+                    "revision": 1,
+                    "summary": "建议采用固定背景层 + 循环环境特效层 + 角色精灵层三层结构，画布 960×540、单帧 64×64、四向各 4 帧共 16 帧、8fps 行走、110px/s 移动；AI 先出角色母版与 4×4 网格大图，再用 Pillow 裁切、抠底、统一对齐得到可用 sprite sheet。"
+                  },
+                  "source_id": "SRC-000002",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000005": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000054",
+                "review_id": "REV-000007",
+                "time": "2026-10-28T08:54:13.922021+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "实测输出：duration=40, loop=true",
+                    "exception": {
+                      "expected": "判定播放配置不合格",
+                      "handling": "检查音频文件与 bgm.js 设置后复测",
+                      "scenario": "时长不符或未开启循环"
+                    },
+                    "expected": "duration 为 40（±0.05 秒），loop 属性为 true",
+                    "id": "AC-000015",
+                    "input": "无输入",
+                    "method": "在浏览器控制台读取 window.__bgm.audio.duration 与 loop",
+                    "operation": "读取音频元素的时长与 loop 属性",
+                    "preconditions": "页面已打开且音乐资源加载完成",
+                    "role": "音频验收者",
+                    "scenario": "核对时长与循环设置"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "实测 0.0019 / 0.413 = 0.005",
+                    "exception": {
+                      "expected": "判定会爆音",
+                      "handling": "重新做无缝处理或改用取模合成",
+                      "scenario": "接缝处跳变接近最大值"
+                    },
+                    "expected": "首尾跳变远小于普通相邻差值（比值 \u003c 0.1），听感上无咔哒",
+                    "id": "AC-000016",
+                    "input": "无输入",
+                    "method": "用脚本读取 PCM，计算 |x[0]-x[-1]| 与相邻差值分布的 p99.9 之比",
+                    "operation": "比较首尾采样跳变与整体相邻采样差值",
+                    "preconditions": "已拿到音频文件",
+                    "role": "音频验收者",
+                    "scenario": "核对接缝无断音爆音"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "操作前后 muted 状态记录",
+                    "exception": {
+                      "expected": "判定静音功能不合格",
+                      "handling": "修正 localStorage 读写与 muted 绑定后复测",
+                      "scenario": "点击无效或刷新后自动恢复播放"
+                    },
+                    "expected": "点击后立即静音且按钮变为静音态；刷新后仍为静音",
+                    "id": "AC-000017",
+                    "input": "点击右上角音乐按钮，然后刷新页面",
+                    "method": "读取 window.__bgm.muted 与按钮文案，刷新后再读一次",
+                    "operation": "观察按钮文案、音频 muted 状态与刷新后的状态",
+                    "preconditions": "音乐正在播放",
+                    "role": "音频验收者",
+                    "scenario": "核对静音开关与记忆"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "页面不报错，音乐保持静默直到用户第一次按键或点击",
+                    "handling": "监听首次交互事件后再调用播放，被拒绝时不清除监听",
+                    "scenario": "浏览器拦截自动播放"
+                  },
+                  {
+                    "expected": "游戏画面正常，音乐开关按钮自动隐藏",
+                    "handling": "监听音频错误事件，隐藏按钮并继续运行",
+                    "scenario": "音频文件缺失或路径错误"
+                  },
+                  {
+                    "expected": "刷新后仍保持静音",
+                    "handling": "静音状态写入 localStorage 并在初始化时读取",
+                    "scenario": "用户静音后刷新页面"
+                  }
+                ],
+                "created_at": "2026-10-28T08:54:12.200904+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "页面加载后提供一段 40 秒整、能够无缝循环的海边休闲风格背景音乐。受浏览器自动播放策略限制，首次按键或点击后开始播放；播放中不出现接缝断音或爆音。右上角提供音乐开关，键盘 M 键也可切换，静音状态记在本地，刷新后保持。音乐文件与页面同在一个文件夹内，断网可用；切换到 mp3 版本时行为不变。",
+                "digest": "a5f9a8c76d9e09e77cc22bded06a02ca129928d59b5dcbd0416f6f5c51a1282a",
+                "event_id": "EVT-000051",
+                "excluded": [
+                  "脚步、水声等环境音效",
+                  "多曲目切换与音量滑动条",
+                  "在线流媒体或版权音乐接入"
+                ],
+                "id": "REQ-000005",
+                "included": [
+                  "40.000 秒、首尾无缝衔接的循环音频",
+                  "首次按键或点击后自动开始播放",
+                  "右上角按钮与 M 键切换静音，状态写入 localStorage",
+                  "音乐文件随页面同目录存放，离线可用"
+                ],
+                "module": "音频",
+                "necessity": "没有背景音乐时场景偏“静”，用户明确要求补一段海边悠闲向、可循环的电子音乐。",
+                "normal_behavior": {
+                  "behavior": "背景音乐从当前循环位置开始播放，音量淡入到设定值",
+                  "expected": "能听到连续不断的音乐；走到 40 秒末尾时直接接回开头，没有静音空档或爆音",
+                  "scenario": "用户打开页面并按下任意方向键"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0002"
+                  }
+                },
+                "priority": "P1",
+                "purpose": "给静止或行走中的场景提供持续的氛围声，让页面像一个完整的小游戏而不是一张会动的图。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "播放可无缝循环的海岸背景音乐并支持静音",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0002",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000006": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000133",
+                "review_id": "REV-000019",
+                "time": "2026-10-28T09:12:14.221013+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "实测 7 次序列：24,48,96,48,24,48,96（含 小/中/大 标签）",
+                    "exception": {
+                      "expected": "判定反弹逻辑或标签绑定有误",
+                      "handling": "修正方向翻转与文案刷新后复测",
+                      "scenario": "出现 96 直接跳到 24、或文案与尺寸不符"
+                    },
+                    "expected": "序列为 48(中)→24(小)→48(中)→96(大)→48(中)→24(小)→48(中)；按钮依次显示「尺寸 小 24 / 中 48 / 大 96 …」",
+                    "id": "AC-000024",
+                    "input": "连续按 T 键 7 次",
+                    "method": "点击按钮并读取 window.__probe.state().size 与按钮 textContent",
+                    "operation": "记录每次的尺寸与按钮文案",
+                    "preconditions": "页面已加载三套表，默认中档",
+                    "role": "尺寸验收者",
+                    "scenario": "核对反弹序列与标签"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "实测 24 → 48、96 → 48",
+                    "exception": {
+                      "expected": "判定仍在绕回",
+                      "handling": "检查方向变量是否在越界时翻转",
+                      "scenario": "24 跳到 96 或 96 跳到 24"
+                    },
+                    "expected": "24 的下一档是 48；96 的下一档也是 48",
+                    "id": "AC-000025",
+                    "input": "在端点再按一次 T",
+                    "method": "把档位切到端点后按一次 T，读取结果",
+                    "operation": "观察下一档",
+                    "preconditions": "已停在最小档 24 或最大档 96",
+                    "role": "尺寸验收者",
+                    "scenario": "核对两端不互跳"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "三档基线 86/43/21，朝向行一致",
+                    "exception": {
+                      "expected": "判定该档基线或行映射有问题",
+                      "handling": "修正后复测",
+                      "scenario": "某档悬空或朝向错乱"
+                    },
+                    "expected": "三档脚底分别落在 86/43/21 基线上，朝向仍为右→正面行、上→侧视行",
+                    "id": "AC-000026",
+                    "input": "每档按住右键后改按上键",
+                    "method": "读取角色坐标与该档基线核对偏移",
+                    "operation": "核对脚底贴地与朝向行",
+                    "preconditions": "分别切到三档",
+                    "role": "尺寸验收者",
+                    "scenario": "核对三档脚底与朝向不受切换逻辑影响"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "回到中档（而不是跳到大档）",
+                    "handling": "索引越界时翻转方向再前进一步",
+                    "scenario": "在最小档继续按 T"
+                  },
+                  {
+                    "expected": "回到中档（而不是跳到小档）",
+                    "handling": "同上",
+                    "scenario": "在最大档继续按 T"
+                  },
+                  {
+                    "expected": "位置、碰撞与帧序都不受影响",
+                    "handling": "切换只改绘制用的表与基线",
+                    "scenario": "角色移动过程中切换"
+                  }
+                ],
+                "created_at": "2026-10-28T09:12:07.880416+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "螃蟹保留 96（大）、48（中）、24（小）三套精灵表，由同一张动作卡逐级派生，共用朝向状态机、行走帧序与脚底对齐规则；三档都做了侧视按行缩放 90%。T 键或左上角按钮采用**反弹式**切换：从中档出发先变小，到最小档后掉头变大，到最大档后再掉头变小，形成 中→小→中→大→中→小… 的往复，而不是跳回另一端。按钮显示当前档位的中文标签与像素尺寸（如「尺寸 中 48」）。",
+                "digest": "73343bc0b56bfe6235c12b2c0a1c7b735f114b2ca045861226dab93197d893d8",
+                "event_id": "EVT-000130",
+                "excluded": [
+                  "绕回式（一端的下一档直接跳到另一端）切换",
+                  "尺寸滑块或自定义尺寸",
+                  "按距离自动切换尺寸"
+                ],
+                "id": "REQ-000006",
+                "included": [
+                  "96/48/24 三套精灵表同时存在且都可加载",
+                  "T 键与按钮按反弹方式切换：中→小→中→大→中…",
+                  "按钮显示「尺寸 大/中/小 + 像素值」",
+                  "三档共用朝向状态机与行走帧序，侧视均缩 90%"
+                ],
+                "module": "角色渲染",
+                "necessity": "用户明确要求把绕回式切换改成反弹式，并要求用 小/中/大 表达档位。",
+                "normal_behavior": {
+                  "behavior": "每按一次 T 或点一次按钮，档位沿当前方向走一格；走到端点则反向",
+                  "expected": "序列为 中→小→中→大→中→小…，按钮文案随之更新，且不会出现两端直接互跳",
+                  "scenario": "页面加载完成，默认停在中档 48"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P1",
+                "purpose": "让调节尺寸的过程连续、可预期：越按越接近想要的大小，不会在两端之间突然跳变。",
+                "questions": [],
+                "revision": 3,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "同一角色三档尺寸按 T 键反弹切换（小↔中↔大）",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 3,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000007": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000153",
+                "review_id": "REV-000023",
+                "time": "2026-10-28T10:25:08.580419+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图",
+                    "exception": {
+                      "expected": "判定不通过并记录 fitCount 未增长",
+                      "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460",
+                      "scenario": "静置超过 1 秒画布尺寸仍未变化"
+                    },
+                    "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+                    "id": "AC-000027",
+                    "input": "把可见高度由 390 改为 460，不派发任何事件",
+                    "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+                    "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                    "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+                    "role": "移动端验收者",
+                    "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "前后画布尺寸数值与 fitCount 变化",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向",
+                      "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉"
+                    },
+                    "expected": "画布自动回到 693×390，fitCount 再增加 1",
+                    "id": "AC-000028",
+                    "input": "把可见高度由 460 改回 390，不派发任何事件",
+                    "method": "与上一条同一套模拟手段，反向修改高度",
+                    "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                    "preconditions": "承接上一条，画布当前为 818×460",
+                    "role": "移动端验收者",
+                    "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "三次事件与静置期的 fitCount 数值",
+                    "exception": {
+                      "expected": "判定不通过，说明存在空转",
+                      "handling": "检查轮询是否在尺寸未变时仍调用 fit()",
+                      "scenario": "静置期间 fitCount 持续增长"
+                    },
+                    "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+                    "id": "AC-000029",
+                    "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+                    "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+                    "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+                    "preconditions": "页面稳定，画布尺寸已确定",
+                    "role": "移动端验收者",
+                    "scenario": "核对各事件通道与空闲开销"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名",
+                      "scenario": "画布仍保留 2% / 6% 边距"
+                    },
+                    "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+                    "id": "AC-000030",
+                    "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+                    "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+                    "operation": "读取画布尺寸与可见区域尺寸",
+                    "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+                    "role": "移动端验收者",
+                    "scenario": "触屏设备上画布铺满可见区域"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "视口尺寸、画布尺寸与公式计算值",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏",
+                      "scenario": "桌面画布被拉伸到 929 以上或出现裁剪"
+                    },
+                    "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+                    "id": "AC-000031",
+                    "input": "视口 947×972",
+                    "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+                    "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+                    "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+                    "role": "桌面验收者",
+                    "scenario": "桌面端不出现铺满带来的回归"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "画布的 CSS 尺寸保持不变",
+                    "handling": "viewBox() 退回 innerWidth / innerHeight，跳过本次重排，避免放大过程中画面跳动",
+                    "scenario": "用户正在双指放大（visualViewport.scale 大于 1）"
+                  }
+                ],
+                "created_at": "2026-10-28T10:24:35.811740+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "手机浏览器的工具栏（地址栏、底部导航）收起或展开会改变页面可见高度，但部分浏览器在此时不派发 window.resize（iOS Safari 尤其常见）。当前实现只监听 window.resize，所以可见区域变大后画布仍保持旧尺寸，必须等其它事件（例如点击「收起按键」触发的那一次 resize）才会重排。本需求要求以真实可见区域（visualViewport）为准，在可见区域变化后自动重算画布尺寸，把它放大到当前可见区域内能放下的最大值，并在触屏设备上去掉原来预留的 2% / 6% 边距。",
+                "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+                "event_id": "EVT-000150",
+                "excluded": [
+                  "双指放大（visualViewport.scale 大于 1）过程中的重新排版",
+                  "桌面端留边距策略的变更，桌面仍保持 0.98 / 0.94",
+                  "虚拟按键的位置、显隐与输入通道逻辑"
+                ],
+                "id": "REQ-000007",
+                "included": [
+                  "以 visualViewport 的宽高作为可见区域，在工具栏收起或展开后自动重算画布尺寸",
+                  "触屏设备上画布铺满可见区域，不再保留原来的 2% 宽度与 6% 高度边距",
+                  "同时监听 window resize、visualViewport resize、visualViewport scroll、orientationchange、pageshow、visibilitychange 六条来源",
+                  "增加 400ms 的可见区域尺寸比对兜底，应对浏览器完全不发事件的情况"
+                ],
+                "module": "画面自适应（可见区域适配）",
+                "necessity": "去掉本项，画面会在工具栏收起后长期偏小：横屏实测少用约 6% 的高度（693×390 而非应有的 818×460），竖屏少用 8px 宽度；且表现为“点了某个按钮才放大”的怪异时序，用户会以为页面卡住。",
+                "normal_behavior": {
+                  "behavior": "页面以 visualViewport 为准重新计算画布缩放",
+                  "expected": "画布在一个 400ms 轮询周期内由 693×390 自动变为 818×460，全程无需用户点击任何按钮",
+                  "scenario": "手机横屏下收起浏览器工具栏，可见高度由 390 变为 460，浏览器没有派发 resize"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P1",
+                "purpose": "让手机玩家收起浏览器工具栏后立刻得到更大的画面，不需要手动触发任何按钮。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000003",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": "实现位于 main.js：viewBox() 在 visualViewport.scale 约等于 1 时取 visualViewport 的宽高，否则退回 innerWidth/innerHeight；fit() 依据 html.touch-mode 决定铺满还是保留边距；事件监听与 400ms 轮询兜底同在 fit() 附近注册；另暴露 __probe.fitCount() 与 __probe.viewBox() 供验收读取。",
+                "title": "手机隐藏浏览器工具栏后画面自动放大到最大",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-28T10:24:10.851262+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户消息",
+                    "digest": "ddf640df9e4d1bbd434e4ab85bd1e7ac6d19794064dd9c94565faa4675a8fbd2",
+                    "event_id": "EVT-000149",
+                    "id": "SRC-000003",
+                    "kind": "用户消息",
+                    "location": null,
+                    "manual_note": "用户在本次会话中以文字直接提出的原始需求，未经整理",
+                    "name": "用户提出画面自适应需求（手机隐藏工具栏后自动放大）",
+                    "quote": "手机浏览器有一个问题就是，刚开始的时候如果游戏页面小，我隐藏工具栏之后页面不会自动放大，而是点收起按钮的时候才会自适应放大，让页面自动放大最大，新需求创建修改",
+                    "revision": 1,
+                    "summary": "用户指出：手机隐藏浏览器工具栏后可见区域变大，画面却不会自动放大，要点「收起按键」才重排；要求画面自动放大到最大。"
+                  },
+                  "source_id": "SRC-000003",
+                  "source_revision": 1
+                }
+              ]
+            }
+          },
+          "predecessor": "BASE-000005",
+          "revision": 1,
+          "status": "有效",
+          "version": "V1.5"
+        },
+        "previous_content_revision": null,
+        "target": "BASE-000006",
+        "type": "success"
+      },
+      "sequence": 160,
+      "time": "2026-10-28T10:27:27.278915+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "dev start",
+      "fingerprint": "366a802106d6c710cb2969ad399d13e74147897b55d501fee4fdcb89d5fa3fc6",
+      "id": "EVT-000161",
+      "operation_id": "crab-req7-devstart",
+      "reason": "在有效基线 BASE-000006 下开始 REQ-000007 的开发轮次",
+      "request": {
+        "agent": "octie-agent",
+        "command": "dev start",
+        "data": {
+          "baseline_id": "BASE-000006",
+          "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+          "id": "REQ-000007",
+          "revision": 1
+        },
+        "reason": "在有效基线 BASE-000006 下开始 REQ-000007 的开发轮次"
+      },
+      "result": {
+        "command": "dev start",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 161,
+        "document_revision": 161,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000161",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:27:41.920418+00:00"
+        },
+        "object": {
+          "agent": "octie-agent",
+          "baseline_id": "BASE-000006",
+          "cycle": 1,
+          "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+          "event_id": "EVT-000161",
+          "event_sequence": 161,
+          "id": "DEV-000161",
+          "implemented_event_id": null,
+          "reason": "在有效基线 BASE-000006 下开始 REQ-000007 的开发轮次",
+          "requirement_id": "REQ-000007",
+          "revision": 1,
+          "start_event_id": "EVT-000161",
+          "state": "进行中",
+          "time": "2026-10-28T10:27:41.920418+00:00"
+        },
+        "previous_content_revision": null,
+        "target": "DEV-000161",
+        "type": "success"
+      },
+      "sequence": 161,
+      "time": "2026-10-28T10:27:41.920418+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "dev complete",
+      "fingerprint": "0056e989b21cdad5e1245b508906e8ef2a3ebb2aae499d8893cfeb6efa77b60b",
+      "id": "EVT-000162",
+      "operation_id": "crab-req7-devcomplete",
+      "reason": "代码已实现并部署（提交 e4212ab），开发轮次完成",
+      "request": {
+        "agent": "octie-agent",
+        "command": "dev complete",
+        "data": {
+          "baseline_id": "BASE-000006",
+          "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+          "id": "REQ-000007",
+          "revision": 1
+        },
+        "reason": "代码已实现并部署（提交 e4212ab），开发轮次完成"
+      },
+      "result": {
+        "command": "dev complete",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 162,
+        "document_revision": 162,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000162",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:27:51.579079+00:00"
+        },
+        "object": {
+          "agent": "octie-agent",
+          "baseline_id": "BASE-000006",
+          "cycle": 1,
+          "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+          "event_id": "EVT-000162",
+          "event_sequence": 162,
+          "id": "DEV-000162",
+          "implemented_event_id": "EVT-000162",
+          "reason": "代码已实现并部署（提交 e4212ab），开发轮次完成",
+          "requirement_id": "REQ-000007",
+          "revision": 1,
+          "start_event_id": "EVT-000161",
+          "state": "已实现",
+          "time": "2026-10-28T10:27:51.579079+00:00"
+        },
+        "previous_content_revision": null,
+        "target": "DEV-000162",
+        "type": "success"
+      },
+      "sequence": 162,
+      "time": "2026-10-28T10:27:51.579079+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "acceptance record",
+      "fingerprint": "b56cd113a700111aecd4a98f9faabc895e810c83786709dd8ebfa28b1ebf5d95",
+      "id": "EVT-000163",
+      "operation_id": "crab-req7-acc-AC-000027",
+      "reason": "按实测数据登记该条件的验收结果",
+      "request": {
+        "agent": "octie-agent",
+        "command": "acceptance record",
+        "data": {
+          "actual": "把 visualViewport.height 由 390 覆写为 460（模拟浏览器工具栏收起，全程不派发任何事件）后静置 700ms：__probe.viewBox() 变为 {w:844,h:460}，画布由 693×390 自动变为 818×460，__probe.fitCount() 由 3 增至 4，期间没有任何用户点击。",
+          "baseline_id": "BASE-000006",
+          "condition_id": "AC-000027",
+          "cycle": 1,
+          "delivery_id": "crab-coast-v6",
+          "evidence": "evidence/req7_landscape.json 步骤 1→2；另于本地 8099 与线上 ?v=10 各复测一次，结果一致",
+          "implemented_event_id": "EVT-000162",
+          "method": "移动模拟（844×390、hasTouch）下用 Object.defineProperty 覆写 visualViewport.height，读取 __probe.canvasRect() / viewBox() / fitCount()。",
+          "requirement_id": "REQ-000007",
+          "result": "通过",
+          "revision": 1,
+          "waiver_id": null
+        },
+        "reason": "按实测数据登记该条件的验收结果"
+      },
+      "result": {
+        "command": "acceptance record",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 163,
+        "document_revision": 163,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000163",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:29:20.102849+00:00"
+        },
+        "object": {
+          "actual": "把 visualViewport.height 由 390 覆写为 460（模拟浏览器工具栏收起，全程不派发任何事件）后静置 700ms：__probe.viewBox() 变为 {w:844,h:460}，画布由 693×390 自动变为 818×460，__probe.fitCount() 由 3 增至 4，期间没有任何用户点击。",
+          "agent": "octie-agent",
+          "baseline_id": "BASE-000006",
+          "condition_digest": "00c70aab7505a1f4910d6de2824b972fe50f3928a0fd4e34006363beb6325c12",
+          "condition_id": "AC-000027",
+          "cycle": 1,
+          "delivery_id": "crab-coast-v6",
+          "event_id": "EVT-000163",
+          "event_sequence": 163,
+          "evidence": "evidence/req7_landscape.json 步骤 1→2；另于本地 8099 与线上 ?v=10 各复测一次，结果一致",
+          "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+          "id": "EXE-000041",
+          "implemented_event_id": "EVT-000162",
+          "kind": "条件执行",
+          "method": "移动模拟（844×390、hasTouch）下用 Object.defineProperty 覆写 visualViewport.height，读取 __probe.canvasRect() / viewBox() / fitCount()。",
+          "reason": "按实测数据登记该条件的验收结果",
+          "requirement_id": "REQ-000007",
+          "result": "通过",
+          "revision": 1,
+          "time": "2026-10-28T10:29:20.102849+00:00",
+          "waiver_id": null
+        },
+        "previous_content_revision": null,
+        "target": "EXE-000041",
+        "type": "success"
+      },
+      "sequence": 163,
+      "time": "2026-10-28T10:29:20.102849+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "acceptance record",
+      "fingerprint": "737bf3d1390d49b130618b76ea7608b39b3b5cde4cc1fe65f2bbcb6710465ec7",
+      "id": "EVT-000164",
+      "operation_id": "crab-req7-acc-AC-000028",
+      "reason": "按实测数据登记该条件的验收结果",
+      "request": {
+        "agent": "octie-agent",
+        "command": "acceptance record",
+        "data": {
+          "actual": "把 visualViewport.height 由 460 改回 390（同样不发事件）后静置 700ms：画布自动由 818×460 回到 693×390，fitCount 由 4 增至 5。",
+          "baseline_id": "BASE-000006",
+          "condition_id": "AC-000028",
+          "cycle": 1,
+          "delivery_id": "crab-coast-v6",
+          "evidence": "evidence/req7_landscape.json 步骤 2→3",
+          "implemented_event_id": "EVT-000162",
+          "method": "与上一条同一套覆写手段，反向修改高度后读取画布尺寸与 fitCount。",
+          "requirement_id": "REQ-000007",
+          "result": "通过",
+          "revision": 1,
+          "waiver_id": null
+        },
+        "reason": "按实测数据登记该条件的验收结果"
+      },
+      "result": {
+        "command": "acceptance record",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 164,
+        "document_revision": 164,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000164",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:29:22.644825+00:00"
+        },
+        "object": {
+          "actual": "把 visualViewport.height 由 460 改回 390（同样不发事件）后静置 700ms：画布自动由 818×460 回到 693×390，fitCount 由 4 增至 5。",
+          "agent": "octie-agent",
+          "baseline_id": "BASE-000006",
+          "condition_digest": "aa758490649c9401eb53d055b8f4fc955c35c884e615a4585821c81fb5e8595e",
+          "condition_id": "AC-000028",
+          "cycle": 1,
+          "delivery_id": "crab-coast-v6",
+          "event_id": "EVT-000164",
+          "event_sequence": 164,
+          "evidence": "evidence/req7_landscape.json 步骤 2→3",
+          "expected": "画布自动回到 693×390，fitCount 再增加 1",
+          "id": "EXE-000042",
+          "implemented_event_id": "EVT-000162",
+          "kind": "条件执行",
+          "method": "与上一条同一套覆写手段，反向修改高度后读取画布尺寸与 fitCount。",
+          "reason": "按实测数据登记该条件的验收结果",
+          "requirement_id": "REQ-000007",
+          "result": "通过",
+          "revision": 1,
+          "time": "2026-10-28T10:29:22.644825+00:00",
+          "waiver_id": null
+        },
+        "previous_content_revision": null,
+        "target": "EXE-000042",
+        "type": "success"
+      },
+      "sequence": 164,
+      "time": "2026-10-28T10:29:22.644825+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "acceptance record",
+      "fingerprint": "3b57ecfc7c6bb631ff0ba28c77ba9549a7000a0ad1551e1abc7852e8a42c40ee",
+      "id": "EVT-000165",
+      "operation_id": "crab-req7-acc-AC-000029",
+      "reason": "按实测数据登记该条件的验收结果",
+      "request": {
+        "agent": "octie-agent",
+        "command": "acceptance record",
+        "data": {
+          "actual": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow：fitCount 分别 +1、+1、+1；随后静置 900ms，fitCount 增量为 0（不空转）。",
+          "baseline_id": "BASE-000006",
+          "condition_id": "AC-000029",
+          "cycle": 1,
+          "delivery_id": "crab-coast-v6",
+          "evidence": "evidence/req7_landscape.json 的 events 字段：{vvResize:1, windowResize:1, pageshow:1, idle900ms:0}",
+          "implemented_event_id": "EVT-000162",
+          "method": "派发合成事件并在每步后读取 __probe.fitCount() 的增量。",
+          "requirement_id": "REQ-000007",
+          "result": "通过",
+          "revision": 1,
+          "waiver_id": null
+        },
+        "reason": "按实测数据登记该条件的验收结果"
+      },
+      "result": {
+        "command": "acceptance record",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 165,
+        "document_revision": 165,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000165",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:29:25.058760+00:00"
+        },
+        "object": {
+          "actual": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow：fitCount 分别 +1、+1、+1；随后静置 900ms，fitCount 增量为 0（不空转）。",
+          "agent": "octie-agent",
+          "baseline_id": "BASE-000006",
+          "condition_digest": "1ed4040b5e8b96cae838da9db1b0761c5689bcb5981fcc26ecc15a8bd6c87eb3",
+          "condition_id": "AC-000029",
+          "cycle": 1,
+          "delivery_id": "crab-coast-v6",
+          "event_id": "EVT-000165",
+          "event_sequence": 165,
+          "evidence": "evidence/req7_landscape.json 的 events 字段：{vvResize:1, windowResize:1, pageshow:1, idle900ms:0}",
+          "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+          "id": "EXE-000043",
+          "implemented_event_id": "EVT-000162",
+          "kind": "条件执行",
+          "method": "派发合成事件并在每步后读取 __probe.fitCount() 的增量。",
+          "reason": "按实测数据登记该条件的验收结果",
+          "requirement_id": "REQ-000007",
+          "result": "通过",
+          "revision": 1,
+          "time": "2026-10-28T10:29:25.058760+00:00",
+          "waiver_id": null
+        },
+        "previous_content_revision": null,
+        "target": "EXE-000043",
+        "type": "success"
+      },
+      "sequence": 165,
+      "time": "2026-10-28T10:29:25.058760+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "acceptance record",
+      "fingerprint": "407ada94ceecbef81dbd04da25ae9f3ea4cfc873218b3ff934031fcbf4bfa851",
+      "id": "EVT-000166",
+      "operation_id": "crab-req7-acc-AC-000030",
+      "reason": "按实测数据登记该条件的验收结果",
+      "request": {
+        "agent": "octie-agent",
+        "command": "acceptance record",
+        "data": {
+          "actual": "竖屏 390×844 下画布为 390×219（宽度完全铺满，改动前为 382×215）；横屏 844×390 下画布为 693×390（高度完全铺满，改动前为 652×367）。收起虚拟按键后操作带由 236px 归零、场景重新居中，再展开恢复原状。",
+          "baseline_id": "BASE-000006",
+          "condition_id": "AC-000030",
+          "cycle": 1,
+          "delivery_id": "crab-coast-v6",
+          "evidence": "evidence/req7_portrait.json（竖屏与收起/恢复）、evidence/req7_landscape.json（横屏）",
+          "implemented_event_id": "EVT-000162",
+          "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight，并调用 __touch.hide()/show() 观察居中变化。",
+          "requirement_id": "REQ-000007",
+          "result": "通过",
+          "revision": 1,
+          "waiver_id": null
+        },
+        "reason": "按实测数据登记该条件的验收结果"
+      },
+      "result": {
+        "command": "acceptance record",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 166,
+        "document_revision": 166,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000166",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:29:27.546277+00:00"
+        },
+        "object": {
+          "actual": "竖屏 390×844 下画布为 390×219（宽度完全铺满，改动前为 382×215）；横屏 844×390 下画布为 693×390（高度完全铺满，改动前为 652×367）。收起虚拟按键后操作带由 236px 归零、场景重新居中，再展开恢复原状。",
+          "agent": "octie-agent",
+          "baseline_id": "BASE-000006",
+          "condition_digest": "a11965f1d7d38e284f9f62fd7889938f1649c18aed2ce4e02e149059e914bd1f",
+          "condition_id": "AC-000030",
+          "cycle": 1,
+          "delivery_id": "crab-coast-v6",
+          "event_id": "EVT-000166",
+          "event_sequence": 166,
+          "evidence": "evidence/req7_portrait.json（竖屏与收起/恢复）、evidence/req7_landscape.json（横屏）",
+          "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+          "id": "EXE-000044",
+          "implemented_event_id": "EVT-000162",
+          "kind": "条件执行",
+          "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight，并调用 __touch.hide()/show() 观察居中变化。",
+          "reason": "按实测数据登记该条件的验收结果",
+          "requirement_id": "REQ-000007",
+          "result": "通过",
+          "revision": 1,
+          "time": "2026-10-28T10:29:27.546277+00:00",
+          "waiver_id": null
+        },
+        "previous_content_revision": null,
+        "target": "EXE-000044",
+        "type": "success"
+      },
+      "sequence": 166,
+      "time": "2026-10-28T10:29:27.546277+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "acceptance record",
+      "fingerprint": "6f984579e9203718ab5451e39d23293b6d7317e3aec6f6abbe0f389bd1edcb2c",
+      "id": "EVT-000167",
+      "operation_id": "crab-req7-acc-AC-000031",
+      "reason": "按实测数据登记该条件的验收结果",
+      "request": {
+        "agent": "octie-agent",
+        "command": "acceptance record",
+        "data": {
+          "actual": "桌面 852×875 视口（未做触屏模拟，html 无 touch-mode、无触屏覆盖层）下画布为 835×470，与 0.98/0.94 公式计算值 835×470 逐像素一致，铺满逻辑未误用在桌面。",
+          "baseline_id": "BASE-000006",
+          "condition_id": "AC-000031",
+          "cycle": 1,
+          "delivery_id": "crab-coast-v6",
+          "evidence": "evidence/req7_desktop.json",
+          "implemented_event_id": "EVT-000162",
+          "method": "在未模拟触屏的桌面页读取 __probe.canvasRect() 与 __probe.viewBox()，并用同一公式计算期望值比较。",
+          "requirement_id": "REQ-000007",
+          "result": "通过",
+          "revision": 1,
+          "waiver_id": null
+        },
+        "reason": "按实测数据登记该条件的验收结果"
+      },
+      "result": {
+        "command": "acceptance record",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 167,
+        "document_revision": 167,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000167",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:29:30.109385+00:00"
+        },
+        "object": {
+          "actual": "桌面 852×875 视口（未做触屏模拟，html 无 touch-mode、无触屏覆盖层）下画布为 835×470，与 0.98/0.94 公式计算值 835×470 逐像素一致，铺满逻辑未误用在桌面。",
+          "agent": "octie-agent",
+          "baseline_id": "BASE-000006",
+          "condition_digest": "6f7524cbc2e578130912d5f7095faabb96a9870e3e46c666a9552ab3911b01ef",
+          "condition_id": "AC-000031",
+          "cycle": 1,
+          "delivery_id": "crab-coast-v6",
+          "event_id": "EVT-000167",
+          "event_sequence": 167,
+          "evidence": "evidence/req7_desktop.json",
+          "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+          "id": "EXE-000045",
+          "implemented_event_id": "EVT-000162",
+          "kind": "条件执行",
+          "method": "在未模拟触屏的桌面页读取 __probe.canvasRect() 与 __probe.viewBox()，并用同一公式计算期望值比较。",
+          "reason": "按实测数据登记该条件的验收结果",
+          "requirement_id": "REQ-000007",
+          "result": "通过",
+          "revision": 1,
+          "time": "2026-10-28T10:29:30.109385+00:00",
+          "waiver_id": null
+        },
+        "previous_content_revision": null,
+        "target": "EXE-000045",
+        "type": "success"
+      },
+      "sequence": 167,
+      "time": "2026-10-28T10:29:30.109385+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "acceptance record",
+      "fingerprint": "3d91be6c94c757e8ab2e81b672196c4252e906bb36648fc0e413f488730e98df",
+      "id": "EVT-000168",
+      "operation_id": "crab-retest-REQ-000001-AC-000001",
+      "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+      "request": {
+        "agent": "octie-agent",
+        "command": "acceptance record",
+        "data": {
+          "actual": "线上 ?v=10 画面可逐一指出海水（上方整片）、沙滩（中部大片沙地）、红树林（左上与中部气根树丛）、海藻床（水中成片海草）、珊瑚礁（浅水区礁石）、台阶（左侧木台阶）、高脚屋（右侧木屋）共 7 类元素，无缺失。",
+          "baseline_id": "BASE-000006",
+          "condition_id": "AC-000001",
+          "cycle": 2,
+          "delivery_id": "crab-coast-v6",
+          "evidence": "evidence/req7_scene_seven.png（线上 ?v=10 全屏截图，七类元素均可见）",
+          "implemented_event_id": "EVT-000064",
+          "method": "截取整页画面，按七类元素清单逐项勾选并标注位置；同时在画布上确认元素分布区域。",
+          "requirement_id": "REQ-000001",
+          "result": "通过",
+          "revision": 1,
+          "waiver_id": null
+        },
+        "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果"
+      },
+      "result": {
+        "command": "acceptance record",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 168,
+        "document_revision": 168,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000168",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:31:16.434824+00:00"
+        },
+        "object": {
+          "actual": "线上 ?v=10 画面可逐一指出海水（上方整片）、沙滩（中部大片沙地）、红树林（左上与中部气根树丛）、海藻床（水中成片海草）、珊瑚礁（浅水区礁石）、台阶（左侧木台阶）、高脚屋（右侧木屋）共 7 类元素，无缺失。",
+          "agent": "octie-agent",
+          "baseline_id": "BASE-000006",
+          "condition_digest": "5a55b7e4eacf288acc838fbf9f1cc658aa0d858c8dce1d271dd5fbbe9fbc9a95",
+          "condition_id": "AC-000001",
+          "cycle": 2,
+          "delivery_id": "crab-coast-v6",
+          "event_id": "EVT-000168",
+          "event_sequence": 168,
+          "evidence": "evidence/req7_scene_seven.png（线上 ?v=10 全屏截图，七类元素均可见）",
+          "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+          "id": "EXE-000046",
+          "implemented_event_id": "EVT-000064",
+          "kind": "条件执行",
+          "method": "截取整页画面，按七类元素清单逐项勾选并标注位置；同时在画布上确认元素分布区域。",
+          "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+          "requirement_id": "REQ-000001",
+          "result": "通过",
+          "revision": 1,
+          "time": "2026-10-28T10:31:16.434824+00:00",
+          "waiver_id": null
+        },
+        "previous_content_revision": null,
+        "target": "EXE-000046",
+        "type": "success"
+      },
+      "sequence": 168,
+      "time": "2026-10-28T10:31:16.434824+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "acceptance record",
+      "fingerprint": "ed5d0bddac448ca9ceaeb5fb2a2d5dd4b32a8b7978d5969e2fde9c43117af3ac",
+      "id": "EVT-000169",
+      "operation_id": "crab-retest-REQ-000001-AC-000002",
+      "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+      "request": {
+        "agent": "octie-agent",
+        "command": "acceptance record",
+        "data": {
+          "actual": "冻结环境动画后，对沙地区域 (150,350)-(300,450) 取值，按住右键移动 800ms 前后比较：该区域 15000 个像素中变化 0 个，背景位移为 0。",
+          "baseline_id": "BASE-000006",
+          "condition_id": "AC-000002",
+          "cycle": 2,
+          "delivery_id": "crab-coast-v6",
+          "evidence": "本次测量的返回值 {bgDiffPixels: 0, regionPixels: 15000}，执行记录见本表",
+          "implemented_event_id": "EVT-000064",
+          "method": "调用 __probe.freeze(true) 冻结海浪等环境动画，用 canvas getImageData 取同一块沙地像素，移动角色后再取一次做逐像素比较。",
+          "requirement_id": "REQ-000001",
+          "result": "通过",
+          "revision": 1,
+          "waiver_id": null
+        },
+        "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果"
+      },
+      "result": {
+        "command": "acceptance record",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 169,
+        "document_revision": 169,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000169",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:31:19.026677+00:00"
+        },
+        "object": {
+          "actual": "冻结环境动画后，对沙地区域 (150,350)-(300,450) 取值，按住右键移动 800ms 前后比较：该区域 15000 个像素中变化 0 个，背景位移为 0。",
+          "agent": "octie-agent",
+          "baseline_id": "BASE-000006",
+          "condition_digest": "e23e38141b2e4bdc4b93934a740be18792ba560ead40615085fd91d61d597fdb",
+          "condition_id": "AC-000002",
+          "cycle": 2,
+          "delivery_id": "crab-coast-v6",
+          "event_id": "EVT-000169",
+          "event_sequence": 169,
+          "evidence": "本次测量的返回值 {bgDiffPixels: 0, regionPixels: 15000}，执行记录见本表",
+          "expected": "除角色精灵所在区域外，背景像素与移动前一致，背景位移为 0 像素",
+          "id": "EXE-000047",
+          "implemented_event_id": "EVT-000064",
+          "kind": "条件执行",
+          "method": "调用 __probe.freeze(true) 冻结海浪等环境动画，用 canvas getImageData 取同一块沙地像素，移动角色后再取一次做逐像素比较。",
+          "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+          "requirement_id": "REQ-000001",
+          "result": "通过",
+          "revision": 1,
+          "time": "2026-10-28T10:31:19.026677+00:00",
+          "waiver_id": null
+        },
+        "previous_content_revision": null,
+        "target": "EXE-000047",
+        "type": "success"
+      },
+      "sequence": 169,
+      "time": "2026-10-28T10:31:19.026677+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "acceptance record",
+      "fingerprint": "e791082bf7f6f2d5d24a6f24654ede3ea2694dc6384c72eb3ddfc0ea10716269",
+      "id": "EVT-000170",
+      "operation_id": "crab-retest-REQ-000001-AC-000003",
+      "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+      "request": {
+        "agent": "octie-agent",
+        "command": "acceptance record",
+        "data": {
+          "actual": "解冻后对水面区域 (100,60)-(400,160) 连续取值三次（间隔 1 秒）：相邻两帧分别有 272 / 269 个像素发生变化（占 30000 的约 0.9%），变化集中在波浪纹理上，没有整幅跳动或闪烁。",
+          "baseline_id": "BASE-000006",
+          "condition_id": "AC-000003",
+          "cycle": 2,
+          "delivery_id": "crab-coast-v6",
+          "evidence": "本次测量的返回值 {diff_1v2: 272, diff_2v3: 269, waterRegion: 30000}",
+          "implemented_event_id": "EVT-000064",
+          "method": "用 canvas getImageData 对同一水面区域间隔 1 秒连续取样三次，统计相邻帧差异像素数量并观察其占比。",
+          "requirement_id": "REQ-000001",
+          "result": "通过",
+          "revision": 1,
+          "waiver_id": null
+        },
+        "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果"
+      },
+      "result": {
+        "command": "acceptance record",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 170,
+        "document_revision": 170,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000170",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:31:21.811374+00:00"
+        },
+        "object": {
+          "actual": "解冻后对水面区域 (100,60)-(400,160) 连续取值三次（间隔 1 秒）：相邻两帧分别有 272 / 269 个像素发生变化（占 30000 的约 0.9%），变化集中在波浪纹理上，没有整幅跳动或闪烁。",
+          "agent": "octie-agent",
+          "baseline_id": "BASE-000006",
+          "condition_digest": "f7ce88b52436d59e2c0d848194e70183f2f168c9341aa0d43efc87b09255f153",
+          "condition_id": "AC-000003",
+          "cycle": 2,
+          "delivery_id": "crab-coast-v6",
+          "event_id": "EVT-000170",
+          "event_sequence": 170,
+          "evidence": "本次测量的返回值 {diff_1v2: 272, diff_2v3: 269, waterRegion: 30000}",
+          "expected": "三帧海浪纹理位置不同，循环周期内无整幅跳动或闪烁",
+          "id": "EXE-000048",
+          "implemented_event_id": "EVT-000064",
+          "kind": "条件执行",
+          "method": "用 canvas getImageData 对同一水面区域间隔 1 秒连续取样三次，统计相邻帧差异像素数量并观察其占比。",
+          "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+          "requirement_id": "REQ-000001",
+          "result": "通过",
+          "revision": 1,
+          "time": "2026-10-28T10:31:21.811374+00:00",
+          "waiver_id": null
+        },
+        "previous_content_revision": null,
+        "target": "EXE-000048",
+        "type": "success"
+      },
+      "sequence": 170,
+      "time": "2026-10-28T10:31:21.811374+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "acceptance record",
+      "fingerprint": "ff7eddf83d1ae16275e3d819aaaa3e1c949eda4c9388f501aa94c78f4ca3888d",
+      "id": "EVT-000171",
+      "operation_id": "crab-retest-REQ-000004-AC-000012",
+      "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+      "request": {
+        "agent": "octie-agent",
+        "command": "acceptance record",
+        "data": {
+          "actual": "线上页面共 10 个资源请求，来源全部为页面自身 origin（starchen-cycler.github.io 下的相对路径），外部域名请求 0 个。",
+          "baseline_id": "BASE-000006",
+          "condition_id": "AC-000012",
+          "cycle": 2,
+          "delivery_id": "crab-coast-v6",
+          "evidence": "本次测量的返回值 {totalRequests: 10, external: [], sameOriginOnly: true}",
+          "implemented_event_id": "EVT-000070",
+          "method": "读取 performance.getEntriesByType('resource')，逐条比对是否属于 location.origin。",
+          "requirement_id": "REQ-000004",
+          "result": "通过",
+          "revision": 1,
+          "waiver_id": null
+        },
+        "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果"
+      },
+      "result": {
+        "command": "acceptance record",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 171,
+        "document_revision": 171,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000171",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:31:24.653785+00:00"
+        },
+        "object": {
+          "actual": "线上页面共 10 个资源请求，来源全部为页面自身 origin（starchen-cycler.github.io 下的相对路径），外部域名请求 0 个。",
+          "agent": "octie-agent",
+          "baseline_id": "BASE-000006",
+          "condition_digest": "d541dc0e519fe9775586a32226d31c8cef852b026adbf5d6dd419b1a46d17b77",
+          "condition_id": "AC-000012",
+          "cycle": 2,
+          "delivery_id": "crab-coast-v6",
+          "event_id": "EVT-000171",
+          "event_sequence": 171,
+          "evidence": "本次测量的返回值 {totalRequests: 10, external: [], sameOriginOnly: true}",
+          "expected": "页面完整显示场景与角色，Network 面板中没有任何指向本机以外域名的请求，全部请求为 file:// 或 localhost 本地路径",
+          "id": "EXE-000049",
+          "implemented_event_id": "EVT-000070",
+          "kind": "条件执行",
+          "method": "读取 performance.getEntriesByType('resource')，逐条比对是否属于 location.origin。",
+          "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+          "requirement_id": "REQ-000004",
+          "result": "通过",
+          "revision": 1,
+          "time": "2026-10-28T10:31:24.653785+00:00",
+          "waiver_id": null
+        },
+        "previous_content_revision": null,
+        "target": "EXE-000049",
+        "type": "success"
+      },
+      "sequence": 171,
+      "time": "2026-10-28T10:31:24.653785+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "acceptance record",
+      "fingerprint": "26d51082371567625385abb740166ee34592557669ec29e9e7149a04107832bb",
+      "id": "EVT-000172",
+      "operation_id": "crab-retest-REQ-000004-AC-000013",
+      "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+      "request": {
+        "agent": "octie-agent",
+        "command": "acceptance record",
+        "data": {
+          "actual": "按住右键移动，连续三轮各 5 秒：平均帧率均为 82.5 fps，\u003e50ms 长帧均为 0 次。",
+          "baseline_id": "BASE-000006",
+          "condition_id": "AC-000013",
+          "cycle": 2,
+          "delivery_id": "crab-coast-v6",
+          "evidence": "本次测量返回值 {runs:[{fps:82.5,longFrames:0},{fps:82.5,longFrames:0},{fps:82.5,longFrames:0}]}",
+          "implemented_event_id": "EVT-000070",
+          "method": "每轮先 __probe.resetStats()，按住右键 5 秒后读 __probe.fps() 与 __probe.longFrames()，共三轮。",
+          "requirement_id": "REQ-000004",
+          "result": "通过",
+          "revision": 1,
+          "waiver_id": null
+        },
+        "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果"
+      },
+      "result": {
+        "command": "acceptance record",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 172,
+        "document_revision": 172,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000172",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:31:27.595106+00:00"
+        },
+        "object": {
+          "actual": "按住右键移动，连续三轮各 5 秒：平均帧率均为 82.5 fps，\u003e50ms 长帧均为 0 次。",
+          "agent": "octie-agent",
+          "baseline_id": "BASE-000006",
+          "condition_digest": "fa690f9f7d82a761fbc002eaae727344e98bedd6ec47b1f3d9b7f6dbf5c66e7c",
+          "condition_id": "AC-000013",
+          "cycle": 2,
+          "delivery_id": "crab-coast-v6",
+          "event_id": "EVT-000172",
+          "event_sequence": 172,
+          "evidence": "本次测量返回值 {runs:[{fps:82.5,longFrames:0},{fps:82.5,longFrames:0},{fps:82.5,longFrames:0}]}",
+          "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+          "id": "EXE-000050",
+          "implemented_event_id": "EVT-000070",
+          "kind": "条件执行",
+          "method": "每轮先 __probe.resetStats()，按住右键 5 秒后读 __probe.fps() 与 __probe.longFrames()，共三轮。",
+          "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+          "requirement_id": "REQ-000004",
+          "result": "通过",
+          "revision": 1,
+          "time": "2026-10-28T10:31:27.595106+00:00",
+          "waiver_id": null
+        },
+        "previous_content_revision": null,
+        "target": "EXE-000050",
+        "type": "success"
+      },
+      "sequence": 172,
+      "time": "2026-10-28T10:31:27.595106+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "acceptance record",
+      "fingerprint": "ca1db1e97109ab03cc7755c26fc978ed80a6a919da21099eb4b638529374dc37",
+      "id": "EVT-000173",
+      "operation_id": "crab-retest-REQ-000004-AC-000014",
+      "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+      "request": {
+        "agent": "octie-agent",
+        "command": "acceptance record",
+        "data": {
+          "actual": "画布 2D 上下文 imageSmoothingEnabled = false，CSS image-rendering = crisp-edges，且绘制使用最近邻放大，像素边缘为硬边。",
+          "baseline_id": "BASE-000006",
+          "condition_id": "AC-000014",
+          "cycle": 2,
+          "delivery_id": "crab-coast-v6",
+          "evidence": "本次测量返回值 {imageSmoothingEnabled: false, imageRendering: 'crisp-edges'}；另见 evidence/req7_scene_seven.png 中的硬边像素",
+          "implemented_event_id": "EVT-000070",
+          "method": "读取 canvas.getContext('2d').imageSmoothingEnabled 与 getComputedStyle(canvas).imageRendering。",
+          "requirement_id": "REQ-000004",
+          "result": "通过",
+          "revision": 1,
+          "waiver_id": null
+        },
+        "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果"
+      },
+      "result": {
+        "command": "acceptance record",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 173,
+        "document_revision": 173,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000173",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:31:30.475121+00:00"
+        },
+        "object": {
+          "actual": "画布 2D 上下文 imageSmoothingEnabled = false，CSS image-rendering = crisp-edges，且绘制使用最近邻放大，像素边缘为硬边。",
+          "agent": "octie-agent",
+          "baseline_id": "BASE-000006",
+          "condition_digest": "bdfffabb94225564c4917f0948403d9b143b6aab8349987b535ff57680a8c31e",
+          "condition_id": "AC-000014",
+          "cycle": 2,
+          "delivery_id": "crab-coast-v6",
+          "event_id": "EVT-000173",
+          "event_sequence": 173,
+          "evidence": "本次测量返回值 {imageSmoothingEnabled: false, imageRendering: 'crisp-edges'}；另见 evidence/req7_scene_seven.png 中的硬边像素",
+          "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+          "id": "EXE-000051",
+          "implemented_event_id": "EVT-000070",
+          "kind": "条件执行",
+          "method": "读取 canvas.getContext('2d').imageSmoothingEnabled 与 getComputedStyle(canvas).imageRendering。",
+          "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+          "requirement_id": "REQ-000004",
+          "result": "通过",
+          "revision": 1,
+          "time": "2026-10-28T10:31:30.475121+00:00",
+          "waiver_id": null
+        },
+        "previous_content_revision": null,
+        "target": "EXE-000051",
+        "type": "success"
+      },
+      "sequence": 173,
+      "time": "2026-10-28T10:31:30.475121+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "release add",
+      "fingerprint": "a24e92d67d9445a469e602825df1b5d76e7a756ca57ec6f7e7fc37e3d75f0a6a",
+      "id": "EVT-000174",
+      "operation_id": "crab-release-v6",
+      "reason": "在基线 BASE-000006 下发布 crab-coast-v6：新增 REQ-000007，并重发本次重验的 REQ-000001 / REQ-000004",
+      "request": {
+        "agent": "octie-agent",
+        "command": "release add",
+        "data": {
+          "baseline_id": "BASE-000006",
+          "delivery_id": "crab-coast-v6",
+          "members": [
+            {
+              "cycle": 2,
+              "id": "REQ-000001",
+              "revision": 1
+            },
+            {
+              "cycle": 2,
+              "id": "REQ-000004",
+              "revision": 1
+            },
+            {
+              "cycle": 1,
+              "id": "REQ-000007",
+              "revision": 1
+            }
+          ]
+        },
+        "reason": "在基线 BASE-000006 下发布 crab-coast-v6：新增 REQ-000007，并重发本次重验的 REQ-000001 / REQ-000004"
+      },
+      "result": {
+        "command": "release add",
+        "commit_status": "committed",
+        "content_revision": null,
+        "current_document_revision": 174,
+        "document_revision": 174,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000174",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:31:42.628728+00:00"
+        },
+        "object": {
+          "agent": "octie-agent",
+          "baseline_digest": "29ff1fe352b768deddffe0178f94864d266b72557fd5189b4a5ed6ce218ff046",
+          "baseline_id": "BASE-000006",
+          "delivery_id": "crab-coast-v6",
+          "event_id": "EVT-000174",
+          "event_sequence": 174,
+          "id": "REL-000006",
+          "members": [
+            {
+              "cycle": 2,
+              "digest": "2310b3e8c298e8c9a0645878ccae71b3e32c822529ee1675b0ddce9d973bbed4",
+              "execution_ids": [
+                "EXE-000046",
+                "EXE-000047",
+                "EXE-000048"
+              ],
+              "executions": [
+                {
+                  "actual": "线上 ?v=10 画面可逐一指出海水（上方整片）、沙滩（中部大片沙地）、红树林（左上与中部气根树丛）、海藻床（水中成片海草）、珊瑚礁（浅水区礁石）、台阶（左侧木台阶）、高脚屋（右侧木屋）共 7 类元素，无缺失。",
+                  "agent": "octie-agent",
+                  "baseline_id": "BASE-000006",
+                  "condition_digest": "5a55b7e4eacf288acc838fbf9f1cc658aa0d858c8dce1d271dd5fbbe9fbc9a95",
+                  "condition_id": "AC-000001",
+                  "cycle": 2,
+                  "delivery_id": "crab-coast-v6",
+                  "event_id": "EVT-000168",
+                  "event_sequence": 168,
+                  "evidence": "evidence/req7_scene_seven.png（线上 ?v=10 全屏截图，七类元素均可见）",
+                  "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+                  "id": "EXE-000046",
+                  "implemented_event_id": "EVT-000064",
+                  "kind": "条件执行",
+                  "method": "截取整页画面，按七类元素清单逐项勾选并标注位置；同时在画布上确认元素分布区域。",
+                  "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+                  "requirement_id": "REQ-000001",
+                  "result": "通过",
+                  "revision": 1,
+                  "time": "2026-10-28T10:31:16.434824+00:00",
+                  "waiver_id": null
+                },
+                {
+                  "actual": "冻结环境动画后，对沙地区域 (150,350)-(300,450) 取值，按住右键移动 800ms 前后比较：该区域 15000 个像素中变化 0 个，背景位移为 0。",
+                  "agent": "octie-agent",
+                  "baseline_id": "BASE-000006",
+                  "condition_digest": "e23e38141b2e4bdc4b93934a740be18792ba560ead40615085fd91d61d597fdb",
+                  "condition_id": "AC-000002",
+                  "cycle": 2,
+                  "delivery_id": "crab-coast-v6",
+                  "event_id": "EVT-000169",
+                  "event_sequence": 169,
+                  "evidence": "本次测量的返回值 {bgDiffPixels: 0, regionPixels: 15000}，执行记录见本表",
+                  "expected": "除角色精灵所在区域外，背景像素与移动前一致，背景位移为 0 像素",
+                  "id": "EXE-000047",
+                  "implemented_event_id": "EVT-000064",
+                  "kind": "条件执行",
+                  "method": "调用 __probe.freeze(true) 冻结海浪等环境动画，用 canvas getImageData 取同一块沙地像素，移动角色后再取一次做逐像素比较。",
+                  "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+                  "requirement_id": "REQ-000001",
+                  "result": "通过",
+                  "revision": 1,
+                  "time": "2026-10-28T10:31:19.026677+00:00",
+                  "waiver_id": null
+                },
+                {
+                  "actual": "解冻后对水面区域 (100,60)-(400,160) 连续取值三次（间隔 1 秒）：相邻两帧分别有 272 / 269 个像素发生变化（占 30000 的约 0.9%），变化集中在波浪纹理上，没有整幅跳动或闪烁。",
+                  "agent": "octie-agent",
+                  "baseline_id": "BASE-000006",
+                  "condition_digest": "f7ce88b52436d59e2c0d848194e70183f2f168c9341aa0d43efc87b09255f153",
+                  "condition_id": "AC-000003",
+                  "cycle": 2,
+                  "delivery_id": "crab-coast-v6",
+                  "event_id": "EVT-000170",
+                  "event_sequence": 170,
+                  "evidence": "本次测量的返回值 {diff_1v2: 272, diff_2v3: 269, waterRegion: 30000}",
+                  "expected": "三帧海浪纹理位置不同，循环周期内无整幅跳动或闪烁",
+                  "id": "EXE-000048",
+                  "implemented_event_id": "EVT-000064",
+                  "kind": "条件执行",
+                  "method": "用 canvas getImageData 对同一水面区域间隔 1 秒连续取样三次，统计相邻帧差异像素数量并观察其占比。",
+                  "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+                  "requirement_id": "REQ-000001",
+                  "result": "通过",
+                  "revision": 1,
+                  "time": "2026-10-28T10:31:21.811374+00:00",
+                  "waiver_id": null
+                }
+              ],
+              "id": "REQ-000001",
+              "implemented_event_id": "EVT-000064",
+              "revision": 1
+            },
+            {
+              "cycle": 2,
+              "digest": "ebe38c666d0ea584981c3f07bf4467a6f41bd9664d7b76fece4d2e3c81292687",
+              "execution_ids": [
+                "EXE-000049",
+                "EXE-000050",
+                "EXE-000051"
+              ],
+              "executions": [
+                {
+                  "actual": "线上页面共 10 个资源请求，来源全部为页面自身 origin（starchen-cycler.github.io 下的相对路径），外部域名请求 0 个。",
+                  "agent": "octie-agent",
+                  "baseline_id": "BASE-000006",
+                  "condition_digest": "d541dc0e519fe9775586a32226d31c8cef852b026adbf5d6dd419b1a46d17b77",
+                  "condition_id": "AC-000012",
+                  "cycle": 2,
+                  "delivery_id": "crab-coast-v6",
+                  "event_id": "EVT-000171",
+                  "event_sequence": 171,
+                  "evidence": "本次测量的返回值 {totalRequests: 10, external: [], sameOriginOnly: true}",
+                  "expected": "页面完整显示场景与角色，Network 面板中没有任何指向本机以外域名的请求，全部请求为 file:// 或 localhost 本地路径",
+                  "id": "EXE-000049",
+                  "implemented_event_id": "EVT-000070",
+                  "kind": "条件执行",
+                  "method": "读取 performance.getEntriesByType('resource')，逐条比对是否属于 location.origin。",
+                  "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+                  "requirement_id": "REQ-000004",
+                  "result": "通过",
+                  "revision": 1,
+                  "time": "2026-10-28T10:31:24.653785+00:00",
+                  "waiver_id": null
+                },
+                {
+                  "actual": "按住右键移动，连续三轮各 5 秒：平均帧率均为 82.5 fps，\u003e50ms 长帧均为 0 次。",
+                  "agent": "octie-agent",
+                  "baseline_id": "BASE-000006",
+                  "condition_digest": "fa690f9f7d82a761fbc002eaae727344e98bedd6ec47b1f3d9b7f6dbf5c66e7c",
+                  "condition_id": "AC-000013",
+                  "cycle": 2,
+                  "delivery_id": "crab-coast-v6",
+                  "event_id": "EVT-000172",
+                  "event_sequence": 172,
+                  "evidence": "本次测量返回值 {runs:[{fps:82.5,longFrames:0},{fps:82.5,longFrames:0},{fps:82.5,longFrames:0}]}",
+                  "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+                  "id": "EXE-000050",
+                  "implemented_event_id": "EVT-000070",
+                  "kind": "条件执行",
+                  "method": "每轮先 __probe.resetStats()，按住右键 5 秒后读 __probe.fps() 与 __probe.longFrames()，共三轮。",
+                  "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+                  "requirement_id": "REQ-000004",
+                  "result": "通过",
+                  "revision": 1,
+                  "time": "2026-10-28T10:31:27.595106+00:00",
+                  "waiver_id": null
+                },
+                {
+                  "actual": "画布 2D 上下文 imageSmoothingEnabled = false，CSS image-rendering = crisp-edges，且绘制使用最近邻放大，像素边缘为硬边。",
+                  "agent": "octie-agent",
+                  "baseline_id": "BASE-000006",
+                  "condition_digest": "bdfffabb94225564c4917f0948403d9b143b6aab8349987b535ff57680a8c31e",
+                  "condition_id": "AC-000014",
+                  "cycle": 2,
+                  "delivery_id": "crab-coast-v6",
+                  "event_id": "EVT-000173",
+                  "event_sequence": 173,
+                  "evidence": "本次测量返回值 {imageSmoothingEnabled: false, imageRendering: 'crisp-edges'}；另见 evidence/req7_scene_seven.png 中的硬边像素",
+                  "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+                  "id": "EXE-000051",
+                  "implemented_event_id": "EVT-000070",
+                  "kind": "条件执行",
+                  "method": "读取 canvas.getContext('2d').imageSmoothingEnabled 与 getComputedStyle(canvas).imageRendering。",
+                  "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+                  "requirement_id": "REQ-000004",
+                  "result": "通过",
+                  "revision": 1,
+                  "time": "2026-10-28T10:31:30.475121+00:00",
+                  "waiver_id": null
+                }
+              ],
+              "id": "REQ-000004",
+              "implemented_event_id": "EVT-000070",
+              "revision": 1
+            },
+            {
+              "cycle": 1,
+              "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+              "execution_ids": [
+                "EXE-000041",
+                "EXE-000042",
+                "EXE-000043",
+                "EXE-000044",
+                "EXE-000045"
+              ],
+              "executions": [
+                {
+                  "actual": "把 visualViewport.height 由 390 覆写为 460（模拟浏览器工具栏收起，全程不派发任何事件）后静置 700ms：__probe.viewBox() 变为 {w:844,h:460}，画布由 693×390 自动变为 818×460，__probe.fitCount() 由 3 增至 4，期间没有任何用户点击。",
+                  "agent": "octie-agent",
+                  "baseline_id": "BASE-000006",
+                  "condition_digest": "00c70aab7505a1f4910d6de2824b972fe50f3928a0fd4e34006363beb6325c12",
+                  "condition_id": "AC-000027",
+                  "cycle": 1,
+                  "delivery_id": "crab-coast-v6",
+                  "event_id": "EVT-000163",
+                  "event_sequence": 163,
+                  "evidence": "evidence/req7_landscape.json 步骤 1→2；另于本地 8099 与线上 ?v=10 各复测一次，结果一致",
+                  "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+                  "id": "EXE-000041",
+                  "implemented_event_id": "EVT-000162",
+                  "kind": "条件执行",
+                  "method": "移动模拟（844×390、hasTouch）下用 Object.defineProperty 覆写 visualViewport.height，读取 __probe.canvasRect() / viewBox() / fitCount()。",
+                  "reason": "按实测数据登记该条件的验收结果",
+                  "requirement_id": "REQ-000007",
+                  "result": "通过",
+                  "revision": 1,
+                  "time": "2026-10-28T10:29:20.102849+00:00",
+                  "waiver_id": null
+                },
+                {
+                  "actual": "把 visualViewport.height 由 460 改回 390（同样不发事件）后静置 700ms：画布自动由 818×460 回到 693×390，fitCount 由 4 增至 5。",
+                  "agent": "octie-agent",
+                  "baseline_id": "BASE-000006",
+                  "condition_digest": "aa758490649c9401eb53d055b8f4fc955c35c884e615a4585821c81fb5e8595e",
+                  "condition_id": "AC-000028",
+                  "cycle": 1,
+                  "delivery_id": "crab-coast-v6",
+                  "event_id": "EVT-000164",
+                  "event_sequence": 164,
+                  "evidence": "evidence/req7_landscape.json 步骤 2→3",
+                  "expected": "画布自动回到 693×390，fitCount 再增加 1",
+                  "id": "EXE-000042",
+                  "implemented_event_id": "EVT-000162",
+                  "kind": "条件执行",
+                  "method": "与上一条同一套覆写手段，反向修改高度后读取画布尺寸与 fitCount。",
+                  "reason": "按实测数据登记该条件的验收结果",
+                  "requirement_id": "REQ-000007",
+                  "result": "通过",
+                  "revision": 1,
+                  "time": "2026-10-28T10:29:22.644825+00:00",
+                  "waiver_id": null
+                },
+                {
+                  "actual": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow：fitCount 分别 +1、+1、+1；随后静置 900ms，fitCount 增量为 0（不空转）。",
+                  "agent": "octie-agent",
+                  "baseline_id": "BASE-000006",
+                  "condition_digest": "1ed4040b5e8b96cae838da9db1b0761c5689bcb5981fcc26ecc15a8bd6c87eb3",
+                  "condition_id": "AC-000029",
+                  "cycle": 1,
+                  "delivery_id": "crab-coast-v6",
+                  "event_id": "EVT-000165",
+                  "event_sequence": 165,
+                  "evidence": "evidence/req7_landscape.json 的 events 字段：{vvResize:1, windowResize:1, pageshow:1, idle900ms:0}",
+                  "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+                  "id": "EXE-000043",
+                  "implemented_event_id": "EVT-000162",
+                  "kind": "条件执行",
+                  "method": "派发合成事件并在每步后读取 __probe.fitCount() 的增量。",
+                  "reason": "按实测数据登记该条件的验收结果",
+                  "requirement_id": "REQ-000007",
+                  "result": "通过",
+                  "revision": 1,
+                  "time": "2026-10-28T10:29:25.058760+00:00",
+                  "waiver_id": null
+                },
+                {
+                  "actual": "竖屏 390×844 下画布为 390×219（宽度完全铺满，改动前为 382×215）；横屏 844×390 下画布为 693×390（高度完全铺满，改动前为 652×367）。收起虚拟按键后操作带由 236px 归零、场景重新居中，再展开恢复原状。",
+                  "agent": "octie-agent",
+                  "baseline_id": "BASE-000006",
+                  "condition_digest": "a11965f1d7d38e284f9f62fd7889938f1649c18aed2ce4e02e149059e914bd1f",
+                  "condition_id": "AC-000030",
+                  "cycle": 1,
+                  "delivery_id": "crab-coast-v6",
+                  "event_id": "EVT-000166",
+                  "event_sequence": 166,
+                  "evidence": "evidence/req7_portrait.json（竖屏与收起/恢复）、evidence/req7_landscape.json（横屏）",
+                  "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+                  "id": "EXE-000044",
+                  "implemented_event_id": "EVT-000162",
+                  "kind": "条件执行",
+                  "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight，并调用 __touch.hide()/show() 观察居中变化。",
+                  "reason": "按实测数据登记该条件的验收结果",
+                  "requirement_id": "REQ-000007",
+                  "result": "通过",
+                  "revision": 1,
+                  "time": "2026-10-28T10:29:27.546277+00:00",
+                  "waiver_id": null
+                },
+                {
+                  "actual": "桌面 852×875 视口（未做触屏模拟，html 无 touch-mode、无触屏覆盖层）下画布为 835×470，与 0.98/0.94 公式计算值 835×470 逐像素一致，铺满逻辑未误用在桌面。",
+                  "agent": "octie-agent",
+                  "baseline_id": "BASE-000006",
+                  "condition_digest": "6f7524cbc2e578130912d5f7095faabb96a9870e3e46c666a9552ab3911b01ef",
+                  "condition_id": "AC-000031",
+                  "cycle": 1,
+                  "delivery_id": "crab-coast-v6",
+                  "event_id": "EVT-000167",
+                  "event_sequence": 167,
+                  "evidence": "evidence/req7_desktop.json",
+                  "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+                  "id": "EXE-000045",
+                  "implemented_event_id": "EVT-000162",
+                  "kind": "条件执行",
+                  "method": "在未模拟触屏的桌面页读取 __probe.canvasRect() 与 __probe.viewBox()，并用同一公式计算期望值比较。",
+                  "reason": "按实测数据登记该条件的验收结果",
+                  "requirement_id": "REQ-000007",
+                  "result": "通过",
+                  "revision": 1,
+                  "time": "2026-10-28T10:29:30.109385+00:00",
+                  "waiver_id": null
+                }
+              ],
+              "id": "REQ-000007",
+              "implemented_event_id": "EVT-000162",
+              "revision": 1
+            }
+          ],
+          "reason": "在基线 BASE-000006 下发布 crab-coast-v6：新增 REQ-000007，并重发本次重验的 REQ-000001 / REQ-000004",
+          "revalidation": [
+            {
+              "basis": {
+                "delivery_id": "crab-coast-v6",
+                "execution_id": "EXE-000046",
+                "type": "执行"
+              },
+              "disposition": "通过",
+              "execution": {
+                "actual": "线上 ?v=10 画面可逐一指出海水（上方整片）、沙滩（中部大片沙地）、红树林（左上与中部气根树丛）、海藻床（水中成片海草）、珊瑚礁（浅水区礁石）、台阶（左侧木台阶）、高脚屋（右侧木屋）共 7 类元素，无缺失。",
+                "agent": "octie-agent",
+                "baseline_id": "BASE-000006",
+                "condition_digest": "5a55b7e4eacf288acc838fbf9f1cc658aa0d858c8dce1d271dd5fbbe9fbc9a95",
+                "condition_id": "AC-000001",
+                "cycle": 2,
+                "delivery_id": "crab-coast-v6",
+                "event_id": "EVT-000168",
+                "event_sequence": 168,
+                "evidence": "evidence/req7_scene_seven.png（线上 ?v=10 全屏截图，七类元素均可见）",
+                "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+                "id": "EXE-000046",
+                "implemented_event_id": "EVT-000064",
+                "kind": "条件执行",
+                "method": "截取整页画面，按七类元素清单逐项勾选并标注位置；同时在画布上确认元素分布区域。",
+                "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+                "requirement_id": "REQ-000001",
+                "result": "通过",
+                "revision": 1,
+                "time": "2026-10-28T10:31:16.434824+00:00",
+                "waiver_id": null
+              },
+              "obligation": {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition_id": "AC-000001",
+                "requirement_id": "REQ-000001",
+                "revision": 1
+              }
+            },
+            {
+              "basis": {
+                "delivery_id": "crab-coast-v6",
+                "execution_id": "EXE-000050",
+                "type": "执行"
+              },
+              "disposition": "通过",
+              "execution": {
+                "actual": "按住右键移动，连续三轮各 5 秒：平均帧率均为 82.5 fps，\u003e50ms 长帧均为 0 次。",
+                "agent": "octie-agent",
+                "baseline_id": "BASE-000006",
+                "condition_digest": "fa690f9f7d82a761fbc002eaae727344e98bedd6ec47b1f3d9b7f6dbf5c66e7c",
+                "condition_id": "AC-000013",
+                "cycle": 2,
+                "delivery_id": "crab-coast-v6",
+                "event_id": "EVT-000172",
+                "event_sequence": 172,
+                "evidence": "本次测量返回值 {runs:[{fps:82.5,longFrames:0},{fps:82.5,longFrames:0},{fps:82.5,longFrames:0}]}",
+                "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+                "id": "EXE-000050",
+                "implemented_event_id": "EVT-000070",
+                "kind": "条件执行",
+                "method": "每轮先 __probe.resetStats()，按住右键 5 秒后读 __probe.fps() 与 __probe.longFrames()，共三轮。",
+                "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+                "requirement_id": "REQ-000004",
+                "result": "通过",
+                "revision": 1,
+                "time": "2026-10-28T10:31:27.595106+00:00",
+                "waiver_id": null
+              },
+              "obligation": {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition_id": "AC-000013",
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              }
+            },
+            {
+              "basis": {
+                "delivery_id": "crab-coast-v6",
+                "execution_id": "EXE-000051",
+                "type": "执行"
+              },
+              "disposition": "通过",
+              "execution": {
+                "actual": "画布 2D 上下文 imageSmoothingEnabled = false，CSS image-rendering = crisp-edges，且绘制使用最近邻放大，像素边缘为硬边。",
+                "agent": "octie-agent",
+                "baseline_id": "BASE-000006",
+                "condition_digest": "bdfffabb94225564c4917f0948403d9b143b6aab8349987b535ff57680a8c31e",
+                "condition_id": "AC-000014",
+                "cycle": 2,
+                "delivery_id": "crab-coast-v6",
+                "event_id": "EVT-000173",
+                "event_sequence": 173,
+                "evidence": "本次测量返回值 {imageSmoothingEnabled: false, imageRendering: 'crisp-edges'}；另见 evidence/req7_scene_seven.png 中的硬边像素",
+                "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+                "id": "EXE-000051",
+                "implemented_event_id": "EVT-000070",
+                "kind": "条件执行",
+                "method": "读取 canvas.getContext('2d').imageSmoothingEnabled 与 getComputedStyle(canvas).imageRendering。",
+                "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+                "requirement_id": "REQ-000004",
+                "result": "通过",
+                "revision": 1,
+                "time": "2026-10-28T10:31:30.475121+00:00",
+                "waiver_id": null
+              },
+              "obligation": {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition_id": "AC-000014",
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              }
+            },
+            {
+              "basis": {
+                "delivery_id": "crab-coast-v6",
+                "execution_id": "EXE-000041",
+                "type": "执行"
+              },
+              "disposition": "通过",
+              "execution": {
+                "actual": "把 visualViewport.height 由 390 覆写为 460（模拟浏览器工具栏收起，全程不派发任何事件）后静置 700ms：__probe.viewBox() 变为 {w:844,h:460}，画布由 693×390 自动变为 818×460，__probe.fitCount() 由 3 增至 4，期间没有任何用户点击。",
+                "agent": "octie-agent",
+                "baseline_id": "BASE-000006",
+                "condition_digest": "00c70aab7505a1f4910d6de2824b972fe50f3928a0fd4e34006363beb6325c12",
+                "condition_id": "AC-000027",
+                "cycle": 1,
+                "delivery_id": "crab-coast-v6",
+                "event_id": "EVT-000163",
+                "event_sequence": 163,
+                "evidence": "evidence/req7_landscape.json 步骤 1→2；另于本地 8099 与线上 ?v=10 各复测一次，结果一致",
+                "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+                "id": "EXE-000041",
+                "implemented_event_id": "EVT-000162",
+                "kind": "条件执行",
+                "method": "移动模拟（844×390、hasTouch）下用 Object.defineProperty 覆写 visualViewport.height，读取 __probe.canvasRect() / viewBox() / fitCount()。",
+                "reason": "按实测数据登记该条件的验收结果",
+                "requirement_id": "REQ-000007",
+                "result": "通过",
+                "revision": 1,
+                "time": "2026-10-28T10:29:20.102849+00:00",
+                "waiver_id": null
+              },
+              "obligation": {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition_id": "AC-000027",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              }
+            },
+            {
+              "basis": {
+                "delivery_id": "crab-coast-v6",
+                "execution_id": "EXE-000042",
+                "type": "执行"
+              },
+              "disposition": "通过",
+              "execution": {
+                "actual": "把 visualViewport.height 由 460 改回 390（同样不发事件）后静置 700ms：画布自动由 818×460 回到 693×390，fitCount 由 4 增至 5。",
+                "agent": "octie-agent",
+                "baseline_id": "BASE-000006",
+                "condition_digest": "aa758490649c9401eb53d055b8f4fc955c35c884e615a4585821c81fb5e8595e",
+                "condition_id": "AC-000028",
+                "cycle": 1,
+                "delivery_id": "crab-coast-v6",
+                "event_id": "EVT-000164",
+                "event_sequence": 164,
+                "evidence": "evidence/req7_landscape.json 步骤 2→3",
+                "expected": "画布自动回到 693×390，fitCount 再增加 1",
+                "id": "EXE-000042",
+                "implemented_event_id": "EVT-000162",
+                "kind": "条件执行",
+                "method": "与上一条同一套覆写手段，反向修改高度后读取画布尺寸与 fitCount。",
+                "reason": "按实测数据登记该条件的验收结果",
+                "requirement_id": "REQ-000007",
+                "result": "通过",
+                "revision": 1,
+                "time": "2026-10-28T10:29:22.644825+00:00",
+                "waiver_id": null
+              },
+              "obligation": {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition_id": "AC-000028",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              }
+            },
+            {
+              "basis": {
+                "delivery_id": "crab-coast-v6",
+                "execution_id": "EXE-000043",
+                "type": "执行"
+              },
+              "disposition": "通过",
+              "execution": {
+                "actual": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow：fitCount 分别 +1、+1、+1；随后静置 900ms，fitCount 增量为 0（不空转）。",
+                "agent": "octie-agent",
+                "baseline_id": "BASE-000006",
+                "condition_digest": "1ed4040b5e8b96cae838da9db1b0761c5689bcb5981fcc26ecc15a8bd6c87eb3",
+                "condition_id": "AC-000029",
+                "cycle": 1,
+                "delivery_id": "crab-coast-v6",
+                "event_id": "EVT-000165",
+                "event_sequence": 165,
+                "evidence": "evidence/req7_landscape.json 的 events 字段：{vvResize:1, windowResize:1, pageshow:1, idle900ms:0}",
+                "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+                "id": "EXE-000043",
+                "implemented_event_id": "EVT-000162",
+                "kind": "条件执行",
+                "method": "派发合成事件并在每步后读取 __probe.fitCount() 的增量。",
+                "reason": "按实测数据登记该条件的验收结果",
+                "requirement_id": "REQ-000007",
+                "result": "通过",
+                "revision": 1,
+                "time": "2026-10-28T10:29:25.058760+00:00",
+                "waiver_id": null
+              },
+              "obligation": {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition_id": "AC-000029",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              }
+            },
+            {
+              "basis": {
+                "delivery_id": "crab-coast-v6",
+                "execution_id": "EXE-000044",
+                "type": "执行"
+              },
+              "disposition": "通过",
+              "execution": {
+                "actual": "竖屏 390×844 下画布为 390×219（宽度完全铺满，改动前为 382×215）；横屏 844×390 下画布为 693×390（高度完全铺满，改动前为 652×367）。收起虚拟按键后操作带由 236px 归零、场景重新居中，再展开恢复原状。",
+                "agent": "octie-agent",
+                "baseline_id": "BASE-000006",
+                "condition_digest": "a11965f1d7d38e284f9f62fd7889938f1649c18aed2ce4e02e149059e914bd1f",
+                "condition_id": "AC-000030",
+                "cycle": 1,
+                "delivery_id": "crab-coast-v6",
+                "event_id": "EVT-000166",
+                "event_sequence": 166,
+                "evidence": "evidence/req7_portrait.json（竖屏与收起/恢复）、evidence/req7_landscape.json（横屏）",
+                "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+                "id": "EXE-000044",
+                "implemented_event_id": "EVT-000162",
+                "kind": "条件执行",
+                "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight，并调用 __touch.hide()/show() 观察居中变化。",
+                "reason": "按实测数据登记该条件的验收结果",
+                "requirement_id": "REQ-000007",
+                "result": "通过",
+                "revision": 1,
+                "time": "2026-10-28T10:29:27.546277+00:00",
+                "waiver_id": null
+              },
+              "obligation": {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition_id": "AC-000030",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              }
+            },
+            {
+              "basis": {
+                "delivery_id": "crab-coast-v6",
+                "execution_id": "EXE-000045",
+                "type": "执行"
+              },
+              "disposition": "通过",
+              "execution": {
+                "actual": "桌面 852×875 视口（未做触屏模拟，html 无 touch-mode、无触屏覆盖层）下画布为 835×470，与 0.98/0.94 公式计算值 835×470 逐像素一致，铺满逻辑未误用在桌面。",
+                "agent": "octie-agent",
+                "baseline_id": "BASE-000006",
+                "condition_digest": "6f7524cbc2e578130912d5f7095faabb96a9870e3e46c666a9552ab3911b01ef",
+                "condition_id": "AC-000031",
+                "cycle": 1,
+                "delivery_id": "crab-coast-v6",
+                "event_id": "EVT-000167",
+                "event_sequence": 167,
+                "evidence": "evidence/req7_desktop.json",
+                "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+                "id": "EXE-000045",
+                "implemented_event_id": "EVT-000162",
+                "kind": "条件执行",
+                "method": "在未模拟触屏的桌面页读取 __probe.canvasRect() 与 __probe.viewBox()，并用同一公式计算期望值比较。",
+                "reason": "按实测数据登记该条件的验收结果",
+                "requirement_id": "REQ-000007",
+                "result": "通过",
+                "revision": 1,
+                "time": "2026-10-28T10:29:30.109385+00:00",
+                "waiver_id": null
+              },
+              "obligation": {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition_id": "AC-000031",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              }
+            }
+          ],
+          "time": "2026-10-28T10:31:42.628728+00:00"
+        },
+        "previous_content_revision": null,
+        "target": "REL-000006",
+        "type": "success"
+      },
+      "sequence": 174,
+      "time": "2026-10-28T10:31:42.628728+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "change close",
+      "fingerprint": "f892c2c53bf32d0abaca99303be0819ffc76acade504f31d1c1adb4a0ebfb4a7",
+      "id": "EVT-000175",
+      "operation_id": "crab-chg5-close-2",
+      "reason": "变更已应用、基线已激活、已随 REL-000006 发布，逐动作与逐义务关闭",
+      "request": {
+        "agent": "octie-agent",
+        "command": "change close",
+        "data": {
+          "action_closures": [
+            {
+              "action": {
+                "new_revision": 1,
+                "old_revision": null,
+                "requirement_id": "REQ-000007",
+                "type": "新增"
+              },
+              "basis": {
+                "release_id": "REL-000006",
+                "type": "发布"
+              }
+            }
+          ],
+          "digest": "ea172f2a692d679024b59f612fd1241d308fc7ff08614b04a4ffe7e7cfe228b5",
+          "id": "CHG-000005",
+          "obligation_closures": [
+            {
+              "basis": {
+                "executions": [
+                  {
+                    "delivery_id": "crab-coast-v6",
+                    "execution_id": "EXE-000046"
+                  }
+                ],
+                "type": "执行"
+              },
+              "obligation": {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition_id": "AC-000001",
+                "requirement_id": "REQ-000001",
+                "revision": 1
+              }
+            },
+            {
+              "basis": {
+                "executions": [
+                  {
+                    "delivery_id": "crab-coast-v6",
+                    "execution_id": "EXE-000050"
+                  }
+                ],
+                "type": "执行"
+              },
+              "obligation": {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition_id": "AC-000013",
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              }
+            },
+            {
+              "basis": {
+                "executions": [
+                  {
+                    "delivery_id": "crab-coast-v6",
+                    "execution_id": "EXE-000051"
+                  }
+                ],
+                "type": "执行"
+              },
+              "obligation": {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition_id": "AC-000014",
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              }
+            },
+            {
+              "basis": {
+                "executions": [
+                  {
+                    "delivery_id": "crab-coast-v6",
+                    "execution_id": "EXE-000041"
+                  }
+                ],
+                "type": "执行"
+              },
+              "obligation": {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition_id": "AC-000027",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              }
+            },
+            {
+              "basis": {
+                "executions": [
+                  {
+                    "delivery_id": "crab-coast-v6",
+                    "execution_id": "EXE-000042"
+                  }
+                ],
+                "type": "执行"
+              },
+              "obligation": {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition_id": "AC-000028",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              }
+            },
+            {
+              "basis": {
+                "executions": [
+                  {
+                    "delivery_id": "crab-coast-v6",
+                    "execution_id": "EXE-000043"
+                  }
+                ],
+                "type": "执行"
+              },
+              "obligation": {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition_id": "AC-000029",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              }
+            },
+            {
+              "basis": {
+                "executions": [
+                  {
+                    "delivery_id": "crab-coast-v6",
+                    "execution_id": "EXE-000044"
+                  }
+                ],
+                "type": "执行"
+              },
+              "obligation": {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition_id": "AC-000030",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              }
+            },
+            {
+              "basis": {
+                "executions": [
+                  {
+                    "delivery_id": "crab-coast-v6",
+                    "execution_id": "EXE-000045"
+                  }
+                ],
+                "type": "执行"
+              },
+              "obligation": {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition_id": "AC-000031",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              }
+            }
+          ],
+          "revision": 1
+        },
+        "reason": "变更已应用、基线已激活、已随 REL-000006 发布，逐动作与逐义务关闭"
+      },
+      "result": {
+        "command": "change close",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 175,
+        "document_revision": 175,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000175",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-28T10:32:16.330435+00:00"
+        },
+        "object": {
+          "actions": [
+            {
+              "new_revision": 1,
+              "old_revision": null,
+              "requirement_id": "REQ-000007",
+              "type": "新增"
+            }
+          ],
+          "application": {
+            "agent": "octie-agent",
+            "baseline_digest": "29ff1fe352b768deddffe0178f94864d266b72557fd5189b4a5ed6ce218ff046",
+            "baseline_id": "BASE-000006",
+            "event_id": "EVT-000158",
+            "review_id": "REV-000024",
+            "time": "2026-10-28T10:26:58.491736+00:00"
+          },
+          "application_candidate": {
+            "change": {
+              "actions": [
+                {
+                  "new_revision": 1,
+                  "old_revision": null,
+                  "requirement_id": "REQ-000007",
+                  "type": "新增"
+                }
+              ],
+              "application_event_id": "EVT-000158",
+              "approval_event_id": "EVT-000157",
+              "digest": "ea172f2a692d679024b59f612fd1241d308fc7ff08614b04a4ffe7e7cfe228b5",
+              "evaluation": {
+                "affected_members": [
+                  {
+                    "requirement_id": "REQ-000001",
+                    "revision": 1
+                  },
+                  {
+                    "requirement_id": "REQ-000004",
+                    "revision": 1
+                  },
+                  {
+                    "requirement_id": "REQ-000007",
+                    "revision": 1
+                  }
+                ],
+                "empty_retests_reason": null,
+                "impact_analysis": "本次变更只新增一条需求（REQ-000007 手机隐藏工具栏后画面自动放大到最大），落地改动集中在 main.js 的画布尺寸计算：新增 viewBox() 取 visualViewport、fit() 增加触屏铺满分支、注册 resize / visualViewport.resize / visualViewport.scroll / orientationchange / pageshow / visibilitychange 六条监听与 400ms 轮询兜底。不涉及场景贴图、角色精灵、朝向状态机、碰撞网格、帧序与音频，因此这些既有需求的内容不需要修改。仍然受影响的点有三类：一是画布缩放比例发生变化后，场景是否仍完整呈现且不变形（REQ-000001）；二是触屏上画布被放大到铺满后，帧率与像素硬边是否仍然达标（REQ-000004）；三是新需求自身的五条验收条件需要逐条实测（REQ-000007）。已排除的虚拟按键显隐与输入通道、双指放大过程中的重排，均不在本次差异内。",
+                "obligations": [
+                  {
+                    "change_id": "CHG-000005",
+                    "change_revision": 1,
+                    "condition": {
+                      "allow_na": false,
+                      "evidence": "初始画面截图 + 七类元素勾选清单（含各自大致坐标）",
+                      "exception": {
+                        "expected": "某类元素缺失或颜色与同类无法区分",
+                        "handling": "记为不通过，补画该类元素后重新截图核对",
+                        "scenario": "某类元素缺失或与同类无法区分"
+                      },
+                      "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+                      "id": "AC-000001",
+                      "input": "无输入，仅观察初始画面",
+                      "method": "对初始画面截图，按七类元素清单逐项勾选并标注位置",
+                      "operation": "打开 index.html 并等待加载提示消失",
+                      "preconditions": "资源已加载完成，页面处于初始状态",
+                      "role": "场景验收者",
+                      "scenario": "核对七类海岸元素是否齐全"
+                    },
+                    "condition_id": "AC-000001",
+                    "requirement_id": "REQ-000001",
+                    "revision": 1
+                  },
+                  {
+                    "change_id": "CHG-000005",
+                    "change_revision": 1,
+                    "condition": {
+                      "allow_na": false,
+                      "evidence": "性能面板截图或帧率统计数值",
+                      "exception": {
+                        "expected": "判定为不流畅",
+                        "handling": "减少每帧重绘区域或缓存背景图层后复测",
+                        "scenario": "平均帧率低于 55 或出现超过 50 毫秒的长帧"
+                      },
+                      "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+                      "id": "AC-000013",
+                      "input": "按住 → 键移动角色 5 秒",
+                      "method": "录制性能时间线，统计移动期间的帧率均值与最长帧间隔",
+                      "operation": "用浏览器性能面板记录该时段的帧率",
+                      "preconditions": "页面运行在本机 Edge 浏览器",
+                      "role": "交付验收者",
+                      "scenario": "核对渲染帧率"
+                    },
+                    "condition_id": "AC-000013",
+                    "requirement_id": "REQ-000004",
+                    "revision": 1
+                  },
+                  {
+                    "change_id": "CHG-000005",
+                    "change_revision": 1,
+                    "condition": {
+                      "allow_na": false,
+                      "evidence": "角色局部放大截图",
+                      "exception": {
+                        "expected": "判定像素渲染不合格",
+                        "handling": "补充 image-rendering 与关闭图像平滑后复测",
+                        "scenario": "出现模糊或彩色边缘"
+                      },
+                      "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+                      "id": "AC-000014",
+                      "input": "无输入",
+                      "method": "对角色局部区域截图并放大观察边缘像素",
+                      "operation": "放大查看角色与背景边缘",
+                      "preconditions": "页面已打开并显示角色",
+                      "role": "交付验收者",
+                      "scenario": "核对像素清晰度"
+                    },
+                    "condition_id": "AC-000014",
+                    "requirement_id": "REQ-000004",
+                    "revision": 1
+                  },
+                  {
+                    "change_id": "CHG-000005",
+                    "change_revision": 1,
+                    "condition": {
+                      "allow_na": false,
+                      "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图",
+                      "exception": {
+                        "expected": "判定不通过并记录 fitCount 未增长",
+                        "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460",
+                        "scenario": "静置超过 1 秒画布尺寸仍未变化"
+                      },
+                      "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+                      "id": "AC-000027",
+                      "input": "把可见高度由 390 改为 460，不派发任何事件",
+                      "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+                      "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                      "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+                      "role": "移动端验收者",
+                      "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件"
+                    },
+                    "condition_id": "AC-000027",
+                    "requirement_id": "REQ-000007",
+                    "revision": 1
+                  },
+                  {
+                    "change_id": "CHG-000005",
+                    "change_revision": 1,
+                    "condition": {
+                      "allow_na": false,
+                      "evidence": "前后画布尺寸数值与 fitCount 变化",
+                      "exception": {
+                        "expected": "判定不通过",
+                        "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向",
+                        "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉"
+                      },
+                      "expected": "画布自动回到 693×390，fitCount 再增加 1",
+                      "id": "AC-000028",
+                      "input": "把可见高度由 460 改回 390，不派发任何事件",
+                      "method": "与上一条同一套模拟手段，反向修改高度",
+                      "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                      "preconditions": "承接上一条，画布当前为 818×460",
+                      "role": "移动端验收者",
+                      "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件"
+                    },
+                    "condition_id": "AC-000028",
+                    "requirement_id": "REQ-000007",
+                    "revision": 1
+                  },
+                  {
+                    "change_id": "CHG-000005",
+                    "change_revision": 1,
+                    "condition": {
+                      "allow_na": false,
+                      "evidence": "三次事件与静置期的 fitCount 数值",
+                      "exception": {
+                        "expected": "判定不通过，说明存在空转",
+                        "handling": "检查轮询是否在尺寸未变时仍调用 fit()",
+                        "scenario": "静置期间 fitCount 持续增长"
+                      },
+                      "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+                      "id": "AC-000029",
+                      "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+                      "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+                      "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+                      "preconditions": "页面稳定，画布尺寸已确定",
+                      "role": "移动端验收者",
+                      "scenario": "核对各事件通道与空闲开销"
+                    },
+                    "condition_id": "AC-000029",
+                    "requirement_id": "REQ-000007",
+                    "revision": 1
+                  },
+                  {
+                    "change_id": "CHG-000005",
+                    "change_revision": 1,
+                    "condition": {
+                      "allow_na": false,
+                      "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图",
+                      "exception": {
+                        "expected": "判定不通过",
+                        "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名",
+                        "scenario": "画布仍保留 2% / 6% 边距"
+                      },
+                      "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+                      "id": "AC-000030",
+                      "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+                      "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+                      "operation": "读取画布尺寸与可见区域尺寸",
+                      "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+                      "role": "移动端验收者",
+                      "scenario": "触屏设备上画布铺满可见区域"
+                    },
+                    "condition_id": "AC-000030",
+                    "requirement_id": "REQ-000007",
+                    "revision": 1
+                  },
+                  {
+                    "change_id": "CHG-000005",
+                    "change_revision": 1,
+                    "condition": {
+                      "allow_na": false,
+                      "evidence": "视口尺寸、画布尺寸与公式计算值",
+                      "exception": {
+                        "expected": "判定不通过",
+                        "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏",
+                        "scenario": "桌面画布被拉伸到 929 以上或出现裁剪"
+                      },
+                      "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+                      "id": "AC-000031",
+                      "input": "视口 947×972",
+                      "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+                      "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+                      "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+                      "role": "桌面验收者",
+                      "scenario": "桌面端不出现铺满带来的回归"
+                    },
+                    "condition_id": "AC-000031",
+                    "requirement_id": "REQ-000007",
+                    "revision": 1
+                  }
+                ],
+                "retests": [
+                  {
+                    "condition_id": "AC-000001",
+                    "requirement_id": "REQ-000001",
+                    "revision": 1
+                  },
+                  {
+                    "condition_id": "AC-000013",
+                    "requirement_id": "REQ-000004",
+                    "revision": 1
+                  },
+                  {
+                    "condition_id": "AC-000014",
+                    "requirement_id": "REQ-000004",
+                    "revision": 1
+                  },
+                  {
+                    "condition_id": "AC-000027",
+                    "requirement_id": "REQ-000007",
+                    "revision": 1
+                  },
+                  {
+                    "condition_id": "AC-000028",
+                    "requirement_id": "REQ-000007",
+                    "revision": 1
+                  },
+                  {
+                    "condition_id": "AC-000029",
+                    "requirement_id": "REQ-000007",
+                    "revision": 1
+                  },
+                  {
+                    "condition_id": "AC-000030",
+                    "requirement_id": "REQ-000007",
+                    "revision": 1
+                  },
+                  {
+                    "condition_id": "AC-000031",
+                    "requirement_id": "REQ-000007",
+                    "revision": 1
+                  }
+                ],
+                "supersessions": []
+              },
+              "id": "CHG-000005",
+              "revision": 1
+            },
+            "created_at": "2026-10-28T10:26:58.491736+00:00",
+            "created_by": "octie-agent",
+            "digest": "29ff1fe352b768deddffe0178f94864d266b72557fd5189b4a5ed6ce218ff046",
+            "event_id": "EVT-000158",
+            "id": "BASE-000006",
+            "ledger_id": "LED-19d840367862455889aebf797805ea48",
+            "members": {
+              "REQ-000001": {
+                "confirmation": {
+                  "agent": "octie-agent",
+                  "event_id": "EVT-000011",
+                  "review_id": "REV-000001",
+                  "time": "2026-10-27T20:19:33.136841+00:00"
+                },
+                "content": {
+                  "acceptance": [
+                    {
+                      "allow_na": false,
+                      "evidence": "初始画面截图 + 七类元素勾选清单（含各自大致坐标）",
+                      "exception": {
+                        "expected": "某类元素缺失或颜色与同类无法区分",
+                        "handling": "记为不通过，补画该类元素后重新截图核对",
+                        "scenario": "某类元素缺失或与同类无法区分"
+                      },
+                      "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+                      "id": "AC-000001",
+                      "input": "无输入，仅观察初始画面",
+                      "method": "对初始画面截图，按七类元素清单逐项勾选并标注位置",
+                      "operation": "打开 index.html 并等待加载提示消失",
+                      "preconditions": "资源已加载完成，页面处于初始状态",
+                      "role": "场景验收者",
+                      "scenario": "核对七类海岸元素是否齐全"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "移动前后两张截图 + 背景区域差异率数值",
+                      "exception": {
+                        "expected": "背景出现任何平移或缩放跳动",
+                        "handling": "判定为不通过，移除背景位移逻辑",
+                        "scenario": "角色移动过程中背景发生位移"
+                      },
+                      "expected": "除角色精灵所在区域外，背景像素与移动前一致，背景位移为 0 像素",
+                      "id": "AC-000002",
+                      "input": "按住右方向键持续 3 秒，再按住左方向键持续 3 秒",
+                      "method": "移动前后各截一张图，用像素差分统计背景区域差异率",
+                      "operation": "移动角色后回到起始位置附近，比较背景像素",
+                      "preconditions": "页面已进入且背景渲染完成",
+                      "role": "场景验收者",
+                      "scenario": "验证背景不随角色移动"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "连续 3 帧截图",
+                      "exception": {
+                        "expected": "海面完全静止或每帧出现大面积跳变",
+                        "handling": "记为不通过，调整波浪相位与循环周期后复测",
+                        "scenario": "海面静止或帧间跳变过大"
+                      },
+                      "expected": "三帧海浪纹理位置不同，循环周期内无整幅跳动或闪烁",
+                      "id": "AC-000003",
+                      "input": "无输入",
+                      "method": "间隔 1 秒连续截 3 帧，比对海浪纹理位移",
+                      "operation": "静置观察海面 3 秒并连续截取 3 帧",
+                      "preconditions": "页面静止无角色输入",
+                      "role": "场景验收者",
+                      "scenario": "验证海面循环动画存在且连贯"
+                    }
+                  ],
+                  "boundaries": [
+                    {
+                      "expected": "场景等比缩放并居中，四周留出底色，不拉伸不变形",
+                      "handling": "按 min(宽比, 高比) 等比缩放后居中绘制，留边填深色",
+                      "scenario": "浏览器窗口宽高比与场景原始比例不一致"
+                    },
+                    {
+                      "expected": "仍能看完整幅场景与角色，元素不变形",
+                      "handling": "继续等比缩放至适配宽度，允许整体变小但不裁切",
+                      "scenario": "窗口宽度小于 480px 的窄屏"
+                    }
+                  ],
+                  "created_at": "2026-10-27T19:58:51.627651+00:00",
+                  "created_by": "octie-agent",
+                  "dependencies": [],
+                  "description": "页面打开后在画布上绘制一幅完整的深圳海岸场景：海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋。背景是一整张固定的 2.5D 平面图，角色在其上方行走时背景像素位置保持不变，不做相机跟随与地图滚动。海水部分带持续的循环动画（波浪流动），让画面不是死图。",
+                  "digest": "2310b3e8c298e8c9a0645878ccae71b3e32c822529ee1675b0ddce9d973bbed4",
+                  "event_id": "EVT-000004",
+                  "excluded": [
+                    "视差滚动、相机跟随与地图平移",
+                    "多场景或关卡切换",
+                    "玩家侧的场景缩放与旋转"
+                  ],
+                  "id": "REQ-000001",
+                  "included": [
+                    "海水区与沙滩区上固定绘制的一整幅海岸背景",
+                    "红树林、海藻床、珊瑚礁三类深圳典型海岸元素的可见呈现",
+                    "台阶与房屋等场景道具的可见呈现",
+                    "海面波浪的循环动画"
+                  ],
+                  "module": "场景渲染",
+                  "necessity": "没有背景就没有场景可言：用户明确要求网站带海洋、沙滩与深圳典型海岸元素，且背景必须固定不动，否则就不是他要的“大地图一站到底”的观感。",
+                  "normal_behavior": {
+                    "behavior": "画布按场景原始比例等比绘制完整海岸背景，海面开始循环波浪动画",
+                    "expected": "画面同时可见海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋共七类元素，且背景在角色移动前后像素位置不变",
+                    "scenario": "用户打开本地页面且资产已就绪"
+                  },
+                  "placement": {
+                    "kind": "页面",
+                    "other": [],
+                    "primary": {
+                      "page_id": "PAGE-000001",
+                      "page_revision": 1,
+                      "region_id": "REG-000001-0001-0001"
+                    }
+                  },
+                  "priority": "P0",
+                  "purpose": "给螃蟹角色提供一个可辨认的深圳海岸小世界作为舞台，让用户一眼看出这是海藻床、红树林、珊瑚礁构成的真实海岸场景。",
+                  "questions": [],
+                  "revision": 1,
+                  "sources": [
+                    {
+                      "source_id": "SRC-000001",
+                      "source_revision": 1
+                    }
+                  ],
+                  "tags": [],
+                  "technical": null,
+                  "title": "呈现固定不滚动的深圳海岸 2.5D 场景背景",
+                  "type": "功能"
+                },
+                "pages": [
+                  {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001",
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:11.769250+00:00",
+                      "created_by": "octie-agent",
+                      "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                      "event_id": "EVT-000002",
+                      "id": "PAGE-000001",
+                      "location": "crab-coast/index.html 单页应用",
+                      "name": "深圳海岸小世界主页",
+                      "regions": [
+                        {
+                          "id": "REG-000001-0001-0001",
+                          "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                          "name": "场景画布区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0002",
+                          "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                          "name": "方向控制提示区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0003",
+                          "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                          "name": "资源加载提示区"
+                        }
+                      ],
+                      "revision": 1
+                    }
+                  }
+                ],
+                "revision": 1,
+                "scope": {
+                  "decision": "纳入",
+                  "reason": null
+                },
+                "sources": [
+                  {
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:28.507590+00:00",
+                      "created_by": "octie-agent",
+                      "date_note": "2026-10-28 用户在会话中的原始消息",
+                      "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                      "event_id": "EVT-000003",
+                      "id": "SRC-000001",
+                      "kind": "用户消息",
+                      "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                      "manual_note": null,
+                      "name": "用户口述需求：深圳海岸螃蟹小世界",
+                      "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                      "revision": 1,
+                      "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                    },
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ]
+              },
+              "REQ-000002": {
+                "confirmation": {
+                  "agent": "octie-agent",
+                  "event_id": "EVT-000014",
+                  "review_id": "REV-000002",
+                  "time": "2026-10-27T20:19:33.931717+00:00"
+                },
+                "content": {
+                  "acceptance": [
+                    {
+                      "allow_na": false,
+                      "evidence": "四次按键的起点终点坐标记录表（含 dx、dy 数值）",
+                      "exception": {
+                        "expected": "该方向判定不通过",
+                        "handling": "修正该方向的输入映射后复测",
+                        "scenario": "某个方向位移方向相反或出现斜向偏移"
+                      },
+                      "expected": "↑ 的 y 减小且 x 不变，↓ 的 y 增大且 x 不变，← 的 x 减小且 y 不变，→ 的 x 增大且 y 不变，四次的垂直轴偏移均为 0 像素",
+                      "id": "AC-000004",
+                      "input": "依次单独按住 ↑、↓、←、→ 各 1 秒",
+                      "method": "在页面中暴露角色坐标并逐次记录，比对 dx 与 dy 的正负和零值",
+                      "operation": "每次按键后记录角色起点与终点坐标",
+                      "preconditions": "角色位于场景中央，四个方向均有足够空间",
+                      "role": "操作验收者",
+                      "scenario": "逐个方向核对移动方向正确"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "三组位移量原始数值与相对差计算结果",
+                      "exception": {
+                        "expected": "判定速度不稳定",
+                        "handling": "改为按时间增量累加位移后复测",
+                        "scenario": "三次位移差异超过 10% 或位移接近 0"
+                      },
+                      "expected": "三次位移量的最大值与最小值相对差不超过 10%",
+                      "id": "AC-000005",
+                      "input": "连续 3 次按住 → 各 1 秒后松开",
+                      "method": "同一方向的 3 组位移量做极差与均值比值计算",
+                      "operation": "记录每次 1 秒内的水平位移量",
+                      "preconditions": "角色位于场景中央",
+                      "role": "操作验收者",
+                      "scenario": "核对移动速度稳定"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "最终坐标数值 + 贴边截图",
+                      "exception": {
+                        "expected": "判定边界处理不通过",
+                        "handling": "修正钳制范围并复测",
+                        "scenario": "角色移出画面或贴在边缘抖动"
+                      },
+                      "expected": "角色整体仍在可视区域内，其右边缘不超过场景右内边距，坐标被钳制在允许范围",
+                      "id": "AC-000006",
+                      "input": "持续按住 → 5 秒",
+                      "method": "持续按键后读取角色最终坐标与场景边界值做比较",
+                      "operation": "观察角色最终位置与画面右边缘的关系",
+                      "preconditions": "角色靠近右侧边界",
+                      "role": "操作验收者",
+                      "scenario": "核对边界限制"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "松键时刻与最后一帧位移的时间差记录",
+                      "exception": {
+                        "expected": "判定为未立即停止",
+                        "handling": "移除速度衰减逻辑，改为松键直接归零",
+                        "scenario": "松键后角色继续滑行超过 100 毫秒"
+                      },
+                      "expected": "松键后 100 毫秒内水平位移归零，角色不再移动",
+                      "id": "AC-000007",
+                      "input": "松开 → 键",
+                      "method": "松键后按帧记录坐标，找出最后一次位移的帧号与时间差",
+                      "operation": "松键后连续观察 0.5 秒",
+                      "preconditions": "角色正在向右移动",
+                      "role": "操作验收者",
+                      "scenario": "核对松键立即停止"
+                    }
+                  ],
+                  "boundaries": [
+                    {
+                      "expected": "角色只沿最后按下的那个方向移动，不同时产生斜向位移",
+                      "handling": "以最后一次按下的方向键为准，忽略先前仍按住的轴",
+                      "scenario": "同时按住两个方向键（例如右键与上键）"
+                    },
+                    {
+                      "expected": "角色停在边界内侧，不越出画面",
+                      "handling": "对坐标做上下限钳制，越界时保留在允许范围内",
+                      "scenario": "角色持续朝同一个方向移动到场景边缘"
+                    },
+                    {
+                      "expected": "角色停止移动，不出现卡住持续漂移",
+                      "handling": "监听失焦事件清空按键状态",
+                      "scenario": "按住方向键时浏览器窗口失去焦点"
+                    }
+                  ],
+                  "created_at": "2026-10-27T19:59:07.557201+00:00",
+                  "created_by": "octie-agent",
+                  "dependencies": [],
+                  "description": "用户按下 W/A/S/D 或键盘方向键时，螃蟹角色在固定场景内沿对应方向匀速移动；松开按键立即停止。移动只在上下左右四个轴方向发生，不产生斜向位移，角色始终被限制在场景可视范围内。",
+                  "digest": "433c05bb460b38b24a3f7879d6b4fe2d1231808c67f52164bd721002d7614d6a",
+                  "event_id": "EVT-000005",
+                  "excluded": [
+                    "斜向八方向自由移动",
+                    "跳跃、攻击、拾取等额外动作",
+                    "身体惯性、摩擦滑行与加速缓冲"
+                  ],
+                  "id": "REQ-000002",
+                  "included": [
+                    "W 与 ↑ 向上移动，S 与 ↓ 向下移动，A 与 ← 向左移动，D 与 → 向右移动",
+                    "恒定速度的水平与垂直位移",
+                    "角色位置限制在场景可视区域内",
+                    "松开按键后立即停止"
+                  ],
+                  "module": "角色控制",
+                  "necessity": "没有四向移动就没有交互，整个场景退化为一张静止图片；用户原话明确这是当前唯一必须实现的功能。",
+                  "normal_behavior": {
+                    "behavior": "按住某一个方向键，角色沿该轴方向持续移动并播放行走动画，松开按键后停住",
+                    "expected": "位移方向与按键方向一致，单位时间位移量保持稳定",
+                    "scenario": "角色位于场景中央且没有触达边界"
+                  },
+                  "placement": {
+                    "kind": "页面",
+                    "other": [],
+                    "primary": {
+                      "page_id": "PAGE-000001",
+                      "page_revision": 1,
+                      "region_id": "REG-000001-0001-0001"
+                    }
+                  },
+                  "priority": "P0",
+                  "purpose": "这是用户唯一要求现在必须完成的操作能力：用四个方向键驱动小螃蟹在海岸场景里走动。",
+                  "questions": [],
+                  "revision": 1,
+                  "sources": [
+                    {
+                      "source_id": "SRC-000001",
+                      "source_revision": 1
+                    }
+                  ],
+                  "tags": [],
+                  "technical": null,
+                  "title": "支持键盘四向移动螃蟹角色",
+                  "type": "功能"
+                },
+                "pages": [
+                  {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001",
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:11.769250+00:00",
+                      "created_by": "octie-agent",
+                      "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                      "event_id": "EVT-000002",
+                      "id": "PAGE-000001",
+                      "location": "crab-coast/index.html 单页应用",
+                      "name": "深圳海岸小世界主页",
+                      "regions": [
+                        {
+                          "id": "REG-000001-0001-0001",
+                          "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                          "name": "场景画布区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0002",
+                          "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                          "name": "方向控制提示区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0003",
+                          "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                          "name": "资源加载提示区"
+                        }
+                      ],
+                      "revision": 1
+                    }
+                  }
+                ],
+                "revision": 1,
+                "scope": {
+                  "decision": "纳入",
+                  "reason": null
+                },
+                "sources": [
+                  {
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:28.507590+00:00",
+                      "created_by": "octie-agent",
+                      "date_note": "2026-10-28 用户在会话中的原始消息",
+                      "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                      "event_id": "EVT-000003",
+                      "id": "SRC-000001",
+                      "kind": "用户消息",
+                      "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                      "manual_note": null,
+                      "name": "用户口述需求：深圳海岸螃蟹小世界",
+                      "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                      "revision": 1,
+                      "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                    },
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ]
+              },
+              "REQ-000003": {
+                "confirmation": {
+                  "agent": "octie-agent",
+                  "event_id": "EVT-000050",
+                  "review_id": "REV-000006",
+                  "time": "2026-10-28T08:54:11.706903+00:00"
+                },
+                "content": {
+                  "acceptance": [
+                    {
+                      "allow_na": false,
+                      "evidence": "帧索引序列日志 + 行走中截图 evidence/03~06",
+                      "exception": {
+                        "expected": "判定动画不连通",
+                        "handling": "修正帧推进逻辑与计时基准后复测",
+                        "scenario": "帧序出现跳跃、倒退或长时间停在同帧"
+                      },
+                      "expected": "帧索引按 0、1、2、3 循环推进，无跳帧与倒序",
+                      "id": "AC-000008",
+                      "input": "按住右方向键持续 1 秒",
+                      "method": "在渲染循环中记录每次帧切换的时间戳与索引，导出序列后检查连续性",
+                      "operation": "记录这 1 秒内实际绘制的帧索引序列",
+                      "preconditions": "角色在可行走沙地上，四个方向的帧组已加载",
+                      "role": "动画验收者",
+                      "scenario": "核对单一方向的帧循环连通"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "切向前后帧组标识日志 + 切向瞬间截图",
+                      "exception": {
+                        "expected": "判定动作组切换失败",
+                        "handling": "修正方向到帧组的映射后复测",
+                        "scenario": "切向后仍显示向右的帧或出现空白帧"
+                      },
+                      "expected": "切向后绘制的是向上动作组的帧，切换发生在 1 个渲染帧之内",
+                      "id": "AC-000009",
+                      "input": "按住右方向键后改为按住上方向键",
+                      "method": "记录切向前后各 5 帧的帧组标识与索引",
+                      "operation": "观察切向瞬间的画面并记录所用帧组",
+                      "preconditions": "角色正在向右行走",
+                      "role": "动画验收者",
+                      "scenario": "核对方向切换动作组"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "松键后 1 秒内的帧索引记录",
+                      "exception": {
+                        "expected": "判定为动画未停止",
+                        "handling": "静止态改为只绘制第 0 帧后复测",
+                        "scenario": "松键后仍在空转播放行走帧"
+                      },
+                      "expected": "帧索引保持不变并停在 0，画面稳定显示该方向的待机帧",
+                      "id": "AC-000010",
+                      "input": "松开所有方向键",
+                      "method": "松键后连续记录帧索引，确认数值不再变化",
+                      "operation": "松键后观察 1 秒",
+                      "preconditions": "角色正在移动",
+                      "role": "动画验收者",
+                      "scenario": "核对静止时停止推进"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "python tools/check_sheet.py 输出 + evidence/33_side_scale_preview.png",
+                      "exception": {
+                        "expected": "判定资产不合格",
+                        "handling": "重新跑切帧与对齐脚本后复检",
+                        "scenario": "存在尺寸不一致、底色残留或帧间跳动"
+                      },
+                      "expected": "16 帧全部 48×48，四角 alpha 为 0，同方向帧间横向漂移不超过 2 像素，脚底基线一致",
+                      "id": "AC-000011",
+                      "input": "无输入",
+                      "method": "用脚本遍历 16 帧，统计尺寸、透明角落与包围盒中心偏移；帧尺寸从 scene.json 读取",
+                      "operation": "运行自检脚本检查 16 帧的尺寸、透明角、帧间漂移与脚底基线",
+                      "preconditions": "动作卡已生成在 assets/crab_sheet.png",
+                      "role": "动画验收者",
+                      "scenario": "核对动作卡资产一致性与尺寸"
+                    }
+                  ],
+                  "boundaries": [
+                    {
+                      "expected": "帧序号重置到新方向动作组的第 0 帧，不出现两个方向帧混用的错位画面",
+                      "handling": "方向变化即重置动画计时器与帧索引",
+                      "scenario": "移动过程中快速改变方向"
+                    },
+                    {
+                      "expected": "保持在当前面向方向的第 0 帧，不继续推进动画",
+                      "handling": "无输入时冻结帧索引",
+                      "scenario": "角色静止不动"
+                    },
+                    {
+                      "expected": "侧身行的显示尺寸比正面小约 10%，切换瞬间不出现明显的“变大”跳变",
+                      "handling": "切片阶段按行缩放，并把缩放后的脚底回拉到同一基线",
+                      "scenario": "从正面切到侧身"
+                    }
+                  ],
+                  "created_at": "2026-10-28T08:54:10.386122+00:00",
+                  "created_by": "octie-agent",
+                  "dependencies": [],
+                  "description": "螃蟹为四个方向（下、左、右、上）各准备一组走路帧，方向切换时立即切换动作组，移动过程中按固定帧率循环播放，静止时停在该方向的待机帧。动作卡由图片生成模型直接产出 4×4 卡片（绿幕），再由代码完成：等分切格 → 软阈值抠绿 → 按包围盒归一化（脚底对齐同一基线）→ 整表统一调色板量化。当前成品为半尺寸：单帧 48×48、整表 192×192、32 色；其中左侧与右侧两行额外缩放到 90%，避免侧身时视觉上比正面显大。",
+                  "digest": "9eb3d2fa058fc7d4588a0382fce3f699fabf2129c3badef805ae216396ebdcf3",
+                  "event_id": "EVT-000047",
+                  "excluded": [
+                    "斜向与八方向的独立动作组",
+                    "攻击、跳跃、死亡等战斗动作",
+                    "帧间插值生成的补间画面",
+                    "静止时的呼吸/眨眼等二次动作（试做过，已移除）"
+                  ],
+                  "id": "REQ-000003",
+                  "included": [
+                    "上、下、左、右四个方向的独立走路帧组，每组 4 帧",
+                    "按 8 帧每秒循环推进帧序号",
+                    "方向切换时同步切换动作组",
+                    "松开方向键后停在该方向待机帧（第 0 帧）",
+                    "16 帧统一 48×48 尺寸、透明背景、同一套 32 色调色板",
+                    "侧视两行按行缩放到 90%，脚底与正面行保持同一基线"
+                  ],
+                  "module": "角色动画",
+                  "necessity": "只有位移没有帧动画，角色会表现为贴图滑动，用户会直接判定不合格；动作卡是该需求的核心交付物。",
+                  "normal_behavior": {
+                    "behavior": "每经过 125 毫秒切换到该方向动作组的下一个帧，四帧结束后回到第一帧继续循环",
+                    "expected": "画面中的螃蟹腿部姿态逐帧变化，形成持续步行动作",
+                    "scenario": "角色正在向右移动"
+                  },
+                  "placement": {
+                    "kind": "页面",
+                    "other": [],
+                    "primary": {
+                      "page_id": "PAGE-000001",
+                      "page_revision": 1,
+                      "region_id": "REG-000001-0001-0001"
+                    }
+                  },
+                  "priority": "P0",
+                  "purpose": "让螃蟹的移动看起来是一只活物在走，而不是一张贴图在平移；这也是用户反复强调的“动作卡连续播放”。",
+                  "questions": [],
+                  "revision": 2,
+                  "sources": [
+                    {
+                      "source_id": "SRC-000001",
+                      "source_revision": 1
+                    },
+                    {
+                      "source_id": "SRC-000002",
+                      "source_revision": 1
+                    }
+                  ],
+                  "tags": [],
+                  "technical": null,
+                  "title": "播放四向走路动作卡的连续帧动画",
+                  "type": "功能"
+                },
+                "pages": [
+                  {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001",
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:11.769250+00:00",
+                      "created_by": "octie-agent",
+                      "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                      "event_id": "EVT-000002",
+                      "id": "PAGE-000001",
+                      "location": "crab-coast/index.html 单页应用",
+                      "name": "深圳海岸小世界主页",
+                      "regions": [
+                        {
+                          "id": "REG-000001-0001-0001",
+                          "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                          "name": "场景画布区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0002",
+                          "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                          "name": "方向控制提示区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0003",
+                          "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                          "name": "资源加载提示区"
+                        }
+                      ],
+                      "revision": 1
+                    }
+                  }
+                ],
+                "revision": 2,
+                "scope": {
+                  "decision": "纳入",
+                  "reason": null
+                },
+                "sources": [
+                  {
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:28.507590+00:00",
+                      "created_by": "octie-agent",
+                      "date_note": "2026-10-28 用户在会话中的原始消息",
+                      "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                      "event_id": "EVT-000003",
+                      "id": "SRC-000001",
+                      "kind": "用户消息",
+                      "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                      "manual_note": null,
+                      "name": "用户口述需求：深圳海岸螃蟹小世界",
+                      "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                      "revision": 1,
+                      "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                    },
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  },
+                  {
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:59:22.515291+00:00",
+                      "created_by": "octie-agent",
+                      "date_note": "2026-10-28 通过 Edge CDP 在 chatgpt.com 发起的技术咨询",
+                      "digest": "526cf481c8592bf102dac7430092a1f929638f4a83987b5b8e77e65d0a36e982",
+                      "event_id": "EVT-000006",
+                      "id": "SRC-000002",
+                      "kind": "链接",
+                      "location": "https://chatgpt.com/c/6ae10247-06f0-83ee-80ae-b56b5c95a4ff",
+                      "manual_note": null,
+                      "name": "ChatGPT 咨询：深圳海岸像素小游戏最短可行资产方案",
+                      "quote": "推荐技术栈：AI 生图 + Python Pillow + HTML5 Canvas 2D。整体采用三个独立层：固定背景、循环环境特效、角色精灵。不要让 AI 一次生成整张背景和全部角色动作后直接投入使用。游戏逻辑画布 960 × 540 px；背景 960 × 540 PNG；角色逻辑帧 64 × 64 px；四向动画 Down / Left / Right / Up，每方向 4 帧，总帧数 16 帧，最终 Sprite Sheet 256 × 256 PNG；行走动画 8 FPS；游戏渲染 requestAnimationFrame，通常目标 60 FPS；移动速度 110 px/s。推荐先生成一张角色母版（Character Reference），确认角色外观后，再生成四个方向的动作。不要首先要求模型直接输出 256 × 256 的成品 Sheet，更稳妥的方法是生成较大的 4 × 4 等分网格，再用代码裁切。",
+                      "revision": 1,
+                      "summary": "建议采用固定背景层 + 循环环境特效层 + 角色精灵层三层结构，画布 960×540、单帧 64×64、四向各 4 帧共 16 帧、8fps 行走、110px/s 移动；AI 先出角色母版与 4×4 网格大图，再用 Pillow 裁切、抠底、统一对齐得到可用 sprite sheet。"
+                    },
+                    "source_id": "SRC-000002",
+                    "source_revision": 1
+                  }
+                ]
+              },
+              "REQ-000004": {
+                "confirmation": {
+                  "agent": "octie-agent",
+                  "event_id": "EVT-000020",
+                  "review_id": "REV-000004",
+                  "time": "2026-10-27T20:19:35.854973+00:00"
+                },
+                "content": {
+                  "acceptance": [
+                    {
+                      "allow_na": false,
+                      "evidence": "Network 请求列表截图（含域名列）+ 离线状态下的页面截图",
+                      "exception": {
+                        "expected": "判定不自包含",
+                        "handling": "把所需资源下载到本地目录并改为相对路径后复测",
+                        "scenario": "出现外部域名请求或页面白屏"
+                      },
+                      "expected": "页面完整显示场景与角色，Network 面板中没有任何指向本机以外域名的请求，全部请求为 file:// 或 localhost 本地路径",
+                      "id": "AC-000012",
+                      "input": "无网络",
+                      "method": "断网打开页面并导出 Network 请求列表，逐条检查域名",
+                      "operation": "断开网络后双击 index.html，并查看开发者工具的 Network 面板",
+                      "preconditions": "已拿到 crab-coast 文件夹，网络已断开",
+                      "role": "交付验收者",
+                      "scenario": "核对文件夹自包含与离线可运行"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "性能面板截图或帧率统计数值",
+                      "exception": {
+                        "expected": "判定为不流畅",
+                        "handling": "减少每帧重绘区域或缓存背景图层后复测",
+                        "scenario": "平均帧率低于 55 或出现超过 50 毫秒的长帧"
+                      },
+                      "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+                      "id": "AC-000013",
+                      "input": "按住 → 键移动角色 5 秒",
+                      "method": "录制性能时间线，统计移动期间的帧率均值与最长帧间隔",
+                      "operation": "用浏览器性能面板记录该时段的帧率",
+                      "preconditions": "页面运行在本机 Edge 浏览器",
+                      "role": "交付验收者",
+                      "scenario": "核对渲染帧率"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "角色局部放大截图",
+                      "exception": {
+                        "expected": "判定像素渲染不合格",
+                        "handling": "补充 image-rendering 与关闭图像平滑后复测",
+                        "scenario": "出现模糊或彩色边缘"
+                      },
+                      "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+                      "id": "AC-000014",
+                      "input": "无输入",
+                      "method": "对角色局部区域截图并放大观察边缘像素",
+                      "operation": "放大查看角色与背景边缘",
+                      "preconditions": "页面已打开并显示角色",
+                      "role": "交付验收者",
+                      "scenario": "核对像素清晰度"
+                    }
+                  ],
+                  "boundaries": [
+                    {
+                      "expected": "角色移动速度与动画节拍保持与时间一致，不出现慢动作",
+                      "handling": "位移与帧推进都按真实时间增量计算，不按固定步数",
+                      "scenario": "运行在性能较弱的机器上，帧率降到 30 帧每秒"
+                    },
+                    {
+                      "expected": "场景等比缩放，像素边缘保持锐利不模糊",
+                      "handling": "canvas 使用 image-rendering: pixelated，并按整数或等比缩放绘制",
+                      "scenario": "浏览器窗口被缩放到很小或很大"
+                    }
+                  ],
+                  "created_at": "2026-10-27T19:59:41.739698+00:00",
+                  "created_by": "octie-agent",
+                  "dependencies": [],
+                  "description": "整站所有文件（页面、脚本、样式、背景图、动作卡、生成脚本、需求台账）只存在于 crab-coast 一个文件夹内，不引用任何外部 CDN、字体或接口；断网状态下双击 index.html 即可运行。渲染使用 requestAnimationFrame 加时间增量推进，画面按 60 帧每秒目标运行，像素素材放大时使用最近邻插值保持锐利。",
+                  "digest": "ebe38c666d0ea584981c3f07bf4467a6f41bd9664d7b76fece4d2e3c81292687",
+                  "event_id": "EVT-000008",
+                  "excluded": [
+                    "后端服务、数据库与账号体系",
+                    "外部 CDN 资源与在线字体",
+                    "移动端触屏手势（当前迭代不做）"
+                  ],
+                  "id": "REQ-000004",
+                  "included": [
+                    "全部代码与资产位于 crab-coast 文件夹内",
+                    "离线可运行的本地静态页面",
+                    "基于时间增量的稳定渲染循环",
+                    "像素素材放大时的最近邻插值"
+                  ],
+                  "module": "交付与性能",
+                  "necessity": "资产散落在多个目录或依赖外部网络会让这份交付在离线环境下不可用，也无法满足“一个文件夹搞定”的明确约束。",
+                  "normal_behavior": {
+                    "behavior": "页面加载本地素材并开始渲染，方向键控制正常，动画连续",
+                    "expected": "无任何外部网络请求，画面帧率维持在 60 帧每秒附近",
+                    "scenario": "用户在本机双击打开页面，且当前没有联网"
+                  },
+                  "placement": {
+                    "kind": "页面",
+                    "other": [],
+                    "primary": {
+                      "page_id": "PAGE-000001",
+                      "page_revision": 1,
+                      "region_id": "REG-000001-0001-0001"
+                    }
+                  },
+                  "priority": "P0",
+                  "purpose": "用户要求所有产物收在一个文件夹里不外流，并且动画要顺滑、看得出是精心做的像素游戏而不是卡顿的贴图滑动。",
+                  "questions": [],
+                  "revision": 1,
+                  "sources": [
+                    {
+                      "source_id": "SRC-000001",
+                      "source_revision": 1
+                    },
+                    {
+                      "source_id": "SRC-000002",
+                      "source_revision": 1
+                    }
+                  ],
+                  "tags": [],
+                  "technical": null,
+                  "title": "单文件夹自包含交付并保持流畅渲染",
+                  "type": "非功能"
+                },
+                "pages": [
+                  {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001",
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:11.769250+00:00",
+                      "created_by": "octie-agent",
+                      "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                      "event_id": "EVT-000002",
+                      "id": "PAGE-000001",
+                      "location": "crab-coast/index.html 单页应用",
+                      "name": "深圳海岸小世界主页",
+                      "regions": [
+                        {
+                          "id": "REG-000001-0001-0001",
+                          "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                          "name": "场景画布区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0002",
+                          "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                          "name": "方向控制提示区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0003",
+                          "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                          "name": "资源加载提示区"
+                        }
+                      ],
+                      "revision": 1
+                    }
+                  }
+                ],
+                "revision": 1,
+                "scope": {
+                  "decision": "纳入",
+                  "reason": null
+                },
+                "sources": [
+                  {
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:28.507590+00:00",
+                      "created_by": "octie-agent",
+                      "date_note": "2026-10-28 用户在会话中的原始消息",
+                      "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                      "event_id": "EVT-000003",
+                      "id": "SRC-000001",
+                      "kind": "用户消息",
+                      "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                      "manual_note": null,
+                      "name": "用户口述需求：深圳海岸螃蟹小世界",
+                      "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                      "revision": 1,
+                      "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                    },
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  },
+                  {
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:59:22.515291+00:00",
+                      "created_by": "octie-agent",
+                      "date_note": "2026-10-28 通过 Edge CDP 在 chatgpt.com 发起的技术咨询",
+                      "digest": "526cf481c8592bf102dac7430092a1f929638f4a83987b5b8e77e65d0a36e982",
+                      "event_id": "EVT-000006",
+                      "id": "SRC-000002",
+                      "kind": "链接",
+                      "location": "https://chatgpt.com/c/6ae10247-06f0-83ee-80ae-b56b5c95a4ff",
+                      "manual_note": null,
+                      "name": "ChatGPT 咨询：深圳海岸像素小游戏最短可行资产方案",
+                      "quote": "推荐技术栈：AI 生图 + Python Pillow + HTML5 Canvas 2D。整体采用三个独立层：固定背景、循环环境特效、角色精灵。不要让 AI 一次生成整张背景和全部角色动作后直接投入使用。游戏逻辑画布 960 × 540 px；背景 960 × 540 PNG；角色逻辑帧 64 × 64 px；四向动画 Down / Left / Right / Up，每方向 4 帧，总帧数 16 帧，最终 Sprite Sheet 256 × 256 PNG；行走动画 8 FPS；游戏渲染 requestAnimationFrame，通常目标 60 FPS；移动速度 110 px/s。推荐先生成一张角色母版（Character Reference），确认角色外观后，再生成四个方向的动作。不要首先要求模型直接输出 256 × 256 的成品 Sheet，更稳妥的方法是生成较大的 4 × 4 等分网格，再用代码裁切。",
+                      "revision": 1,
+                      "summary": "建议采用固定背景层 + 循环环境特效层 + 角色精灵层三层结构，画布 960×540、单帧 64×64、四向各 4 帧共 16 帧、8fps 行走、110px/s 移动；AI 先出角色母版与 4×4 网格大图，再用 Pillow 裁切、抠底、统一对齐得到可用 sprite sheet。"
+                    },
+                    "source_id": "SRC-000002",
+                    "source_revision": 1
+                  }
+                ]
+              },
+              "REQ-000005": {
+                "confirmation": {
+                  "agent": "octie-agent",
+                  "event_id": "EVT-000054",
+                  "review_id": "REV-000007",
+                  "time": "2026-10-28T08:54:13.922021+00:00"
+                },
+                "content": {
+                  "acceptance": [
+                    {
+                      "allow_na": false,
+                      "evidence": "实测输出：duration=40, loop=true",
+                      "exception": {
+                        "expected": "判定播放配置不合格",
+                        "handling": "检查音频文件与 bgm.js 设置后复测",
+                        "scenario": "时长不符或未开启循环"
+                      },
+                      "expected": "duration 为 40（±0.05 秒），loop 属性为 true",
+                      "id": "AC-000015",
+                      "input": "无输入",
+                      "method": "在浏览器控制台读取 window.__bgm.audio.duration 与 loop",
+                      "operation": "读取音频元素的时长与 loop 属性",
+                      "preconditions": "页面已打开且音乐资源加载完成",
+                      "role": "音频验收者",
+                      "scenario": "核对时长与循环设置"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "实测 0.0019 / 0.413 = 0.005",
+                      "exception": {
+                        "expected": "判定会爆音",
+                        "handling": "重新做无缝处理或改用取模合成",
+                        "scenario": "接缝处跳变接近最大值"
+                      },
+                      "expected": "首尾跳变远小于普通相邻差值（比值 \u003c 0.1），听感上无咔哒",
+                      "id": "AC-000016",
+                      "input": "无输入",
+                      "method": "用脚本读取 PCM，计算 |x[0]-x[-1]| 与相邻差值分布的 p99.9 之比",
+                      "operation": "比较首尾采样跳变与整体相邻采样差值",
+                      "preconditions": "已拿到音频文件",
+                      "role": "音频验收者",
+                      "scenario": "核对接缝无断音爆音"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "操作前后 muted 状态记录",
+                      "exception": {
+                        "expected": "判定静音功能不合格",
+                        "handling": "修正 localStorage 读写与 muted 绑定后复测",
+                        "scenario": "点击无效或刷新后自动恢复播放"
+                      },
+                      "expected": "点击后立即静音且按钮变为静音态；刷新后仍为静音",
+                      "id": "AC-000017",
+                      "input": "点击右上角音乐按钮，然后刷新页面",
+                      "method": "读取 window.__bgm.muted 与按钮文案，刷新后再读一次",
+                      "operation": "观察按钮文案、音频 muted 状态与刷新后的状态",
+                      "preconditions": "音乐正在播放",
+                      "role": "音频验收者",
+                      "scenario": "核对静音开关与记忆"
+                    }
+                  ],
+                  "boundaries": [
+                    {
+                      "expected": "页面不报错，音乐保持静默直到用户第一次按键或点击",
+                      "handling": "监听首次交互事件后再调用播放，被拒绝时不清除监听",
+                      "scenario": "浏览器拦截自动播放"
+                    },
+                    {
+                      "expected": "游戏画面正常，音乐开关按钮自动隐藏",
+                      "handling": "监听音频错误事件，隐藏按钮并继续运行",
+                      "scenario": "音频文件缺失或路径错误"
+                    },
+                    {
+                      "expected": "刷新后仍保持静音",
+                      "handling": "静音状态写入 localStorage 并在初始化时读取",
+                      "scenario": "用户静音后刷新页面"
+                    }
+                  ],
+                  "created_at": "2026-10-28T08:54:12.200904+00:00",
+                  "created_by": "octie-agent",
+                  "dependencies": [],
+                  "description": "页面加载后提供一段 40 秒整、能够无缝循环的海边休闲风格背景音乐。受浏览器自动播放策略限制，首次按键或点击后开始播放；播放中不出现接缝断音或爆音。右上角提供音乐开关，键盘 M 键也可切换，静音状态记在本地，刷新后保持。音乐文件与页面同在一个文件夹内，断网可用；切换到 mp3 版本时行为不变。",
+                  "digest": "a5f9a8c76d9e09e77cc22bded06a02ca129928d59b5dcbd0416f6f5c51a1282a",
+                  "event_id": "EVT-000051",
+                  "excluded": [
+                    "脚步、水声等环境音效",
+                    "多曲目切换与音量滑动条",
+                    "在线流媒体或版权音乐接入"
+                  ],
+                  "id": "REQ-000005",
+                  "included": [
+                    "40.000 秒、首尾无缝衔接的循环音频",
+                    "首次按键或点击后自动开始播放",
+                    "右上角按钮与 M 键切换静音，状态写入 localStorage",
+                    "音乐文件随页面同目录存放，离线可用"
+                  ],
+                  "module": "音频",
+                  "necessity": "没有背景音乐时场景偏“静”，用户明确要求补一段海边悠闲向、可循环的电子音乐。",
+                  "normal_behavior": {
+                    "behavior": "背景音乐从当前循环位置开始播放，音量淡入到设定值",
+                    "expected": "能听到连续不断的音乐；走到 40 秒末尾时直接接回开头，没有静音空档或爆音",
+                    "scenario": "用户打开页面并按下任意方向键"
+                  },
+                  "placement": {
+                    "kind": "页面",
+                    "other": [],
+                    "primary": {
+                      "page_id": "PAGE-000001",
+                      "page_revision": 1,
+                      "region_id": "REG-000001-0001-0002"
+                    }
+                  },
+                  "priority": "P1",
+                  "purpose": "给静止或行走中的场景提供持续的氛围声，让页面像一个完整的小游戏而不是一张会动的图。",
+                  "questions": [],
+                  "revision": 1,
+                  "sources": [
+                    {
+                      "source_id": "SRC-000001",
+                      "source_revision": 1
+                    }
+                  ],
+                  "tags": [],
+                  "technical": null,
+                  "title": "播放可无缝循环的海岸背景音乐并支持静音",
+                  "type": "功能"
+                },
+                "pages": [
+                  {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0002",
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:11.769250+00:00",
+                      "created_by": "octie-agent",
+                      "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                      "event_id": "EVT-000002",
+                      "id": "PAGE-000001",
+                      "location": "crab-coast/index.html 单页应用",
+                      "name": "深圳海岸小世界主页",
+                      "regions": [
+                        {
+                          "id": "REG-000001-0001-0001",
+                          "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                          "name": "场景画布区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0002",
+                          "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                          "name": "方向控制提示区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0003",
+                          "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                          "name": "资源加载提示区"
+                        }
+                      ],
+                      "revision": 1
+                    }
+                  }
+                ],
+                "revision": 1,
+                "scope": {
+                  "decision": "纳入",
+                  "reason": null
+                },
+                "sources": [
+                  {
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:28.507590+00:00",
+                      "created_by": "octie-agent",
+                      "date_note": "2026-10-28 用户在会话中的原始消息",
+                      "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                      "event_id": "EVT-000003",
+                      "id": "SRC-000001",
+                      "kind": "用户消息",
+                      "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                      "manual_note": null,
+                      "name": "用户口述需求：深圳海岸螃蟹小世界",
+                      "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                      "revision": 1,
+                      "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                    },
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ]
+              },
+              "REQ-000006": {
+                "confirmation": {
+                  "agent": "octie-agent",
+                  "event_id": "EVT-000133",
+                  "review_id": "REV-000019",
+                  "time": "2026-10-28T09:12:14.221013+00:00"
+                },
+                "content": {
+                  "acceptance": [
+                    {
+                      "allow_na": false,
+                      "evidence": "实测 7 次序列：24,48,96,48,24,48,96（含 小/中/大 标签）",
+                      "exception": {
+                        "expected": "判定反弹逻辑或标签绑定有误",
+                        "handling": "修正方向翻转与文案刷新后复测",
+                        "scenario": "出现 96 直接跳到 24、或文案与尺寸不符"
+                      },
+                      "expected": "序列为 48(中)→24(小)→48(中)→96(大)→48(中)→24(小)→48(中)；按钮依次显示「尺寸 小 24 / 中 48 / 大 96 …」",
+                      "id": "AC-000024",
+                      "input": "连续按 T 键 7 次",
+                      "method": "点击按钮并读取 window.__probe.state().size 与按钮 textContent",
+                      "operation": "记录每次的尺寸与按钮文案",
+                      "preconditions": "页面已加载三套表，默认中档",
+                      "role": "尺寸验收者",
+                      "scenario": "核对反弹序列与标签"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "实测 24 → 48、96 → 48",
+                      "exception": {
+                        "expected": "判定仍在绕回",
+                        "handling": "检查方向变量是否在越界时翻转",
+                        "scenario": "24 跳到 96 或 96 跳到 24"
+                      },
+                      "expected": "24 的下一档是 48；96 的下一档也是 48",
+                      "id": "AC-000025",
+                      "input": "在端点再按一次 T",
+                      "method": "把档位切到端点后按一次 T，读取结果",
+                      "operation": "观察下一档",
+                      "preconditions": "已停在最小档 24 或最大档 96",
+                      "role": "尺寸验收者",
+                      "scenario": "核对两端不互跳"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "三档基线 86/43/21，朝向行一致",
+                      "exception": {
+                        "expected": "判定该档基线或行映射有问题",
+                        "handling": "修正后复测",
+                        "scenario": "某档悬空或朝向错乱"
+                      },
+                      "expected": "三档脚底分别落在 86/43/21 基线上，朝向仍为右→正面行、上→侧视行",
+                      "id": "AC-000026",
+                      "input": "每档按住右键后改按上键",
+                      "method": "读取角色坐标与该档基线核对偏移",
+                      "operation": "核对脚底贴地与朝向行",
+                      "preconditions": "分别切到三档",
+                      "role": "尺寸验收者",
+                      "scenario": "核对三档脚底与朝向不受切换逻辑影响"
+                    }
+                  ],
+                  "boundaries": [
+                    {
+                      "expected": "回到中档（而不是跳到大档）",
+                      "handling": "索引越界时翻转方向再前进一步",
+                      "scenario": "在最小档继续按 T"
+                    },
+                    {
+                      "expected": "回到中档（而不是跳到小档）",
+                      "handling": "同上",
+                      "scenario": "在最大档继续按 T"
+                    },
+                    {
+                      "expected": "位置、碰撞与帧序都不受影响",
+                      "handling": "切换只改绘制用的表与基线",
+                      "scenario": "角色移动过程中切换"
+                    }
+                  ],
+                  "created_at": "2026-10-28T09:12:07.880416+00:00",
+                  "created_by": "octie-agent",
+                  "dependencies": [],
+                  "description": "螃蟹保留 96（大）、48（中）、24（小）三套精灵表，由同一张动作卡逐级派生，共用朝向状态机、行走帧序与脚底对齐规则；三档都做了侧视按行缩放 90%。T 键或左上角按钮采用**反弹式**切换：从中档出发先变小，到最小档后掉头变大，到最大档后再掉头变小，形成 中→小→中→大→中→小… 的往复，而不是跳回另一端。按钮显示当前档位的中文标签与像素尺寸（如「尺寸 中 48」）。",
+                  "digest": "73343bc0b56bfe6235c12b2c0a1c7b735f114b2ca045861226dab93197d893d8",
+                  "event_id": "EVT-000130",
+                  "excluded": [
+                    "绕回式（一端的下一档直接跳到另一端）切换",
+                    "尺寸滑块或自定义尺寸",
+                    "按距离自动切换尺寸"
+                  ],
+                  "id": "REQ-000006",
+                  "included": [
+                    "96/48/24 三套精灵表同时存在且都可加载",
+                    "T 键与按钮按反弹方式切换：中→小→中→大→中…",
+                    "按钮显示「尺寸 大/中/小 + 像素值」",
+                    "三档共用朝向状态机与行走帧序，侧视均缩 90%"
+                  ],
+                  "module": "角色渲染",
+                  "necessity": "用户明确要求把绕回式切换改成反弹式，并要求用 小/中/大 表达档位。",
+                  "normal_behavior": {
+                    "behavior": "每按一次 T 或点一次按钮，档位沿当前方向走一格；走到端点则反向",
+                    "expected": "序列为 中→小→中→大→中→小…，按钮文案随之更新，且不会出现两端直接互跳",
+                    "scenario": "页面加载完成，默认停在中档 48"
+                  },
+                  "placement": {
+                    "kind": "页面",
+                    "other": [],
+                    "primary": {
+                      "page_id": "PAGE-000001",
+                      "page_revision": 1,
+                      "region_id": "REG-000001-0001-0001"
+                    }
+                  },
+                  "priority": "P1",
+                  "purpose": "让调节尺寸的过程连续、可预期：越按越接近想要的大小，不会在两端之间突然跳变。",
+                  "questions": [],
+                  "revision": 3,
+                  "sources": [
+                    {
+                      "source_id": "SRC-000001",
+                      "source_revision": 1
+                    }
+                  ],
+                  "tags": [],
+                  "technical": null,
+                  "title": "同一角色三档尺寸按 T 键反弹切换（小↔中↔大）",
+                  "type": "功能"
+                },
+                "pages": [
+                  {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001",
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:11.769250+00:00",
+                      "created_by": "octie-agent",
+                      "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                      "event_id": "EVT-000002",
+                      "id": "PAGE-000001",
+                      "location": "crab-coast/index.html 单页应用",
+                      "name": "深圳海岸小世界主页",
+                      "regions": [
+                        {
+                          "id": "REG-000001-0001-0001",
+                          "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                          "name": "场景画布区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0002",
+                          "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                          "name": "方向控制提示区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0003",
+                          "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                          "name": "资源加载提示区"
+                        }
+                      ],
+                      "revision": 1
+                    }
+                  }
+                ],
+                "revision": 3,
+                "scope": {
+                  "decision": "纳入",
+                  "reason": null
+                },
+                "sources": [
+                  {
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:28.507590+00:00",
+                      "created_by": "octie-agent",
+                      "date_note": "2026-10-28 用户在会话中的原始消息",
+                      "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                      "event_id": "EVT-000003",
+                      "id": "SRC-000001",
+                      "kind": "用户消息",
+                      "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                      "manual_note": null,
+                      "name": "用户口述需求：深圳海岸螃蟹小世界",
+                      "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                      "revision": 1,
+                      "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                    },
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ]
+              },
+              "REQ-000007": {
+                "confirmation": {
+                  "agent": "octie-agent",
+                  "event_id": "EVT-000153",
+                  "review_id": "REV-000023",
+                  "time": "2026-10-28T10:25:08.580419+00:00"
+                },
+                "content": {
+                  "acceptance": [
+                    {
+                      "allow_na": false,
+                      "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图",
+                      "exception": {
+                        "expected": "判定不通过并记录 fitCount 未增长",
+                        "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460",
+                        "scenario": "静置超过 1 秒画布尺寸仍未变化"
+                      },
+                      "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+                      "id": "AC-000027",
+                      "input": "把可见高度由 390 改为 460，不派发任何事件",
+                      "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+                      "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                      "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+                      "role": "移动端验收者",
+                      "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "前后画布尺寸数值与 fitCount 变化",
+                      "exception": {
+                        "expected": "判定不通过",
+                        "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向",
+                        "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉"
+                      },
+                      "expected": "画布自动回到 693×390，fitCount 再增加 1",
+                      "id": "AC-000028",
+                      "input": "把可见高度由 460 改回 390，不派发任何事件",
+                      "method": "与上一条同一套模拟手段，反向修改高度",
+                      "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                      "preconditions": "承接上一条，画布当前为 818×460",
+                      "role": "移动端验收者",
+                      "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "三次事件与静置期的 fitCount 数值",
+                      "exception": {
+                        "expected": "判定不通过，说明存在空转",
+                        "handling": "检查轮询是否在尺寸未变时仍调用 fit()",
+                        "scenario": "静置期间 fitCount 持续增长"
+                      },
+                      "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+                      "id": "AC-000029",
+                      "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+                      "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+                      "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+                      "preconditions": "页面稳定，画布尺寸已确定",
+                      "role": "移动端验收者",
+                      "scenario": "核对各事件通道与空闲开销"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图",
+                      "exception": {
+                        "expected": "判定不通过",
+                        "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名",
+                        "scenario": "画布仍保留 2% / 6% 边距"
+                      },
+                      "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+                      "id": "AC-000030",
+                      "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+                      "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+                      "operation": "读取画布尺寸与可见区域尺寸",
+                      "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+                      "role": "移动端验收者",
+                      "scenario": "触屏设备上画布铺满可见区域"
+                    },
+                    {
+                      "allow_na": false,
+                      "evidence": "视口尺寸、画布尺寸与公式计算值",
+                      "exception": {
+                        "expected": "判定不通过",
+                        "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏",
+                        "scenario": "桌面画布被拉伸到 929 以上或出现裁剪"
+                      },
+                      "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+                      "id": "AC-000031",
+                      "input": "视口 947×972",
+                      "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+                      "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+                      "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+                      "role": "桌面验收者",
+                      "scenario": "桌面端不出现铺满带来的回归"
+                    }
+                  ],
+                  "boundaries": [
+                    {
+                      "expected": "画布的 CSS 尺寸保持不变",
+                      "handling": "viewBox() 退回 innerWidth / innerHeight，跳过本次重排，避免放大过程中画面跳动",
+                      "scenario": "用户正在双指放大（visualViewport.scale 大于 1）"
+                    }
+                  ],
+                  "created_at": "2026-10-28T10:24:35.811740+00:00",
+                  "created_by": "octie-agent",
+                  "dependencies": [],
+                  "description": "手机浏览器的工具栏（地址栏、底部导航）收起或展开会改变页面可见高度，但部分浏览器在此时不派发 window.resize（iOS Safari 尤其常见）。当前实现只监听 window.resize，所以可见区域变大后画布仍保持旧尺寸，必须等其它事件（例如点击「收起按键」触发的那一次 resize）才会重排。本需求要求以真实可见区域（visualViewport）为准，在可见区域变化后自动重算画布尺寸，把它放大到当前可见区域内能放下的最大值，并在触屏设备上去掉原来预留的 2% / 6% 边距。",
+                  "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+                  "event_id": "EVT-000150",
+                  "excluded": [
+                    "双指放大（visualViewport.scale 大于 1）过程中的重新排版",
+                    "桌面端留边距策略的变更，桌面仍保持 0.98 / 0.94",
+                    "虚拟按键的位置、显隐与输入通道逻辑"
+                  ],
+                  "id": "REQ-000007",
+                  "included": [
+                    "以 visualViewport 的宽高作为可见区域，在工具栏收起或展开后自动重算画布尺寸",
+                    "触屏设备上画布铺满可见区域，不再保留原来的 2% 宽度与 6% 高度边距",
+                    "同时监听 window resize、visualViewport resize、visualViewport scroll、orientationchange、pageshow、visibilitychange 六条来源",
+                    "增加 400ms 的可见区域尺寸比对兜底，应对浏览器完全不发事件的情况"
+                  ],
+                  "module": "画面自适应（可见区域适配）",
+                  "necessity": "去掉本项，画面会在工具栏收起后长期偏小：横屏实测少用约 6% 的高度（693×390 而非应有的 818×460），竖屏少用 8px 宽度；且表现为“点了某个按钮才放大”的怪异时序，用户会以为页面卡住。",
+                  "normal_behavior": {
+                    "behavior": "页面以 visualViewport 为准重新计算画布缩放",
+                    "expected": "画布在一个 400ms 轮询周期内由 693×390 自动变为 818×460，全程无需用户点击任何按钮",
+                    "scenario": "手机横屏下收起浏览器工具栏，可见高度由 390 变为 460，浏览器没有派发 resize"
+                  },
+                  "placement": {
+                    "kind": "页面",
+                    "other": [],
+                    "primary": {
+                      "page_id": "PAGE-000001",
+                      "page_revision": 1,
+                      "region_id": "REG-000001-0001-0001"
+                    }
+                  },
+                  "priority": "P1",
+                  "purpose": "让手机玩家收起浏览器工具栏后立刻得到更大的画面，不需要手动触发任何按钮。",
+                  "questions": [],
+                  "revision": 1,
+                  "sources": [
+                    {
+                      "source_id": "SRC-000003",
+                      "source_revision": 1
+                    }
+                  ],
+                  "tags": [],
+                  "technical": "实现位于 main.js：viewBox() 在 visualViewport.scale 约等于 1 时取 visualViewport 的宽高，否则退回 innerWidth/innerHeight；fit() 依据 html.touch-mode 决定铺满还是保留边距；事件监听与 400ms 轮询兜底同在 fit() 附近注册；另暴露 __probe.fitCount() 与 __probe.viewBox() 供验收读取。",
+                  "title": "手机隐藏浏览器工具栏后画面自动放大到最大",
+                  "type": "功能"
+                },
+                "pages": [
+                  {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001",
+                    "snapshot": {
+                      "created_at": "2026-10-27T19:58:11.769250+00:00",
+                      "created_by": "octie-agent",
+                      "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                      "event_id": "EVT-000002",
+                      "id": "PAGE-000001",
+                      "location": "crab-coast/index.html 单页应用",
+                      "name": "深圳海岸小世界主页",
+                      "regions": [
+                        {
+                          "id": "REG-000001-0001-0001",
+                          "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                          "name": "场景画布区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0002",
+                          "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                          "name": "方向控制提示区"
+                        },
+                        {
+                          "id": "REG-000001-0001-0003",
+                          "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                          "name": "资源加载提示区"
+                        }
+                      ],
+                      "revision": 1
+                    }
+                  }
+                ],
+                "revision": 1,
+                "scope": {
+                  "decision": "纳入",
+                  "reason": null
+                },
+                "sources": [
+                  {
+                    "snapshot": {
+                      "created_at": "2026-10-28T10:24:10.851262+00:00",
+                      "created_by": "octie-agent",
+                      "date_note": "2026-10-28 用户消息",
+                      "digest": "ddf640df9e4d1bbd434e4ab85bd1e7ac6d19794064dd9c94565faa4675a8fbd2",
+                      "event_id": "EVT-000149",
+                      "id": "SRC-000003",
+                      "kind": "用户消息",
+                      "location": null,
+                      "manual_note": "用户在本次会话中以文字直接提出的原始需求，未经整理",
+                      "name": "用户提出画面自适应需求（手机隐藏工具栏后自动放大）",
+                      "quote": "手机浏览器有一个问题就是，刚开始的时候如果游戏页面小，我隐藏工具栏之后页面不会自动放大，而是点收起按钮的时候才会自适应放大，让页面自动放大最大，新需求创建修改",
+                      "revision": 1,
+                      "summary": "用户指出：手机隐藏浏览器工具栏后可见区域变大，画面却不会自动放大，要点「收起按键」才重排；要求画面自动放大到最大。"
+                    },
+                    "source_id": "SRC-000003",
+                    "source_revision": 1
+                  }
+                ]
+              }
+            },
+            "predecessor": "BASE-000005",
+            "revision": 1,
+            "status": "候选",
+            "version": "V1.5"
+          },
+          "approval": {
+            "agent": "octie-agent",
+            "event_id": "EVT-000157",
+            "review_id": "REV-000024",
+            "time": "2026-10-28T10:26:47.084697+00:00"
+          },
+          "candidate_members": {
+            "REQ-000001": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000011",
+                "review_id": "REV-000001",
+                "time": "2026-10-27T20:19:33.136841+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "初始画面截图 + 七类元素勾选清单（含各自大致坐标）",
+                    "exception": {
+                      "expected": "某类元素缺失或颜色与同类无法区分",
+                      "handling": "记为不通过，补画该类元素后重新截图核对",
+                      "scenario": "某类元素缺失或与同类无法区分"
+                    },
+                    "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+                    "id": "AC-000001",
+                    "input": "无输入，仅观察初始画面",
+                    "method": "对初始画面截图，按七类元素清单逐项勾选并标注位置",
+                    "operation": "打开 index.html 并等待加载提示消失",
+                    "preconditions": "资源已加载完成，页面处于初始状态",
+                    "role": "场景验收者",
+                    "scenario": "核对七类海岸元素是否齐全"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "移动前后两张截图 + 背景区域差异率数值",
+                    "exception": {
+                      "expected": "背景出现任何平移或缩放跳动",
+                      "handling": "判定为不通过，移除背景位移逻辑",
+                      "scenario": "角色移动过程中背景发生位移"
+                    },
+                    "expected": "除角色精灵所在区域外，背景像素与移动前一致，背景位移为 0 像素",
+                    "id": "AC-000002",
+                    "input": "按住右方向键持续 3 秒，再按住左方向键持续 3 秒",
+                    "method": "移动前后各截一张图，用像素差分统计背景区域差异率",
+                    "operation": "移动角色后回到起始位置附近，比较背景像素",
+                    "preconditions": "页面已进入且背景渲染完成",
+                    "role": "场景验收者",
+                    "scenario": "验证背景不随角色移动"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "连续 3 帧截图",
+                    "exception": {
+                      "expected": "海面完全静止或每帧出现大面积跳变",
+                      "handling": "记为不通过，调整波浪相位与循环周期后复测",
+                      "scenario": "海面静止或帧间跳变过大"
+                    },
+                    "expected": "三帧海浪纹理位置不同，循环周期内无整幅跳动或闪烁",
+                    "id": "AC-000003",
+                    "input": "无输入",
+                    "method": "间隔 1 秒连续截 3 帧，比对海浪纹理位移",
+                    "operation": "静置观察海面 3 秒并连续截取 3 帧",
+                    "preconditions": "页面静止无角色输入",
+                    "role": "场景验收者",
+                    "scenario": "验证海面循环动画存在且连贯"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "场景等比缩放并居中，四周留出底色，不拉伸不变形",
+                    "handling": "按 min(宽比, 高比) 等比缩放后居中绘制，留边填深色",
+                    "scenario": "浏览器窗口宽高比与场景原始比例不一致"
+                  },
+                  {
+                    "expected": "仍能看完整幅场景与角色，元素不变形",
+                    "handling": "继续等比缩放至适配宽度，允许整体变小但不裁切",
+                    "scenario": "窗口宽度小于 480px 的窄屏"
+                  }
+                ],
+                "created_at": "2026-10-27T19:58:51.627651+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "页面打开后在画布上绘制一幅完整的深圳海岸场景：海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋。背景是一整张固定的 2.5D 平面图，角色在其上方行走时背景像素位置保持不变，不做相机跟随与地图滚动。海水部分带持续的循环动画（波浪流动），让画面不是死图。",
+                "digest": "2310b3e8c298e8c9a0645878ccae71b3e32c822529ee1675b0ddce9d973bbed4",
+                "event_id": "EVT-000004",
+                "excluded": [
+                  "视差滚动、相机跟随与地图平移",
+                  "多场景或关卡切换",
+                  "玩家侧的场景缩放与旋转"
+                ],
+                "id": "REQ-000001",
+                "included": [
+                  "海水区与沙滩区上固定绘制的一整幅海岸背景",
+                  "红树林、海藻床、珊瑚礁三类深圳典型海岸元素的可见呈现",
+                  "台阶与房屋等场景道具的可见呈现",
+                  "海面波浪的循环动画"
+                ],
+                "module": "场景渲染",
+                "necessity": "没有背景就没有场景可言：用户明确要求网站带海洋、沙滩与深圳典型海岸元素，且背景必须固定不动，否则就不是他要的“大地图一站到底”的观感。",
+                "normal_behavior": {
+                  "behavior": "画布按场景原始比例等比绘制完整海岸背景，海面开始循环波浪动画",
+                  "expected": "画面同时可见海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋共七类元素，且背景在角色移动前后像素位置不变",
+                  "scenario": "用户打开本地页面且资产已就绪"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "给螃蟹角色提供一个可辨认的深圳海岸小世界作为舞台，让用户一眼看出这是海藻床、红树林、珊瑚礁构成的真实海岸场景。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "呈现固定不滚动的深圳海岸 2.5D 场景背景",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000002": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000014",
+                "review_id": "REV-000002",
+                "time": "2026-10-27T20:19:33.931717+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "四次按键的起点终点坐标记录表（含 dx、dy 数值）",
+                    "exception": {
+                      "expected": "该方向判定不通过",
+                      "handling": "修正该方向的输入映射后复测",
+                      "scenario": "某个方向位移方向相反或出现斜向偏移"
+                    },
+                    "expected": "↑ 的 y 减小且 x 不变，↓ 的 y 增大且 x 不变，← 的 x 减小且 y 不变，→ 的 x 增大且 y 不变，四次的垂直轴偏移均为 0 像素",
+                    "id": "AC-000004",
+                    "input": "依次单独按住 ↑、↓、←、→ 各 1 秒",
+                    "method": "在页面中暴露角色坐标并逐次记录，比对 dx 与 dy 的正负和零值",
+                    "operation": "每次按键后记录角色起点与终点坐标",
+                    "preconditions": "角色位于场景中央，四个方向均有足够空间",
+                    "role": "操作验收者",
+                    "scenario": "逐个方向核对移动方向正确"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "三组位移量原始数值与相对差计算结果",
+                    "exception": {
+                      "expected": "判定速度不稳定",
+                      "handling": "改为按时间增量累加位移后复测",
+                      "scenario": "三次位移差异超过 10% 或位移接近 0"
+                    },
+                    "expected": "三次位移量的最大值与最小值相对差不超过 10%",
+                    "id": "AC-000005",
+                    "input": "连续 3 次按住 → 各 1 秒后松开",
+                    "method": "同一方向的 3 组位移量做极差与均值比值计算",
+                    "operation": "记录每次 1 秒内的水平位移量",
+                    "preconditions": "角色位于场景中央",
+                    "role": "操作验收者",
+                    "scenario": "核对移动速度稳定"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "最终坐标数值 + 贴边截图",
+                    "exception": {
+                      "expected": "判定边界处理不通过",
+                      "handling": "修正钳制范围并复测",
+                      "scenario": "角色移出画面或贴在边缘抖动"
+                    },
+                    "expected": "角色整体仍在可视区域内，其右边缘不超过场景右内边距，坐标被钳制在允许范围",
+                    "id": "AC-000006",
+                    "input": "持续按住 → 5 秒",
+                    "method": "持续按键后读取角色最终坐标与场景边界值做比较",
+                    "operation": "观察角色最终位置与画面右边缘的关系",
+                    "preconditions": "角色靠近右侧边界",
+                    "role": "操作验收者",
+                    "scenario": "核对边界限制"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "松键时刻与最后一帧位移的时间差记录",
+                    "exception": {
+                      "expected": "判定为未立即停止",
+                      "handling": "移除速度衰减逻辑，改为松键直接归零",
+                      "scenario": "松键后角色继续滑行超过 100 毫秒"
+                    },
+                    "expected": "松键后 100 毫秒内水平位移归零，角色不再移动",
+                    "id": "AC-000007",
+                    "input": "松开 → 键",
+                    "method": "松键后按帧记录坐标，找出最后一次位移的帧号与时间差",
+                    "operation": "松键后连续观察 0.5 秒",
+                    "preconditions": "角色正在向右移动",
+                    "role": "操作验收者",
+                    "scenario": "核对松键立即停止"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "角色只沿最后按下的那个方向移动，不同时产生斜向位移",
+                    "handling": "以最后一次按下的方向键为准，忽略先前仍按住的轴",
+                    "scenario": "同时按住两个方向键（例如右键与上键）"
+                  },
+                  {
+                    "expected": "角色停在边界内侧，不越出画面",
+                    "handling": "对坐标做上下限钳制，越界时保留在允许范围内",
+                    "scenario": "角色持续朝同一个方向移动到场景边缘"
+                  },
+                  {
+                    "expected": "角色停止移动，不出现卡住持续漂移",
+                    "handling": "监听失焦事件清空按键状态",
+                    "scenario": "按住方向键时浏览器窗口失去焦点"
+                  }
+                ],
+                "created_at": "2026-10-27T19:59:07.557201+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "用户按下 W/A/S/D 或键盘方向键时，螃蟹角色在固定场景内沿对应方向匀速移动；松开按键立即停止。移动只在上下左右四个轴方向发生，不产生斜向位移，角色始终被限制在场景可视范围内。",
+                "digest": "433c05bb460b38b24a3f7879d6b4fe2d1231808c67f52164bd721002d7614d6a",
+                "event_id": "EVT-000005",
+                "excluded": [
+                  "斜向八方向自由移动",
+                  "跳跃、攻击、拾取等额外动作",
+                  "身体惯性、摩擦滑行与加速缓冲"
+                ],
+                "id": "REQ-000002",
+                "included": [
+                  "W 与 ↑ 向上移动，S 与 ↓ 向下移动，A 与 ← 向左移动，D 与 → 向右移动",
+                  "恒定速度的水平与垂直位移",
+                  "角色位置限制在场景可视区域内",
+                  "松开按键后立即停止"
+                ],
+                "module": "角色控制",
+                "necessity": "没有四向移动就没有交互，整个场景退化为一张静止图片；用户原话明确这是当前唯一必须实现的功能。",
+                "normal_behavior": {
+                  "behavior": "按住某一个方向键，角色沿该轴方向持续移动并播放行走动画，松开按键后停住",
+                  "expected": "位移方向与按键方向一致，单位时间位移量保持稳定",
+                  "scenario": "角色位于场景中央且没有触达边界"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "这是用户唯一要求现在必须完成的操作能力：用四个方向键驱动小螃蟹在海岸场景里走动。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "支持键盘四向移动螃蟹角色",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000003": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000050",
+                "review_id": "REV-000006",
+                "time": "2026-10-28T08:54:11.706903+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "帧索引序列日志 + 行走中截图 evidence/03~06",
+                    "exception": {
+                      "expected": "判定动画不连通",
+                      "handling": "修正帧推进逻辑与计时基准后复测",
+                      "scenario": "帧序出现跳跃、倒退或长时间停在同帧"
+                    },
+                    "expected": "帧索引按 0、1、2、3 循环推进，无跳帧与倒序",
+                    "id": "AC-000008",
+                    "input": "按住右方向键持续 1 秒",
+                    "method": "在渲染循环中记录每次帧切换的时间戳与索引，导出序列后检查连续性",
+                    "operation": "记录这 1 秒内实际绘制的帧索引序列",
+                    "preconditions": "角色在可行走沙地上，四个方向的帧组已加载",
+                    "role": "动画验收者",
+                    "scenario": "核对单一方向的帧循环连通"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "切向前后帧组标识日志 + 切向瞬间截图",
+                    "exception": {
+                      "expected": "判定动作组切换失败",
+                      "handling": "修正方向到帧组的映射后复测",
+                      "scenario": "切向后仍显示向右的帧或出现空白帧"
+                    },
+                    "expected": "切向后绘制的是向上动作组的帧，切换发生在 1 个渲染帧之内",
+                    "id": "AC-000009",
+                    "input": "按住右方向键后改为按住上方向键",
+                    "method": "记录切向前后各 5 帧的帧组标识与索引",
+                    "operation": "观察切向瞬间的画面并记录所用帧组",
+                    "preconditions": "角色正在向右行走",
+                    "role": "动画验收者",
+                    "scenario": "核对方向切换动作组"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "松键后 1 秒内的帧索引记录",
+                    "exception": {
+                      "expected": "判定为动画未停止",
+                      "handling": "静止态改为只绘制第 0 帧后复测",
+                      "scenario": "松键后仍在空转播放行走帧"
+                    },
+                    "expected": "帧索引保持不变并停在 0，画面稳定显示该方向的待机帧",
+                    "id": "AC-000010",
+                    "input": "松开所有方向键",
+                    "method": "松键后连续记录帧索引，确认数值不再变化",
+                    "operation": "松键后观察 1 秒",
+                    "preconditions": "角色正在移动",
+                    "role": "动画验收者",
+                    "scenario": "核对静止时停止推进"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "python tools/check_sheet.py 输出 + evidence/33_side_scale_preview.png",
+                    "exception": {
+                      "expected": "判定资产不合格",
+                      "handling": "重新跑切帧与对齐脚本后复检",
+                      "scenario": "存在尺寸不一致、底色残留或帧间跳动"
+                    },
+                    "expected": "16 帧全部 48×48，四角 alpha 为 0，同方向帧间横向漂移不超过 2 像素，脚底基线一致",
+                    "id": "AC-000011",
+                    "input": "无输入",
+                    "method": "用脚本遍历 16 帧，统计尺寸、透明角落与包围盒中心偏移；帧尺寸从 scene.json 读取",
+                    "operation": "运行自检脚本检查 16 帧的尺寸、透明角、帧间漂移与脚底基线",
+                    "preconditions": "动作卡已生成在 assets/crab_sheet.png",
+                    "role": "动画验收者",
+                    "scenario": "核对动作卡资产一致性与尺寸"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "帧序号重置到新方向动作组的第 0 帧，不出现两个方向帧混用的错位画面",
+                    "handling": "方向变化即重置动画计时器与帧索引",
+                    "scenario": "移动过程中快速改变方向"
+                  },
+                  {
+                    "expected": "保持在当前面向方向的第 0 帧，不继续推进动画",
+                    "handling": "无输入时冻结帧索引",
+                    "scenario": "角色静止不动"
+                  },
+                  {
+                    "expected": "侧身行的显示尺寸比正面小约 10%，切换瞬间不出现明显的“变大”跳变",
+                    "handling": "切片阶段按行缩放，并把缩放后的脚底回拉到同一基线",
+                    "scenario": "从正面切到侧身"
+                  }
+                ],
+                "created_at": "2026-10-28T08:54:10.386122+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "螃蟹为四个方向（下、左、右、上）各准备一组走路帧，方向切换时立即切换动作组，移动过程中按固定帧率循环播放，静止时停在该方向的待机帧。动作卡由图片生成模型直接产出 4×4 卡片（绿幕），再由代码完成：等分切格 → 软阈值抠绿 → 按包围盒归一化（脚底对齐同一基线）→ 整表统一调色板量化。当前成品为半尺寸：单帧 48×48、整表 192×192、32 色；其中左侧与右侧两行额外缩放到 90%，避免侧身时视觉上比正面显大。",
+                "digest": "9eb3d2fa058fc7d4588a0382fce3f699fabf2129c3badef805ae216396ebdcf3",
+                "event_id": "EVT-000047",
+                "excluded": [
+                  "斜向与八方向的独立动作组",
+                  "攻击、跳跃、死亡等战斗动作",
+                  "帧间插值生成的补间画面",
+                  "静止时的呼吸/眨眼等二次动作（试做过，已移除）"
+                ],
+                "id": "REQ-000003",
+                "included": [
+                  "上、下、左、右四个方向的独立走路帧组，每组 4 帧",
+                  "按 8 帧每秒循环推进帧序号",
+                  "方向切换时同步切换动作组",
+                  "松开方向键后停在该方向待机帧（第 0 帧）",
+                  "16 帧统一 48×48 尺寸、透明背景、同一套 32 色调色板",
+                  "侧视两行按行缩放到 90%，脚底与正面行保持同一基线"
+                ],
+                "module": "角色动画",
+                "necessity": "只有位移没有帧动画，角色会表现为贴图滑动，用户会直接判定不合格；动作卡是该需求的核心交付物。",
+                "normal_behavior": {
+                  "behavior": "每经过 125 毫秒切换到该方向动作组的下一个帧，四帧结束后回到第一帧继续循环",
+                  "expected": "画面中的螃蟹腿部姿态逐帧变化，形成持续步行动作",
+                  "scenario": "角色正在向右移动"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "让螃蟹的移动看起来是一只活物在走，而不是一张贴图在平移；这也是用户反复强调的“动作卡连续播放”。",
+                "questions": [],
+                "revision": 2,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  },
+                  {
+                    "source_id": "SRC-000002",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "播放四向走路动作卡的连续帧动画",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 2,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                },
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:59:22.515291+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 通过 Edge CDP 在 chatgpt.com 发起的技术咨询",
+                    "digest": "526cf481c8592bf102dac7430092a1f929638f4a83987b5b8e77e65d0a36e982",
+                    "event_id": "EVT-000006",
+                    "id": "SRC-000002",
+                    "kind": "链接",
+                    "location": "https://chatgpt.com/c/6ae10247-06f0-83ee-80ae-b56b5c95a4ff",
+                    "manual_note": null,
+                    "name": "ChatGPT 咨询：深圳海岸像素小游戏最短可行资产方案",
+                    "quote": "推荐技术栈：AI 生图 + Python Pillow + HTML5 Canvas 2D。整体采用三个独立层：固定背景、循环环境特效、角色精灵。不要让 AI 一次生成整张背景和全部角色动作后直接投入使用。游戏逻辑画布 960 × 540 px；背景 960 × 540 PNG；角色逻辑帧 64 × 64 px；四向动画 Down / Left / Right / Up，每方向 4 帧，总帧数 16 帧，最终 Sprite Sheet 256 × 256 PNG；行走动画 8 FPS；游戏渲染 requestAnimationFrame，通常目标 60 FPS；移动速度 110 px/s。推荐先生成一张角色母版（Character Reference），确认角色外观后，再生成四个方向的动作。不要首先要求模型直接输出 256 × 256 的成品 Sheet，更稳妥的方法是生成较大的 4 × 4 等分网格，再用代码裁切。",
+                    "revision": 1,
+                    "summary": "建议采用固定背景层 + 循环环境特效层 + 角色精灵层三层结构，画布 960×540、单帧 64×64、四向各 4 帧共 16 帧、8fps 行走、110px/s 移动；AI 先出角色母版与 4×4 网格大图，再用 Pillow 裁切、抠底、统一对齐得到可用 sprite sheet。"
+                  },
+                  "source_id": "SRC-000002",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000004": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000020",
+                "review_id": "REV-000004",
+                "time": "2026-10-27T20:19:35.854973+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "Network 请求列表截图（含域名列）+ 离线状态下的页面截图",
+                    "exception": {
+                      "expected": "判定不自包含",
+                      "handling": "把所需资源下载到本地目录并改为相对路径后复测",
+                      "scenario": "出现外部域名请求或页面白屏"
+                    },
+                    "expected": "页面完整显示场景与角色，Network 面板中没有任何指向本机以外域名的请求，全部请求为 file:// 或 localhost 本地路径",
+                    "id": "AC-000012",
+                    "input": "无网络",
+                    "method": "断网打开页面并导出 Network 请求列表，逐条检查域名",
+                    "operation": "断开网络后双击 index.html，并查看开发者工具的 Network 面板",
+                    "preconditions": "已拿到 crab-coast 文件夹，网络已断开",
+                    "role": "交付验收者",
+                    "scenario": "核对文件夹自包含与离线可运行"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "性能面板截图或帧率统计数值",
+                    "exception": {
+                      "expected": "判定为不流畅",
+                      "handling": "减少每帧重绘区域或缓存背景图层后复测",
+                      "scenario": "平均帧率低于 55 或出现超过 50 毫秒的长帧"
+                    },
+                    "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+                    "id": "AC-000013",
+                    "input": "按住 → 键移动角色 5 秒",
+                    "method": "录制性能时间线，统计移动期间的帧率均值与最长帧间隔",
+                    "operation": "用浏览器性能面板记录该时段的帧率",
+                    "preconditions": "页面运行在本机 Edge 浏览器",
+                    "role": "交付验收者",
+                    "scenario": "核对渲染帧率"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "角色局部放大截图",
+                    "exception": {
+                      "expected": "判定像素渲染不合格",
+                      "handling": "补充 image-rendering 与关闭图像平滑后复测",
+                      "scenario": "出现模糊或彩色边缘"
+                    },
+                    "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+                    "id": "AC-000014",
+                    "input": "无输入",
+                    "method": "对角色局部区域截图并放大观察边缘像素",
+                    "operation": "放大查看角色与背景边缘",
+                    "preconditions": "页面已打开并显示角色",
+                    "role": "交付验收者",
+                    "scenario": "核对像素清晰度"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "角色移动速度与动画节拍保持与时间一致，不出现慢动作",
+                    "handling": "位移与帧推进都按真实时间增量计算，不按固定步数",
+                    "scenario": "运行在性能较弱的机器上，帧率降到 30 帧每秒"
+                  },
+                  {
+                    "expected": "场景等比缩放，像素边缘保持锐利不模糊",
+                    "handling": "canvas 使用 image-rendering: pixelated，并按整数或等比缩放绘制",
+                    "scenario": "浏览器窗口被缩放到很小或很大"
+                  }
+                ],
+                "created_at": "2026-10-27T19:59:41.739698+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "整站所有文件（页面、脚本、样式、背景图、动作卡、生成脚本、需求台账）只存在于 crab-coast 一个文件夹内，不引用任何外部 CDN、字体或接口；断网状态下双击 index.html 即可运行。渲染使用 requestAnimationFrame 加时间增量推进，画面按 60 帧每秒目标运行，像素素材放大时使用最近邻插值保持锐利。",
+                "digest": "ebe38c666d0ea584981c3f07bf4467a6f41bd9664d7b76fece4d2e3c81292687",
+                "event_id": "EVT-000008",
+                "excluded": [
+                  "后端服务、数据库与账号体系",
+                  "外部 CDN 资源与在线字体",
+                  "移动端触屏手势（当前迭代不做）"
+                ],
+                "id": "REQ-000004",
+                "included": [
+                  "全部代码与资产位于 crab-coast 文件夹内",
+                  "离线可运行的本地静态页面",
+                  "基于时间增量的稳定渲染循环",
+                  "像素素材放大时的最近邻插值"
+                ],
+                "module": "交付与性能",
+                "necessity": "资产散落在多个目录或依赖外部网络会让这份交付在离线环境下不可用，也无法满足“一个文件夹搞定”的明确约束。",
+                "normal_behavior": {
+                  "behavior": "页面加载本地素材并开始渲染，方向键控制正常，动画连续",
+                  "expected": "无任何外部网络请求，画面帧率维持在 60 帧每秒附近",
+                  "scenario": "用户在本机双击打开页面，且当前没有联网"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P0",
+                "purpose": "用户要求所有产物收在一个文件夹里不外流，并且动画要顺滑、看得出是精心做的像素游戏而不是卡顿的贴图滑动。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  },
+                  {
+                    "source_id": "SRC-000002",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "单文件夹自包含交付并保持流畅渲染",
+                "type": "非功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                },
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:59:22.515291+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 通过 Edge CDP 在 chatgpt.com 发起的技术咨询",
+                    "digest": "526cf481c8592bf102dac7430092a1f929638f4a83987b5b8e77e65d0a36e982",
+                    "event_id": "EVT-000006",
+                    "id": "SRC-000002",
+                    "kind": "链接",
+                    "location": "https://chatgpt.com/c/6ae10247-06f0-83ee-80ae-b56b5c95a4ff",
+                    "manual_note": null,
+                    "name": "ChatGPT 咨询：深圳海岸像素小游戏最短可行资产方案",
+                    "quote": "推荐技术栈：AI 生图 + Python Pillow + HTML5 Canvas 2D。整体采用三个独立层：固定背景、循环环境特效、角色精灵。不要让 AI 一次生成整张背景和全部角色动作后直接投入使用。游戏逻辑画布 960 × 540 px；背景 960 × 540 PNG；角色逻辑帧 64 × 64 px；四向动画 Down / Left / Right / Up，每方向 4 帧，总帧数 16 帧，最终 Sprite Sheet 256 × 256 PNG；行走动画 8 FPS；游戏渲染 requestAnimationFrame，通常目标 60 FPS；移动速度 110 px/s。推荐先生成一张角色母版（Character Reference），确认角色外观后，再生成四个方向的动作。不要首先要求模型直接输出 256 × 256 的成品 Sheet，更稳妥的方法是生成较大的 4 × 4 等分网格，再用代码裁切。",
+                    "revision": 1,
+                    "summary": "建议采用固定背景层 + 循环环境特效层 + 角色精灵层三层结构，画布 960×540、单帧 64×64、四向各 4 帧共 16 帧、8fps 行走、110px/s 移动；AI 先出角色母版与 4×4 网格大图，再用 Pillow 裁切、抠底、统一对齐得到可用 sprite sheet。"
+                  },
+                  "source_id": "SRC-000002",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000005": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000054",
+                "review_id": "REV-000007",
+                "time": "2026-10-28T08:54:13.922021+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "实测输出：duration=40, loop=true",
+                    "exception": {
+                      "expected": "判定播放配置不合格",
+                      "handling": "检查音频文件与 bgm.js 设置后复测",
+                      "scenario": "时长不符或未开启循环"
+                    },
+                    "expected": "duration 为 40（±0.05 秒），loop 属性为 true",
+                    "id": "AC-000015",
+                    "input": "无输入",
+                    "method": "在浏览器控制台读取 window.__bgm.audio.duration 与 loop",
+                    "operation": "读取音频元素的时长与 loop 属性",
+                    "preconditions": "页面已打开且音乐资源加载完成",
+                    "role": "音频验收者",
+                    "scenario": "核对时长与循环设置"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "实测 0.0019 / 0.413 = 0.005",
+                    "exception": {
+                      "expected": "判定会爆音",
+                      "handling": "重新做无缝处理或改用取模合成",
+                      "scenario": "接缝处跳变接近最大值"
+                    },
+                    "expected": "首尾跳变远小于普通相邻差值（比值 \u003c 0.1），听感上无咔哒",
+                    "id": "AC-000016",
+                    "input": "无输入",
+                    "method": "用脚本读取 PCM，计算 |x[0]-x[-1]| 与相邻差值分布的 p99.9 之比",
+                    "operation": "比较首尾采样跳变与整体相邻采样差值",
+                    "preconditions": "已拿到音频文件",
+                    "role": "音频验收者",
+                    "scenario": "核对接缝无断音爆音"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "操作前后 muted 状态记录",
+                    "exception": {
+                      "expected": "判定静音功能不合格",
+                      "handling": "修正 localStorage 读写与 muted 绑定后复测",
+                      "scenario": "点击无效或刷新后自动恢复播放"
+                    },
+                    "expected": "点击后立即静音且按钮变为静音态；刷新后仍为静音",
+                    "id": "AC-000017",
+                    "input": "点击右上角音乐按钮，然后刷新页面",
+                    "method": "读取 window.__bgm.muted 与按钮文案，刷新后再读一次",
+                    "operation": "观察按钮文案、音频 muted 状态与刷新后的状态",
+                    "preconditions": "音乐正在播放",
+                    "role": "音频验收者",
+                    "scenario": "核对静音开关与记忆"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "页面不报错，音乐保持静默直到用户第一次按键或点击",
+                    "handling": "监听首次交互事件后再调用播放，被拒绝时不清除监听",
+                    "scenario": "浏览器拦截自动播放"
+                  },
+                  {
+                    "expected": "游戏画面正常，音乐开关按钮自动隐藏",
+                    "handling": "监听音频错误事件，隐藏按钮并继续运行",
+                    "scenario": "音频文件缺失或路径错误"
+                  },
+                  {
+                    "expected": "刷新后仍保持静音",
+                    "handling": "静音状态写入 localStorage 并在初始化时读取",
+                    "scenario": "用户静音后刷新页面"
+                  }
+                ],
+                "created_at": "2026-10-28T08:54:12.200904+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "页面加载后提供一段 40 秒整、能够无缝循环的海边休闲风格背景音乐。受浏览器自动播放策略限制，首次按键或点击后开始播放；播放中不出现接缝断音或爆音。右上角提供音乐开关，键盘 M 键也可切换，静音状态记在本地，刷新后保持。音乐文件与页面同在一个文件夹内，断网可用；切换到 mp3 版本时行为不变。",
+                "digest": "a5f9a8c76d9e09e77cc22bded06a02ca129928d59b5dcbd0416f6f5c51a1282a",
+                "event_id": "EVT-000051",
+                "excluded": [
+                  "脚步、水声等环境音效",
+                  "多曲目切换与音量滑动条",
+                  "在线流媒体或版权音乐接入"
+                ],
+                "id": "REQ-000005",
+                "included": [
+                  "40.000 秒、首尾无缝衔接的循环音频",
+                  "首次按键或点击后自动开始播放",
+                  "右上角按钮与 M 键切换静音，状态写入 localStorage",
+                  "音乐文件随页面同目录存放，离线可用"
+                ],
+                "module": "音频",
+                "necessity": "没有背景音乐时场景偏“静”，用户明确要求补一段海边悠闲向、可循环的电子音乐。",
+                "normal_behavior": {
+                  "behavior": "背景音乐从当前循环位置开始播放，音量淡入到设定值",
+                  "expected": "能听到连续不断的音乐；走到 40 秒末尾时直接接回开头，没有静音空档或爆音",
+                  "scenario": "用户打开页面并按下任意方向键"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0002"
+                  }
+                },
+                "priority": "P1",
+                "purpose": "给静止或行走中的场景提供持续的氛围声，让页面像一个完整的小游戏而不是一张会动的图。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "播放可无缝循环的海岸背景音乐并支持静音",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0002",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000006": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000133",
+                "review_id": "REV-000019",
+                "time": "2026-10-28T09:12:14.221013+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "实测 7 次序列：24,48,96,48,24,48,96（含 小/中/大 标签）",
+                    "exception": {
+                      "expected": "判定反弹逻辑或标签绑定有误",
+                      "handling": "修正方向翻转与文案刷新后复测",
+                      "scenario": "出现 96 直接跳到 24、或文案与尺寸不符"
+                    },
+                    "expected": "序列为 48(中)→24(小)→48(中)→96(大)→48(中)→24(小)→48(中)；按钮依次显示「尺寸 小 24 / 中 48 / 大 96 …」",
+                    "id": "AC-000024",
+                    "input": "连续按 T 键 7 次",
+                    "method": "点击按钮并读取 window.__probe.state().size 与按钮 textContent",
+                    "operation": "记录每次的尺寸与按钮文案",
+                    "preconditions": "页面已加载三套表，默认中档",
+                    "role": "尺寸验收者",
+                    "scenario": "核对反弹序列与标签"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "实测 24 → 48、96 → 48",
+                    "exception": {
+                      "expected": "判定仍在绕回",
+                      "handling": "检查方向变量是否在越界时翻转",
+                      "scenario": "24 跳到 96 或 96 跳到 24"
+                    },
+                    "expected": "24 的下一档是 48；96 的下一档也是 48",
+                    "id": "AC-000025",
+                    "input": "在端点再按一次 T",
+                    "method": "把档位切到端点后按一次 T，读取结果",
+                    "operation": "观察下一档",
+                    "preconditions": "已停在最小档 24 或最大档 96",
+                    "role": "尺寸验收者",
+                    "scenario": "核对两端不互跳"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "三档基线 86/43/21，朝向行一致",
+                    "exception": {
+                      "expected": "判定该档基线或行映射有问题",
+                      "handling": "修正后复测",
+                      "scenario": "某档悬空或朝向错乱"
+                    },
+                    "expected": "三档脚底分别落在 86/43/21 基线上，朝向仍为右→正面行、上→侧视行",
+                    "id": "AC-000026",
+                    "input": "每档按住右键后改按上键",
+                    "method": "读取角色坐标与该档基线核对偏移",
+                    "operation": "核对脚底贴地与朝向行",
+                    "preconditions": "分别切到三档",
+                    "role": "尺寸验收者",
+                    "scenario": "核对三档脚底与朝向不受切换逻辑影响"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "回到中档（而不是跳到大档）",
+                    "handling": "索引越界时翻转方向再前进一步",
+                    "scenario": "在最小档继续按 T"
+                  },
+                  {
+                    "expected": "回到中档（而不是跳到小档）",
+                    "handling": "同上",
+                    "scenario": "在最大档继续按 T"
+                  },
+                  {
+                    "expected": "位置、碰撞与帧序都不受影响",
+                    "handling": "切换只改绘制用的表与基线",
+                    "scenario": "角色移动过程中切换"
+                  }
+                ],
+                "created_at": "2026-10-28T09:12:07.880416+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "螃蟹保留 96（大）、48（中）、24（小）三套精灵表，由同一张动作卡逐级派生，共用朝向状态机、行走帧序与脚底对齐规则；三档都做了侧视按行缩放 90%。T 键或左上角按钮采用**反弹式**切换：从中档出发先变小，到最小档后掉头变大，到最大档后再掉头变小，形成 中→小→中→大→中→小… 的往复，而不是跳回另一端。按钮显示当前档位的中文标签与像素尺寸（如「尺寸 中 48」）。",
+                "digest": "73343bc0b56bfe6235c12b2c0a1c7b735f114b2ca045861226dab93197d893d8",
+                "event_id": "EVT-000130",
+                "excluded": [
+                  "绕回式（一端的下一档直接跳到另一端）切换",
+                  "尺寸滑块或自定义尺寸",
+                  "按距离自动切换尺寸"
+                ],
+                "id": "REQ-000006",
+                "included": [
+                  "96/48/24 三套精灵表同时存在且都可加载",
+                  "T 键与按钮按反弹方式切换：中→小→中→大→中…",
+                  "按钮显示「尺寸 大/中/小 + 像素值」",
+                  "三档共用朝向状态机与行走帧序，侧视均缩 90%"
+                ],
+                "module": "角色渲染",
+                "necessity": "用户明确要求把绕回式切换改成反弹式，并要求用 小/中/大 表达档位。",
+                "normal_behavior": {
+                  "behavior": "每按一次 T 或点一次按钮，档位沿当前方向走一格；走到端点则反向",
+                  "expected": "序列为 中→小→中→大→中→小…，按钮文案随之更新，且不会出现两端直接互跳",
+                  "scenario": "页面加载完成，默认停在中档 48"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P1",
+                "purpose": "让调节尺寸的过程连续、可预期：越按越接近想要的大小，不会在两端之间突然跳变。",
+                "questions": [],
+                "revision": 3,
+                "sources": [
+                  {
+                    "source_id": "SRC-000001",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": null,
+                "title": "同一角色三档尺寸按 T 键反弹切换（小↔中↔大）",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 3,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:28.507590+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户在会话中的原始消息",
+                    "digest": "88a0d30d874035b6809a1a7170489fe2f93d127122d166fe0558cb82d2f7de9f",
+                    "event_id": "EVT-000003",
+                    "id": "SRC-000001",
+                    "kind": "用户消息",
+                    "location": "DSH 会话 2026-10-28 用户原始输入（螃蟹海岸需求整段口述）",
+                    "manual_note": null,
+                    "name": "用户口述需求：深圳海岸螃蟹小世界",
+                    "quote": "I wanna make a local host website on my computer... It is actually a website that has a background of the ocean, the sand, and some typical scenes in Shenzhen, like 海藻床、红树林、珊瑚礁... it is like a 2.5D or like a 2D flat background, and the background is stale... The map does not change or move around when the character in the map walks around... And when it moves, it just has the frame effects of the thing moving around, like a 动作卡，连续播放... the character move scene should actually come from a designed 动作卡，from GPT image generation model Image 2... put all the artifacts in one folder where no artifacts go out anywhere, and all the game assets in the folder too... it just has to be up, down, left, and right. That is the only feature that I require you to do right now.",
+                    "revision": 1,
+                    "summary": "用户要一个本地 localhost 的 2.5D/2D 平面小游戏：固定不滚动的深圳海岸场景（海水、沙滩、海藻床、红树林、珊瑚礁、台阶、房屋），加一个螃蟹角色，用键盘上下左右四向移动并播放连续帧（动作卡）动画；背景可带动画效果；全部产物与游戏资产收在同一个文件夹内。"
+                  },
+                  "source_id": "SRC-000001",
+                  "source_revision": 1
+                }
+              ]
+            },
+            "REQ-000007": {
+              "confirmation": {
+                "agent": "octie-agent",
+                "event_id": "EVT-000153",
+                "review_id": "REV-000023",
+                "time": "2026-10-28T10:25:08.580419+00:00"
+              },
+              "content": {
+                "acceptance": [
+                  {
+                    "allow_na": false,
+                    "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图",
+                    "exception": {
+                      "expected": "判定不通过并记录 fitCount 未增长",
+                      "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460",
+                      "scenario": "静置超过 1 秒画布尺寸仍未变化"
+                    },
+                    "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+                    "id": "AC-000027",
+                    "input": "把可见高度由 390 改为 460，不派发任何事件",
+                    "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+                    "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                    "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+                    "role": "移动端验收者",
+                    "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "前后画布尺寸数值与 fitCount 变化",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向",
+                      "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉"
+                    },
+                    "expected": "画布自动回到 693×390，fitCount 再增加 1",
+                    "id": "AC-000028",
+                    "input": "把可见高度由 460 改回 390，不派发任何事件",
+                    "method": "与上一条同一套模拟手段，反向修改高度",
+                    "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                    "preconditions": "承接上一条，画布当前为 818×460",
+                    "role": "移动端验收者",
+                    "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "三次事件与静置期的 fitCount 数值",
+                    "exception": {
+                      "expected": "判定不通过，说明存在空转",
+                      "handling": "检查轮询是否在尺寸未变时仍调用 fit()",
+                      "scenario": "静置期间 fitCount 持续增长"
+                    },
+                    "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+                    "id": "AC-000029",
+                    "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+                    "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+                    "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+                    "preconditions": "页面稳定，画布尺寸已确定",
+                    "role": "移动端验收者",
+                    "scenario": "核对各事件通道与空闲开销"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名",
+                      "scenario": "画布仍保留 2% / 6% 边距"
+                    },
+                    "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+                    "id": "AC-000030",
+                    "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+                    "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+                    "operation": "读取画布尺寸与可见区域尺寸",
+                    "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+                    "role": "移动端验收者",
+                    "scenario": "触屏设备上画布铺满可见区域"
+                  },
+                  {
+                    "allow_na": false,
+                    "evidence": "视口尺寸、画布尺寸与公式计算值",
+                    "exception": {
+                      "expected": "判定不通过",
+                      "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏",
+                      "scenario": "桌面画布被拉伸到 929 以上或出现裁剪"
+                    },
+                    "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+                    "id": "AC-000031",
+                    "input": "视口 947×972",
+                    "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+                    "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+                    "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+                    "role": "桌面验收者",
+                    "scenario": "桌面端不出现铺满带来的回归"
+                  }
+                ],
+                "boundaries": [
+                  {
+                    "expected": "画布的 CSS 尺寸保持不变",
+                    "handling": "viewBox() 退回 innerWidth / innerHeight，跳过本次重排，避免放大过程中画面跳动",
+                    "scenario": "用户正在双指放大（visualViewport.scale 大于 1）"
+                  }
+                ],
+                "created_at": "2026-10-28T10:24:35.811740+00:00",
+                "created_by": "octie-agent",
+                "dependencies": [],
+                "description": "手机浏览器的工具栏（地址栏、底部导航）收起或展开会改变页面可见高度，但部分浏览器在此时不派发 window.resize（iOS Safari 尤其常见）。当前实现只监听 window.resize，所以可见区域变大后画布仍保持旧尺寸，必须等其它事件（例如点击「收起按键」触发的那一次 resize）才会重排。本需求要求以真实可见区域（visualViewport）为准，在可见区域变化后自动重算画布尺寸，把它放大到当前可见区域内能放下的最大值，并在触屏设备上去掉原来预留的 2% / 6% 边距。",
+                "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+                "event_id": "EVT-000150",
+                "excluded": [
+                  "双指放大（visualViewport.scale 大于 1）过程中的重新排版",
+                  "桌面端留边距策略的变更，桌面仍保持 0.98 / 0.94",
+                  "虚拟按键的位置、显隐与输入通道逻辑"
+                ],
+                "id": "REQ-000007",
+                "included": [
+                  "以 visualViewport 的宽高作为可见区域，在工具栏收起或展开后自动重算画布尺寸",
+                  "触屏设备上画布铺满可见区域，不再保留原来的 2% 宽度与 6% 高度边距",
+                  "同时监听 window resize、visualViewport resize、visualViewport scroll、orientationchange、pageshow、visibilitychange 六条来源",
+                  "增加 400ms 的可见区域尺寸比对兜底，应对浏览器完全不发事件的情况"
+                ],
+                "module": "画面自适应（可见区域适配）",
+                "necessity": "去掉本项，画面会在工具栏收起后长期偏小：横屏实测少用约 6% 的高度（693×390 而非应有的 818×460），竖屏少用 8px 宽度；且表现为“点了某个按钮才放大”的怪异时序，用户会以为页面卡住。",
+                "normal_behavior": {
+                  "behavior": "页面以 visualViewport 为准重新计算画布缩放",
+                  "expected": "画布在一个 400ms 轮询周期内由 693×390 自动变为 818×460，全程无需用户点击任何按钮",
+                  "scenario": "手机横屏下收起浏览器工具栏，可见高度由 390 变为 460，浏览器没有派发 resize"
+                },
+                "placement": {
+                  "kind": "页面",
+                  "other": [],
+                  "primary": {
+                    "page_id": "PAGE-000001",
+                    "page_revision": 1,
+                    "region_id": "REG-000001-0001-0001"
+                  }
+                },
+                "priority": "P1",
+                "purpose": "让手机玩家收起浏览器工具栏后立刻得到更大的画面，不需要手动触发任何按钮。",
+                "questions": [],
+                "revision": 1,
+                "sources": [
+                  {
+                    "source_id": "SRC-000003",
+                    "source_revision": 1
+                  }
+                ],
+                "tags": [],
+                "technical": "实现位于 main.js：viewBox() 在 visualViewport.scale 约等于 1 时取 visualViewport 的宽高，否则退回 innerWidth/innerHeight；fit() 依据 html.touch-mode 决定铺满还是保留边距；事件监听与 400ms 轮询兜底同在 fit() 附近注册；另暴露 __probe.fitCount() 与 __probe.viewBox() 供验收读取。",
+                "title": "手机隐藏浏览器工具栏后画面自动放大到最大",
+                "type": "功能"
+              },
+              "pages": [
+                {
+                  "page_id": "PAGE-000001",
+                  "page_revision": 1,
+                  "region_id": "REG-000001-0001-0001",
+                  "snapshot": {
+                    "created_at": "2026-10-27T19:58:11.769250+00:00",
+                    "created_by": "octie-agent",
+                    "digest": "ce75db05633671f5fa773a12080afa81eda2f6f80b46df93a4c39d8cd7436698",
+                    "event_id": "EVT-000002",
+                    "id": "PAGE-000001",
+                    "location": "crab-coast/index.html 单页应用",
+                    "name": "深圳海岸小世界主页",
+                    "regions": [
+                      {
+                        "id": "REG-000001-0001-0001",
+                        "locator": "#scene 全屏 canvas，等比绘制固定海岸背景、海浪动画与螃蟹角色",
+                        "name": "场景画布区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0002",
+                        "locator": "页面左上角 HUD，显示 WASD 与方向键提示文字",
+                        "name": "方向控制提示区"
+                      },
+                      {
+                        "id": "REG-000001-0001-0003",
+                        "locator": "页面居中的加载文字与进度，资源就绪后隐藏",
+                        "name": "资源加载提示区"
+                      }
+                    ],
+                    "revision": 1
+                  }
+                }
+              ],
+              "revision": 1,
+              "scope": {
+                "decision": "纳入",
+                "reason": null
+              },
+              "sources": [
+                {
+                  "snapshot": {
+                    "created_at": "2026-10-28T10:24:10.851262+00:00",
+                    "created_by": "octie-agent",
+                    "date_note": "2026-10-28 用户消息",
+                    "digest": "ddf640df9e4d1bbd434e4ab85bd1e7ac6d19794064dd9c94565faa4675a8fbd2",
+                    "event_id": "EVT-000149",
+                    "id": "SRC-000003",
+                    "kind": "用户消息",
+                    "location": null,
+                    "manual_note": "用户在本次会话中以文字直接提出的原始需求，未经整理",
+                    "name": "用户提出画面自适应需求（手机隐藏工具栏后自动放大）",
+                    "quote": "手机浏览器有一个问题就是，刚开始的时候如果游戏页面小，我隐藏工具栏之后页面不会自动放大，而是点收起按钮的时候才会自适应放大，让页面自动放大最大，新需求创建修改",
+                    "revision": 1,
+                    "summary": "用户指出：手机隐藏浏览器工具栏后可见区域变大，画面却不会自动放大，要点「收起按键」才重排；要求画面自动放大到最大。"
+                  },
+                  "source_id": "SRC-000003",
+                  "source_revision": 1
+                }
+              ]
+            }
+          },
+          "closure": {
+            "actions": [
+              {
+                "action": {
+                  "new_revision": 1,
+                  "old_revision": null,
+                  "requirement_id": "REQ-000007",
+                  "type": "新增"
+                },
+                "basis": {
+                  "release_id": "REL-000006",
+                  "type": "发布"
+                },
+                "disposition": "已交付"
+              }
+            ],
+            "agent": "octie-agent",
+            "disposition": "逐动作及逐义务关闭",
+            "event_id": "EVT-000175",
+            "obligations": [
+              {
+                "basis": {
+                  "executions": [
+                    {
+                      "delivery_id": "crab-coast-v6",
+                      "execution_id": "EXE-000046"
+                    }
+                  ],
+                  "type": "执行"
+                },
+                "disposition": "有效执行闭合",
+                "executions": [
+                  {
+                    "actual": "线上 ?v=10 画面可逐一指出海水（上方整片）、沙滩（中部大片沙地）、红树林（左上与中部气根树丛）、海藻床（水中成片海草）、珊瑚礁（浅水区礁石）、台阶（左侧木台阶）、高脚屋（右侧木屋）共 7 类元素，无缺失。",
+                    "agent": "octie-agent",
+                    "baseline_id": "BASE-000006",
+                    "condition_digest": "5a55b7e4eacf288acc838fbf9f1cc658aa0d858c8dce1d271dd5fbbe9fbc9a95",
+                    "condition_id": "AC-000001",
+                    "cycle": 2,
+                    "delivery_id": "crab-coast-v6",
+                    "event_id": "EVT-000168",
+                    "event_sequence": 168,
+                    "evidence": "evidence/req7_scene_seven.png（线上 ?v=10 全屏截图，七类元素均可见）",
+                    "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+                    "id": "EXE-000046",
+                    "implemented_event_id": "EVT-000064",
+                    "kind": "条件执行",
+                    "method": "截取整页画面，按七类元素清单逐项勾选并标注位置；同时在画布上确认元素分布区域。",
+                    "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+                    "requirement_id": "REQ-000001",
+                    "result": "通过",
+                    "revision": 1,
+                    "time": "2026-10-28T10:31:16.434824+00:00",
+                    "waiver_id": null
+                  }
+                ],
+                "obligation": {
+                  "change_id": "CHG-000005",
+                  "change_revision": 1,
+                  "condition_id": "AC-000001",
+                  "requirement_id": "REQ-000001",
+                  "revision": 1
+                }
+              },
+              {
+                "basis": {
+                  "executions": [
+                    {
+                      "delivery_id": "crab-coast-v6",
+                      "execution_id": "EXE-000050"
+                    }
+                  ],
+                  "type": "执行"
+                },
+                "disposition": "有效执行闭合",
+                "executions": [
+                  {
+                    "actual": "按住右键移动，连续三轮各 5 秒：平均帧率均为 82.5 fps，\u003e50ms 长帧均为 0 次。",
+                    "agent": "octie-agent",
+                    "baseline_id": "BASE-000006",
+                    "condition_digest": "fa690f9f7d82a761fbc002eaae727344e98bedd6ec47b1f3d9b7f6dbf5c66e7c",
+                    "condition_id": "AC-000013",
+                    "cycle": 2,
+                    "delivery_id": "crab-coast-v6",
+                    "event_id": "EVT-000172",
+                    "event_sequence": 172,
+                    "evidence": "本次测量返回值 {runs:[{fps:82.5,longFrames:0},{fps:82.5,longFrames:0},{fps:82.5,longFrames:0}]}",
+                    "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+                    "id": "EXE-000050",
+                    "implemented_event_id": "EVT-000070",
+                    "kind": "条件执行",
+                    "method": "每轮先 __probe.resetStats()，按住右键 5 秒后读 __probe.fps() 与 __probe.longFrames()，共三轮。",
+                    "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+                    "requirement_id": "REQ-000004",
+                    "result": "通过",
+                    "revision": 1,
+                    "time": "2026-10-28T10:31:27.595106+00:00",
+                    "waiver_id": null
+                  }
+                ],
+                "obligation": {
+                  "change_id": "CHG-000005",
+                  "change_revision": 1,
+                  "condition_id": "AC-000013",
+                  "requirement_id": "REQ-000004",
+                  "revision": 1
+                }
+              },
+              {
+                "basis": {
+                  "executions": [
+                    {
+                      "delivery_id": "crab-coast-v6",
+                      "execution_id": "EXE-000051"
+                    }
+                  ],
+                  "type": "执行"
+                },
+                "disposition": "有效执行闭合",
+                "executions": [
+                  {
+                    "actual": "画布 2D 上下文 imageSmoothingEnabled = false，CSS image-rendering = crisp-edges，且绘制使用最近邻放大，像素边缘为硬边。",
+                    "agent": "octie-agent",
+                    "baseline_id": "BASE-000006",
+                    "condition_digest": "bdfffabb94225564c4917f0948403d9b143b6aab8349987b535ff57680a8c31e",
+                    "condition_id": "AC-000014",
+                    "cycle": 2,
+                    "delivery_id": "crab-coast-v6",
+                    "event_id": "EVT-000173",
+                    "event_sequence": 173,
+                    "evidence": "本次测量返回值 {imageSmoothingEnabled: false, imageRendering: 'crisp-edges'}；另见 evidence/req7_scene_seven.png 中的硬边像素",
+                    "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+                    "id": "EXE-000051",
+                    "implemented_event_id": "EVT-000070",
+                    "kind": "条件执行",
+                    "method": "读取 canvas.getContext('2d').imageSmoothingEnabled 与 getComputedStyle(canvas).imageRendering。",
+                    "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+                    "requirement_id": "REQ-000004",
+                    "result": "通过",
+                    "revision": 1,
+                    "time": "2026-10-28T10:31:30.475121+00:00",
+                    "waiver_id": null
+                  }
+                ],
+                "obligation": {
+                  "change_id": "CHG-000005",
+                  "change_revision": 1,
+                  "condition_id": "AC-000014",
+                  "requirement_id": "REQ-000004",
+                  "revision": 1
+                }
+              },
+              {
+                "basis": {
+                  "executions": [
+                    {
+                      "delivery_id": "crab-coast-v6",
+                      "execution_id": "EXE-000041"
+                    }
+                  ],
+                  "type": "执行"
+                },
+                "disposition": "有效执行闭合",
+                "executions": [
+                  {
+                    "actual": "把 visualViewport.height 由 390 覆写为 460（模拟浏览器工具栏收起，全程不派发任何事件）后静置 700ms：__probe.viewBox() 变为 {w:844,h:460}，画布由 693×390 自动变为 818×460，__probe.fitCount() 由 3 增至 4，期间没有任何用户点击。",
+                    "agent": "octie-agent",
+                    "baseline_id": "BASE-000006",
+                    "condition_digest": "00c70aab7505a1f4910d6de2824b972fe50f3928a0fd4e34006363beb6325c12",
+                    "condition_id": "AC-000027",
+                    "cycle": 1,
+                    "delivery_id": "crab-coast-v6",
+                    "event_id": "EVT-000163",
+                    "event_sequence": 163,
+                    "evidence": "evidence/req7_landscape.json 步骤 1→2；另于本地 8099 与线上 ?v=10 各复测一次，结果一致",
+                    "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+                    "id": "EXE-000041",
+                    "implemented_event_id": "EVT-000162",
+                    "kind": "条件执行",
+                    "method": "移动模拟（844×390、hasTouch）下用 Object.defineProperty 覆写 visualViewport.height，读取 __probe.canvasRect() / viewBox() / fitCount()。",
+                    "reason": "按实测数据登记该条件的验收结果",
+                    "requirement_id": "REQ-000007",
+                    "result": "通过",
+                    "revision": 1,
+                    "time": "2026-10-28T10:29:20.102849+00:00",
+                    "waiver_id": null
+                  }
+                ],
+                "obligation": {
+                  "change_id": "CHG-000005",
+                  "change_revision": 1,
+                  "condition_id": "AC-000027",
+                  "requirement_id": "REQ-000007",
+                  "revision": 1
+                }
+              },
+              {
+                "basis": {
+                  "executions": [
+                    {
+                      "delivery_id": "crab-coast-v6",
+                      "execution_id": "EXE-000042"
+                    }
+                  ],
+                  "type": "执行"
+                },
+                "disposition": "有效执行闭合",
+                "executions": [
+                  {
+                    "actual": "把 visualViewport.height 由 460 改回 390（同样不发事件）后静置 700ms：画布自动由 818×460 回到 693×390，fitCount 由 4 增至 5。",
+                    "agent": "octie-agent",
+                    "baseline_id": "BASE-000006",
+                    "condition_digest": "aa758490649c9401eb53d055b8f4fc955c35c884e615a4585821c81fb5e8595e",
+                    "condition_id": "AC-000028",
+                    "cycle": 1,
+                    "delivery_id": "crab-coast-v6",
+                    "event_id": "EVT-000164",
+                    "event_sequence": 164,
+                    "evidence": "evidence/req7_landscape.json 步骤 2→3",
+                    "expected": "画布自动回到 693×390，fitCount 再增加 1",
+                    "id": "EXE-000042",
+                    "implemented_event_id": "EVT-000162",
+                    "kind": "条件执行",
+                    "method": "与上一条同一套覆写手段，反向修改高度后读取画布尺寸与 fitCount。",
+                    "reason": "按实测数据登记该条件的验收结果",
+                    "requirement_id": "REQ-000007",
+                    "result": "通过",
+                    "revision": 1,
+                    "time": "2026-10-28T10:29:22.644825+00:00",
+                    "waiver_id": null
+                  }
+                ],
+                "obligation": {
+                  "change_id": "CHG-000005",
+                  "change_revision": 1,
+                  "condition_id": "AC-000028",
+                  "requirement_id": "REQ-000007",
+                  "revision": 1
+                }
+              },
+              {
+                "basis": {
+                  "executions": [
+                    {
+                      "delivery_id": "crab-coast-v6",
+                      "execution_id": "EXE-000043"
+                    }
+                  ],
+                  "type": "执行"
+                },
+                "disposition": "有效执行闭合",
+                "executions": [
+                  {
+                    "actual": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow：fitCount 分别 +1、+1、+1；随后静置 900ms，fitCount 增量为 0（不空转）。",
+                    "agent": "octie-agent",
+                    "baseline_id": "BASE-000006",
+                    "condition_digest": "1ed4040b5e8b96cae838da9db1b0761c5689bcb5981fcc26ecc15a8bd6c87eb3",
+                    "condition_id": "AC-000029",
+                    "cycle": 1,
+                    "delivery_id": "crab-coast-v6",
+                    "event_id": "EVT-000165",
+                    "event_sequence": 165,
+                    "evidence": "evidence/req7_landscape.json 的 events 字段：{vvResize:1, windowResize:1, pageshow:1, idle900ms:0}",
+                    "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+                    "id": "EXE-000043",
+                    "implemented_event_id": "EVT-000162",
+                    "kind": "条件执行",
+                    "method": "派发合成事件并在每步后读取 __probe.fitCount() 的增量。",
+                    "reason": "按实测数据登记该条件的验收结果",
+                    "requirement_id": "REQ-000007",
+                    "result": "通过",
+                    "revision": 1,
+                    "time": "2026-10-28T10:29:25.058760+00:00",
+                    "waiver_id": null
+                  }
+                ],
+                "obligation": {
+                  "change_id": "CHG-000005",
+                  "change_revision": 1,
+                  "condition_id": "AC-000029",
+                  "requirement_id": "REQ-000007",
+                  "revision": 1
+                }
+              },
+              {
+                "basis": {
+                  "executions": [
+                    {
+                      "delivery_id": "crab-coast-v6",
+                      "execution_id": "EXE-000044"
+                    }
+                  ],
+                  "type": "执行"
+                },
+                "disposition": "有效执行闭合",
+                "executions": [
+                  {
+                    "actual": "竖屏 390×844 下画布为 390×219（宽度完全铺满，改动前为 382×215）；横屏 844×390 下画布为 693×390（高度完全铺满，改动前为 652×367）。收起虚拟按键后操作带由 236px 归零、场景重新居中，再展开恢复原状。",
+                    "agent": "octie-agent",
+                    "baseline_id": "BASE-000006",
+                    "condition_digest": "a11965f1d7d38e284f9f62fd7889938f1649c18aed2ce4e02e149059e914bd1f",
+                    "condition_id": "AC-000030",
+                    "cycle": 1,
+                    "delivery_id": "crab-coast-v6",
+                    "event_id": "EVT-000166",
+                    "event_sequence": 166,
+                    "evidence": "evidence/req7_portrait.json（竖屏与收起/恢复）、evidence/req7_landscape.json（横屏）",
+                    "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+                    "id": "EXE-000044",
+                    "implemented_event_id": "EVT-000162",
+                    "kind": "条件执行",
+                    "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight，并调用 __touch.hide()/show() 观察居中变化。",
+                    "reason": "按实测数据登记该条件的验收结果",
+                    "requirement_id": "REQ-000007",
+                    "result": "通过",
+                    "revision": 1,
+                    "time": "2026-10-28T10:29:27.546277+00:00",
+                    "waiver_id": null
+                  }
+                ],
+                "obligation": {
+                  "change_id": "CHG-000005",
+                  "change_revision": 1,
+                  "condition_id": "AC-000030",
+                  "requirement_id": "REQ-000007",
+                  "revision": 1
+                }
+              },
+              {
+                "basis": {
+                  "executions": [
+                    {
+                      "delivery_id": "crab-coast-v6",
+                      "execution_id": "EXE-000045"
+                    }
+                  ],
+                  "type": "执行"
+                },
+                "disposition": "有效执行闭合",
+                "executions": [
+                  {
+                    "actual": "桌面 852×875 视口（未做触屏模拟，html 无 touch-mode、无触屏覆盖层）下画布为 835×470，与 0.98/0.94 公式计算值 835×470 逐像素一致，铺满逻辑未误用在桌面。",
+                    "agent": "octie-agent",
+                    "baseline_id": "BASE-000006",
+                    "condition_digest": "6f7524cbc2e578130912d5f7095faabb96a9870e3e46c666a9552ab3911b01ef",
+                    "condition_id": "AC-000031",
+                    "cycle": 1,
+                    "delivery_id": "crab-coast-v6",
+                    "event_id": "EVT-000167",
+                    "event_sequence": 167,
+                    "evidence": "evidence/req7_desktop.json",
+                    "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+                    "id": "EXE-000045",
+                    "implemented_event_id": "EVT-000162",
+                    "kind": "条件执行",
+                    "method": "在未模拟触屏的桌面页读取 __probe.canvasRect() 与 __probe.viewBox()，并用同一公式计算期望值比较。",
+                    "reason": "按实测数据登记该条件的验收结果",
+                    "requirement_id": "REQ-000007",
+                    "result": "通过",
+                    "revision": 1,
+                    "time": "2026-10-28T10:29:30.109385+00:00",
+                    "waiver_id": null
+                  }
+                ],
+                "obligation": {
+                  "change_id": "CHG-000005",
+                  "change_revision": 1,
+                  "condition_id": "AC-000031",
+                  "requirement_id": "REQ-000007",
+                  "revision": 1
+                }
+              }
+            ],
+            "reason": "变更已应用、基线已激活、已随 REL-000006 发布，逐动作与逐义务关闭",
+            "time": "2026-10-28T10:32:16.330435+00:00"
+          },
+          "created_at": "2026-10-28T10:25:50.883955+00:00",
+          "created_by": "octie-agent",
+          "digest": "ea172f2a692d679024b59f612fd1241d308fc7ff08614b04a4ffe7e7cfe228b5",
+          "evaluation": {
+            "affected_members": [
+              {
+                "requirement_id": "REQ-000001",
+                "revision": 1
+              },
+              {
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              },
+              {
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              }
+            ],
+            "empty_retests_reason": null,
+            "impact_analysis": "本次变更只新增一条需求（REQ-000007 手机隐藏工具栏后画面自动放大到最大），落地改动集中在 main.js 的画布尺寸计算：新增 viewBox() 取 visualViewport、fit() 增加触屏铺满分支、注册 resize / visualViewport.resize / visualViewport.scroll / orientationchange / pageshow / visibilitychange 六条监听与 400ms 轮询兜底。不涉及场景贴图、角色精灵、朝向状态机、碰撞网格、帧序与音频，因此这些既有需求的内容不需要修改。仍然受影响的点有三类：一是画布缩放比例发生变化后，场景是否仍完整呈现且不变形（REQ-000001）；二是触屏上画布被放大到铺满后，帧率与像素硬边是否仍然达标（REQ-000004）；三是新需求自身的五条验收条件需要逐条实测（REQ-000007）。已排除的虚拟按键显隐与输入通道、双指放大过程中的重排，均不在本次差异内。",
+            "obligations": [
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "初始画面截图 + 七类元素勾选清单（含各自大致坐标）",
+                  "exception": {
+                    "expected": "某类元素缺失或颜色与同类无法区分",
+                    "handling": "记为不通过，补画该类元素后重新截图核对",
+                    "scenario": "某类元素缺失或与同类无法区分"
+                  },
+                  "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+                  "id": "AC-000001",
+                  "input": "无输入，仅观察初始画面",
+                  "method": "对初始画面截图，按七类元素清单逐项勾选并标注位置",
+                  "operation": "打开 index.html 并等待加载提示消失",
+                  "preconditions": "资源已加载完成，页面处于初始状态",
+                  "role": "场景验收者",
+                  "scenario": "核对七类海岸元素是否齐全"
+                },
+                "condition_id": "AC-000001",
+                "requirement_id": "REQ-000001",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "性能面板截图或帧率统计数值",
+                  "exception": {
+                    "expected": "判定为不流畅",
+                    "handling": "减少每帧重绘区域或缓存背景图层后复测",
+                    "scenario": "平均帧率低于 55 或出现超过 50 毫秒的长帧"
+                  },
+                  "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+                  "id": "AC-000013",
+                  "input": "按住 → 键移动角色 5 秒",
+                  "method": "录制性能时间线，统计移动期间的帧率均值与最长帧间隔",
+                  "operation": "用浏览器性能面板记录该时段的帧率",
+                  "preconditions": "页面运行在本机 Edge 浏览器",
+                  "role": "交付验收者",
+                  "scenario": "核对渲染帧率"
+                },
+                "condition_id": "AC-000013",
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "角色局部放大截图",
+                  "exception": {
+                    "expected": "判定像素渲染不合格",
+                    "handling": "补充 image-rendering 与关闭图像平滑后复测",
+                    "scenario": "出现模糊或彩色边缘"
+                  },
+                  "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+                  "id": "AC-000014",
+                  "input": "无输入",
+                  "method": "对角色局部区域截图并放大观察边缘像素",
+                  "operation": "放大查看角色与背景边缘",
+                  "preconditions": "页面已打开并显示角色",
+                  "role": "交付验收者",
+                  "scenario": "核对像素清晰度"
+                },
+                "condition_id": "AC-000014",
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图",
+                  "exception": {
+                    "expected": "判定不通过并记录 fitCount 未增长",
+                    "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460",
+                    "scenario": "静置超过 1 秒画布尺寸仍未变化"
+                  },
+                  "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+                  "id": "AC-000027",
+                  "input": "把可见高度由 390 改为 460，不派发任何事件",
+                  "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+                  "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                  "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+                  "role": "移动端验收者",
+                  "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件"
+                },
+                "condition_id": "AC-000027",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "前后画布尺寸数值与 fitCount 变化",
+                  "exception": {
+                    "expected": "判定不通过",
+                    "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向",
+                    "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉"
+                  },
+                  "expected": "画布自动回到 693×390，fitCount 再增加 1",
+                  "id": "AC-000028",
+                  "input": "把可见高度由 460 改回 390，不派发任何事件",
+                  "method": "与上一条同一套模拟手段，反向修改高度",
+                  "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+                  "preconditions": "承接上一条，画布当前为 818×460",
+                  "role": "移动端验收者",
+                  "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件"
+                },
+                "condition_id": "AC-000028",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "三次事件与静置期的 fitCount 数值",
+                  "exception": {
+                    "expected": "判定不通过，说明存在空转",
+                    "handling": "检查轮询是否在尺寸未变时仍调用 fit()",
+                    "scenario": "静置期间 fitCount 持续增长"
+                  },
+                  "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+                  "id": "AC-000029",
+                  "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+                  "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+                  "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+                  "preconditions": "页面稳定，画布尺寸已确定",
+                  "role": "移动端验收者",
+                  "scenario": "核对各事件通道与空闲开销"
+                },
+                "condition_id": "AC-000029",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图",
+                  "exception": {
+                    "expected": "判定不通过",
+                    "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名",
+                    "scenario": "画布仍保留 2% / 6% 边距"
+                  },
+                  "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+                  "id": "AC-000030",
+                  "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+                  "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+                  "operation": "读取画布尺寸与可见区域尺寸",
+                  "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+                  "role": "移动端验收者",
+                  "scenario": "触屏设备上画布铺满可见区域"
+                },
+                "condition_id": "AC-000030",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "change_id": "CHG-000005",
+                "change_revision": 1,
+                "condition": {
+                  "allow_na": false,
+                  "evidence": "视口尺寸、画布尺寸与公式计算值",
+                  "exception": {
+                    "expected": "判定不通过",
+                    "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏",
+                    "scenario": "桌面画布被拉伸到 929 以上或出现裁剪"
+                  },
+                  "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+                  "id": "AC-000031",
+                  "input": "视口 947×972",
+                  "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+                  "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+                  "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+                  "role": "桌面验收者",
+                  "scenario": "桌面端不出现铺满带来的回归"
+                },
+                "condition_id": "AC-000031",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              }
+            ],
+            "retests": [
+              {
+                "condition_id": "AC-000001",
+                "requirement_id": "REQ-000001",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000013",
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000014",
+                "requirement_id": "REQ-000004",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000027",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000028",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000029",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000030",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              },
+              {
+                "condition_id": "AC-000031",
+                "requirement_id": "REQ-000007",
+                "revision": 1
+              }
+            ],
+            "supersessions": []
+          },
+          "event_id": "EVT-000154",
+          "id": "CHG-000005",
+          "impact_objects": [
+            "REQ-000001",
+            "REQ-000004",
+            "REQ-000007"
+          ],
+          "latest_review": {
+            "acceptance_review": "评估给出 8 项精确重验义务，逐条对照候选纳入条件：REQ-000001 的 AC-000001（场景仍完整呈现、不变形）、REQ-000004 的 AC-000013 与 AC-000014（放大后帧率与像素硬边）、REQ-000007 的 AC-000027 至 AC-000031（自动放大、自动缩回、事件通道与空闲、触屏铺满、桌面不回归）。条数与重验清单一致，均为可执行的具体条件，没有用“整体回归”这类笼统说法替代。",
+            "basis": "依据 target_digest ea172f2a 指向的 CHG-000005 第 1 修订（propose 后经 evaluate 的当前摘要，非 propose 时的 fa5f6f11），结合 REQ-000007 已确认事件与 BASE-000005 成员快照审阅。声明式审核，Agent 身份仅作操作归因。",
+            "completeness_review": "差异完整：actions 仅一条 {新增, REQ-000007, old_revision=null, new_revision=1}，恰好对应已确认的 REQ-000007 第 1 修订；predecessor 指向当前有效基线 BASE-000005；候选成员为原 6 条加新增 1 条，其余成员保持原修订未动。impact_objects 列出 REQ-000001 / REQ-000004 / REQ-000007，覆盖了受画布缩放影响的既有需求与新需求本身。",
+            "conclusion": "通过",
+            "created_at": "2026-10-28T10:26:36.861548+00:00",
+            "created_by": "review-agent",
+            "event_id": "EVT-000156",
+            "event_sequence": 156,
+            "id": "REV-000024",
+            "necessity_review": "必要性核对：REQ-000007 已确认纳入，而基线 BASE-000005 的成员集合不含它，若直接封新基线会被“非初始成员差异须经变更”这道门禁拦住；走 CHG-000005 是唯一合规路径，且差异确实只有一条新增，没有夹带替换或移除。",
+            "target_digest": "ea172f2a692d679024b59f612fd1241d308fc7ff08614b04a4ffe7e7cfe228b5",
+            "target_id": "CHG-000005",
+            "target_revision": 1,
+            "target_type": "change"
+          },
+          "ledger_id": "LED-19d840367862455889aebf797805ea48",
+          "predecessor": "BASE-000005",
+          "revision": 1,
+          "status": "已关闭"
+        },
+        "previous_content_revision": null,
+        "target": "CHG-000005",
+        "type": "success"
+      },
+      "sequence": 175,
+      "time": "2026-10-28T10:32:16.330435+00:00"
     }
   ],
   "executions": [
@@ -72552,6 +92681,259 @@
       "result": "通过",
       "revision": 3,
       "time": "2026-10-28T09:12:47.864956+00:00",
+      "waiver_id": null
+    },
+    {
+      "actual": "把 visualViewport.height 由 390 覆写为 460（模拟浏览器工具栏收起，全程不派发任何事件）后静置 700ms：__probe.viewBox() 变为 {w:844,h:460}，画布由 693×390 自动变为 818×460，__probe.fitCount() 由 3 增至 4，期间没有任何用户点击。",
+      "agent": "octie-agent",
+      "baseline_id": "BASE-000006",
+      "condition_digest": "00c70aab7505a1f4910d6de2824b972fe50f3928a0fd4e34006363beb6325c12",
+      "condition_id": "AC-000027",
+      "cycle": 1,
+      "delivery_id": "crab-coast-v6",
+      "event_id": "EVT-000163",
+      "event_sequence": 163,
+      "evidence": "evidence/req7_landscape.json 步骤 1→2；另于本地 8099 与线上 ?v=10 各复测一次，结果一致",
+      "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+      "id": "EXE-000041",
+      "implemented_event_id": "EVT-000162",
+      "kind": "条件执行",
+      "method": "移动模拟（844×390、hasTouch）下用 Object.defineProperty 覆写 visualViewport.height，读取 __probe.canvasRect() / viewBox() / fitCount()。",
+      "reason": "按实测数据登记该条件的验收结果",
+      "requirement_id": "REQ-000007",
+      "result": "通过",
+      "revision": 1,
+      "time": "2026-10-28T10:29:20.102849+00:00",
+      "waiver_id": null
+    },
+    {
+      "actual": "把 visualViewport.height 由 460 改回 390（同样不发事件）后静置 700ms：画布自动由 818×460 回到 693×390，fitCount 由 4 增至 5。",
+      "agent": "octie-agent",
+      "baseline_id": "BASE-000006",
+      "condition_digest": "aa758490649c9401eb53d055b8f4fc955c35c884e615a4585821c81fb5e8595e",
+      "condition_id": "AC-000028",
+      "cycle": 1,
+      "delivery_id": "crab-coast-v6",
+      "event_id": "EVT-000164",
+      "event_sequence": 164,
+      "evidence": "evidence/req7_landscape.json 步骤 2→3",
+      "expected": "画布自动回到 693×390，fitCount 再增加 1",
+      "id": "EXE-000042",
+      "implemented_event_id": "EVT-000162",
+      "kind": "条件执行",
+      "method": "与上一条同一套覆写手段，反向修改高度后读取画布尺寸与 fitCount。",
+      "reason": "按实测数据登记该条件的验收结果",
+      "requirement_id": "REQ-000007",
+      "result": "通过",
+      "revision": 1,
+      "time": "2026-10-28T10:29:22.644825+00:00",
+      "waiver_id": null
+    },
+    {
+      "actual": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow：fitCount 分别 +1、+1、+1；随后静置 900ms，fitCount 增量为 0（不空转）。",
+      "agent": "octie-agent",
+      "baseline_id": "BASE-000006",
+      "condition_digest": "1ed4040b5e8b96cae838da9db1b0761c5689bcb5981fcc26ecc15a8bd6c87eb3",
+      "condition_id": "AC-000029",
+      "cycle": 1,
+      "delivery_id": "crab-coast-v6",
+      "event_id": "EVT-000165",
+      "event_sequence": 165,
+      "evidence": "evidence/req7_landscape.json 的 events 字段：{vvResize:1, windowResize:1, pageshow:1, idle900ms:0}",
+      "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+      "id": "EXE-000043",
+      "implemented_event_id": "EVT-000162",
+      "kind": "条件执行",
+      "method": "派发合成事件并在每步后读取 __probe.fitCount() 的增量。",
+      "reason": "按实测数据登记该条件的验收结果",
+      "requirement_id": "REQ-000007",
+      "result": "通过",
+      "revision": 1,
+      "time": "2026-10-28T10:29:25.058760+00:00",
+      "waiver_id": null
+    },
+    {
+      "actual": "竖屏 390×844 下画布为 390×219（宽度完全铺满，改动前为 382×215）；横屏 844×390 下画布为 693×390（高度完全铺满，改动前为 652×367）。收起虚拟按键后操作带由 236px 归零、场景重新居中，再展开恢复原状。",
+      "agent": "octie-agent",
+      "baseline_id": "BASE-000006",
+      "condition_digest": "a11965f1d7d38e284f9f62fd7889938f1649c18aed2ce4e02e149059e914bd1f",
+      "condition_id": "AC-000030",
+      "cycle": 1,
+      "delivery_id": "crab-coast-v6",
+      "event_id": "EVT-000166",
+      "event_sequence": 166,
+      "evidence": "evidence/req7_portrait.json（竖屏与收起/恢复）、evidence/req7_landscape.json（横屏）",
+      "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+      "id": "EXE-000044",
+      "implemented_event_id": "EVT-000162",
+      "kind": "条件执行",
+      "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight，并调用 __touch.hide()/show() 观察居中变化。",
+      "reason": "按实测数据登记该条件的验收结果",
+      "requirement_id": "REQ-000007",
+      "result": "通过",
+      "revision": 1,
+      "time": "2026-10-28T10:29:27.546277+00:00",
+      "waiver_id": null
+    },
+    {
+      "actual": "桌面 852×875 视口（未做触屏模拟，html 无 touch-mode、无触屏覆盖层）下画布为 835×470，与 0.98/0.94 公式计算值 835×470 逐像素一致，铺满逻辑未误用在桌面。",
+      "agent": "octie-agent",
+      "baseline_id": "BASE-000006",
+      "condition_digest": "6f7524cbc2e578130912d5f7095faabb96a9870e3e46c666a9552ab3911b01ef",
+      "condition_id": "AC-000031",
+      "cycle": 1,
+      "delivery_id": "crab-coast-v6",
+      "event_id": "EVT-000167",
+      "event_sequence": 167,
+      "evidence": "evidence/req7_desktop.json",
+      "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+      "id": "EXE-000045",
+      "implemented_event_id": "EVT-000162",
+      "kind": "条件执行",
+      "method": "在未模拟触屏的桌面页读取 __probe.canvasRect() 与 __probe.viewBox()，并用同一公式计算期望值比较。",
+      "reason": "按实测数据登记该条件的验收结果",
+      "requirement_id": "REQ-000007",
+      "result": "通过",
+      "revision": 1,
+      "time": "2026-10-28T10:29:30.109385+00:00",
+      "waiver_id": null
+    },
+    {
+      "actual": "线上 ?v=10 画面可逐一指出海水（上方整片）、沙滩（中部大片沙地）、红树林（左上与中部气根树丛）、海藻床（水中成片海草）、珊瑚礁（浅水区礁石）、台阶（左侧木台阶）、高脚屋（右侧木屋）共 7 类元素，无缺失。",
+      "agent": "octie-agent",
+      "baseline_id": "BASE-000006",
+      "condition_digest": "5a55b7e4eacf288acc838fbf9f1cc658aa0d858c8dce1d271dd5fbbe9fbc9a95",
+      "condition_id": "AC-000001",
+      "cycle": 2,
+      "delivery_id": "crab-coast-v6",
+      "event_id": "EVT-000168",
+      "event_sequence": 168,
+      "evidence": "evidence/req7_scene_seven.png（线上 ?v=10 全屏截图，七类元素均可见）",
+      "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+      "id": "EXE-000046",
+      "implemented_event_id": "EVT-000064",
+      "kind": "条件执行",
+      "method": "截取整页画面，按七类元素清单逐项勾选并标注位置；同时在画布上确认元素分布区域。",
+      "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+      "requirement_id": "REQ-000001",
+      "result": "通过",
+      "revision": 1,
+      "time": "2026-10-28T10:31:16.434824+00:00",
+      "waiver_id": null
+    },
+    {
+      "actual": "冻结环境动画后，对沙地区域 (150,350)-(300,450) 取值，按住右键移动 800ms 前后比较：该区域 15000 个像素中变化 0 个，背景位移为 0。",
+      "agent": "octie-agent",
+      "baseline_id": "BASE-000006",
+      "condition_digest": "e23e38141b2e4bdc4b93934a740be18792ba560ead40615085fd91d61d597fdb",
+      "condition_id": "AC-000002",
+      "cycle": 2,
+      "delivery_id": "crab-coast-v6",
+      "event_id": "EVT-000169",
+      "event_sequence": 169,
+      "evidence": "本次测量的返回值 {bgDiffPixels: 0, regionPixels: 15000}，执行记录见本表",
+      "expected": "除角色精灵所在区域外，背景像素与移动前一致，背景位移为 0 像素",
+      "id": "EXE-000047",
+      "implemented_event_id": "EVT-000064",
+      "kind": "条件执行",
+      "method": "调用 __probe.freeze(true) 冻结海浪等环境动画，用 canvas getImageData 取同一块沙地像素，移动角色后再取一次做逐像素比较。",
+      "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+      "requirement_id": "REQ-000001",
+      "result": "通过",
+      "revision": 1,
+      "time": "2026-10-28T10:31:19.026677+00:00",
+      "waiver_id": null
+    },
+    {
+      "actual": "解冻后对水面区域 (100,60)-(400,160) 连续取值三次（间隔 1 秒）：相邻两帧分别有 272 / 269 个像素发生变化（占 30000 的约 0.9%），变化集中在波浪纹理上，没有整幅跳动或闪烁。",
+      "agent": "octie-agent",
+      "baseline_id": "BASE-000006",
+      "condition_digest": "f7ce88b52436d59e2c0d848194e70183f2f168c9341aa0d43efc87b09255f153",
+      "condition_id": "AC-000003",
+      "cycle": 2,
+      "delivery_id": "crab-coast-v6",
+      "event_id": "EVT-000170",
+      "event_sequence": 170,
+      "evidence": "本次测量的返回值 {diff_1v2: 272, diff_2v3: 269, waterRegion: 30000}",
+      "expected": "三帧海浪纹理位置不同，循环周期内无整幅跳动或闪烁",
+      "id": "EXE-000048",
+      "implemented_event_id": "EVT-000064",
+      "kind": "条件执行",
+      "method": "用 canvas getImageData 对同一水面区域间隔 1 秒连续取样三次，统计相邻帧差异像素数量并观察其占比。",
+      "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+      "requirement_id": "REQ-000001",
+      "result": "通过",
+      "revision": 1,
+      "time": "2026-10-28T10:31:21.811374+00:00",
+      "waiver_id": null
+    },
+    {
+      "actual": "线上页面共 10 个资源请求，来源全部为页面自身 origin（starchen-cycler.github.io 下的相对路径），外部域名请求 0 个。",
+      "agent": "octie-agent",
+      "baseline_id": "BASE-000006",
+      "condition_digest": "d541dc0e519fe9775586a32226d31c8cef852b026adbf5d6dd419b1a46d17b77",
+      "condition_id": "AC-000012",
+      "cycle": 2,
+      "delivery_id": "crab-coast-v6",
+      "event_id": "EVT-000171",
+      "event_sequence": 171,
+      "evidence": "本次测量的返回值 {totalRequests: 10, external: [], sameOriginOnly: true}",
+      "expected": "页面完整显示场景与角色，Network 面板中没有任何指向本机以外域名的请求，全部请求为 file:// 或 localhost 本地路径",
+      "id": "EXE-000049",
+      "implemented_event_id": "EVT-000070",
+      "kind": "条件执行",
+      "method": "读取 performance.getEntriesByType('resource')，逐条比对是否属于 location.origin。",
+      "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+      "requirement_id": "REQ-000004",
+      "result": "通过",
+      "revision": 1,
+      "time": "2026-10-28T10:31:24.653785+00:00",
+      "waiver_id": null
+    },
+    {
+      "actual": "按住右键移动，连续三轮各 5 秒：平均帧率均为 82.5 fps，\u003e50ms 长帧均为 0 次。",
+      "agent": "octie-agent",
+      "baseline_id": "BASE-000006",
+      "condition_digest": "fa690f9f7d82a761fbc002eaae727344e98bedd6ec47b1f3d9b7f6dbf5c66e7c",
+      "condition_id": "AC-000013",
+      "cycle": 2,
+      "delivery_id": "crab-coast-v6",
+      "event_id": "EVT-000172",
+      "event_sequence": 172,
+      "evidence": "本次测量返回值 {runs:[{fps:82.5,longFrames:0},{fps:82.5,longFrames:0},{fps:82.5,longFrames:0}]}",
+      "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+      "id": "EXE-000050",
+      "implemented_event_id": "EVT-000070",
+      "kind": "条件执行",
+      "method": "每轮先 __probe.resetStats()，按住右键 5 秒后读 __probe.fps() 与 __probe.longFrames()，共三轮。",
+      "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+      "requirement_id": "REQ-000004",
+      "result": "通过",
+      "revision": 1,
+      "time": "2026-10-28T10:31:27.595106+00:00",
+      "waiver_id": null
+    },
+    {
+      "actual": "画布 2D 上下文 imageSmoothingEnabled = false，CSS image-rendering = crisp-edges，且绘制使用最近邻放大，像素边缘为硬边。",
+      "agent": "octie-agent",
+      "baseline_id": "BASE-000006",
+      "condition_digest": "bdfffabb94225564c4917f0948403d9b143b6aab8349987b535ff57680a8c31e",
+      "condition_id": "AC-000014",
+      "cycle": 2,
+      "delivery_id": "crab-coast-v6",
+      "event_id": "EVT-000173",
+      "event_sequence": 173,
+      "evidence": "本次测量返回值 {imageSmoothingEnabled: false, imageRendering: 'crisp-edges'}；另见 evidence/req7_scene_seven.png 中的硬边像素",
+      "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+      "id": "EXE-000051",
+      "implemented_event_id": "EVT-000070",
+      "kind": "条件执行",
+      "method": "读取 canvas.getContext('2d').imageSmoothingEnabled 与 getComputedStyle(canvas).imageRendering。",
+      "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+      "requirement_id": "REQ-000004",
+      "result": "通过",
+      "revision": 1,
+      "time": "2026-10-28T10:31:30.475121+00:00",
       "waiver_id": null
     }
   ],
@@ -74370,6 +94752,622 @@
         }
       ],
       "time": "2026-10-28T09:12:49.944957+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "baseline_digest": "29ff1fe352b768deddffe0178f94864d266b72557fd5189b4a5ed6ce218ff046",
+      "baseline_id": "BASE-000006",
+      "delivery_id": "crab-coast-v6",
+      "event_id": "EVT-000174",
+      "event_sequence": 174,
+      "id": "REL-000006",
+      "members": [
+        {
+          "cycle": 2,
+          "digest": "2310b3e8c298e8c9a0645878ccae71b3e32c822529ee1675b0ddce9d973bbed4",
+          "execution_ids": [
+            "EXE-000046",
+            "EXE-000047",
+            "EXE-000048"
+          ],
+          "executions": [
+            {
+              "actual": "线上 ?v=10 画面可逐一指出海水（上方整片）、沙滩（中部大片沙地）、红树林（左上与中部气根树丛）、海藻床（水中成片海草）、珊瑚礁（浅水区礁石）、台阶（左侧木台阶）、高脚屋（右侧木屋）共 7 类元素，无缺失。",
+              "agent": "octie-agent",
+              "baseline_id": "BASE-000006",
+              "condition_digest": "5a55b7e4eacf288acc838fbf9f1cc658aa0d858c8dce1d271dd5fbbe9fbc9a95",
+              "condition_id": "AC-000001",
+              "cycle": 2,
+              "delivery_id": "crab-coast-v6",
+              "event_id": "EVT-000168",
+              "event_sequence": 168,
+              "evidence": "evidence/req7_scene_seven.png（线上 ?v=10 全屏截图，七类元素均可见）",
+              "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+              "id": "EXE-000046",
+              "implemented_event_id": "EVT-000064",
+              "kind": "条件执行",
+              "method": "截取整页画面，按七类元素清单逐项勾选并标注位置；同时在画布上确认元素分布区域。",
+              "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+              "requirement_id": "REQ-000001",
+              "result": "通过",
+              "revision": 1,
+              "time": "2026-10-28T10:31:16.434824+00:00",
+              "waiver_id": null
+            },
+            {
+              "actual": "冻结环境动画后，对沙地区域 (150,350)-(300,450) 取值，按住右键移动 800ms 前后比较：该区域 15000 个像素中变化 0 个，背景位移为 0。",
+              "agent": "octie-agent",
+              "baseline_id": "BASE-000006",
+              "condition_digest": "e23e38141b2e4bdc4b93934a740be18792ba560ead40615085fd91d61d597fdb",
+              "condition_id": "AC-000002",
+              "cycle": 2,
+              "delivery_id": "crab-coast-v6",
+              "event_id": "EVT-000169",
+              "event_sequence": 169,
+              "evidence": "本次测量的返回值 {bgDiffPixels: 0, regionPixels: 15000}，执行记录见本表",
+              "expected": "除角色精灵所在区域外，背景像素与移动前一致，背景位移为 0 像素",
+              "id": "EXE-000047",
+              "implemented_event_id": "EVT-000064",
+              "kind": "条件执行",
+              "method": "调用 __probe.freeze(true) 冻结海浪等环境动画，用 canvas getImageData 取同一块沙地像素，移动角色后再取一次做逐像素比较。",
+              "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+              "requirement_id": "REQ-000001",
+              "result": "通过",
+              "revision": 1,
+              "time": "2026-10-28T10:31:19.026677+00:00",
+              "waiver_id": null
+            },
+            {
+              "actual": "解冻后对水面区域 (100,60)-(400,160) 连续取值三次（间隔 1 秒）：相邻两帧分别有 272 / 269 个像素发生变化（占 30000 的约 0.9%），变化集中在波浪纹理上，没有整幅跳动或闪烁。",
+              "agent": "octie-agent",
+              "baseline_id": "BASE-000006",
+              "condition_digest": "f7ce88b52436d59e2c0d848194e70183f2f168c9341aa0d43efc87b09255f153",
+              "condition_id": "AC-000003",
+              "cycle": 2,
+              "delivery_id": "crab-coast-v6",
+              "event_id": "EVT-000170",
+              "event_sequence": 170,
+              "evidence": "本次测量的返回值 {diff_1v2: 272, diff_2v3: 269, waterRegion: 30000}",
+              "expected": "三帧海浪纹理位置不同，循环周期内无整幅跳动或闪烁",
+              "id": "EXE-000048",
+              "implemented_event_id": "EVT-000064",
+              "kind": "条件执行",
+              "method": "用 canvas getImageData 对同一水面区域间隔 1 秒连续取样三次，统计相邻帧差异像素数量并观察其占比。",
+              "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+              "requirement_id": "REQ-000001",
+              "result": "通过",
+              "revision": 1,
+              "time": "2026-10-28T10:31:21.811374+00:00",
+              "waiver_id": null
+            }
+          ],
+          "id": "REQ-000001",
+          "implemented_event_id": "EVT-000064",
+          "revision": 1
+        },
+        {
+          "cycle": 2,
+          "digest": "ebe38c666d0ea584981c3f07bf4467a6f41bd9664d7b76fece4d2e3c81292687",
+          "execution_ids": [
+            "EXE-000049",
+            "EXE-000050",
+            "EXE-000051"
+          ],
+          "executions": [
+            {
+              "actual": "线上页面共 10 个资源请求，来源全部为页面自身 origin（starchen-cycler.github.io 下的相对路径），外部域名请求 0 个。",
+              "agent": "octie-agent",
+              "baseline_id": "BASE-000006",
+              "condition_digest": "d541dc0e519fe9775586a32226d31c8cef852b026adbf5d6dd419b1a46d17b77",
+              "condition_id": "AC-000012",
+              "cycle": 2,
+              "delivery_id": "crab-coast-v6",
+              "event_id": "EVT-000171",
+              "event_sequence": 171,
+              "evidence": "本次测量的返回值 {totalRequests: 10, external: [], sameOriginOnly: true}",
+              "expected": "页面完整显示场景与角色，Network 面板中没有任何指向本机以外域名的请求，全部请求为 file:// 或 localhost 本地路径",
+              "id": "EXE-000049",
+              "implemented_event_id": "EVT-000070",
+              "kind": "条件执行",
+              "method": "读取 performance.getEntriesByType('resource')，逐条比对是否属于 location.origin。",
+              "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+              "requirement_id": "REQ-000004",
+              "result": "通过",
+              "revision": 1,
+              "time": "2026-10-28T10:31:24.653785+00:00",
+              "waiver_id": null
+            },
+            {
+              "actual": "按住右键移动，连续三轮各 5 秒：平均帧率均为 82.5 fps，\u003e50ms 长帧均为 0 次。",
+              "agent": "octie-agent",
+              "baseline_id": "BASE-000006",
+              "condition_digest": "fa690f9f7d82a761fbc002eaae727344e98bedd6ec47b1f3d9b7f6dbf5c66e7c",
+              "condition_id": "AC-000013",
+              "cycle": 2,
+              "delivery_id": "crab-coast-v6",
+              "event_id": "EVT-000172",
+              "event_sequence": 172,
+              "evidence": "本次测量返回值 {runs:[{fps:82.5,longFrames:0},{fps:82.5,longFrames:0},{fps:82.5,longFrames:0}]}",
+              "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+              "id": "EXE-000050",
+              "implemented_event_id": "EVT-000070",
+              "kind": "条件执行",
+              "method": "每轮先 __probe.resetStats()，按住右键 5 秒后读 __probe.fps() 与 __probe.longFrames()，共三轮。",
+              "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+              "requirement_id": "REQ-000004",
+              "result": "通过",
+              "revision": 1,
+              "time": "2026-10-28T10:31:27.595106+00:00",
+              "waiver_id": null
+            },
+            {
+              "actual": "画布 2D 上下文 imageSmoothingEnabled = false，CSS image-rendering = crisp-edges，且绘制使用最近邻放大，像素边缘为硬边。",
+              "agent": "octie-agent",
+              "baseline_id": "BASE-000006",
+              "condition_digest": "bdfffabb94225564c4917f0948403d9b143b6aab8349987b535ff57680a8c31e",
+              "condition_id": "AC-000014",
+              "cycle": 2,
+              "delivery_id": "crab-coast-v6",
+              "event_id": "EVT-000173",
+              "event_sequence": 173,
+              "evidence": "本次测量返回值 {imageSmoothingEnabled: false, imageRendering: 'crisp-edges'}；另见 evidence/req7_scene_seven.png 中的硬边像素",
+              "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+              "id": "EXE-000051",
+              "implemented_event_id": "EVT-000070",
+              "kind": "条件执行",
+              "method": "读取 canvas.getContext('2d').imageSmoothingEnabled 与 getComputedStyle(canvas).imageRendering。",
+              "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+              "requirement_id": "REQ-000004",
+              "result": "通过",
+              "revision": 1,
+              "time": "2026-10-28T10:31:30.475121+00:00",
+              "waiver_id": null
+            }
+          ],
+          "id": "REQ-000004",
+          "implemented_event_id": "EVT-000070",
+          "revision": 1
+        },
+        {
+          "cycle": 1,
+          "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+          "execution_ids": [
+            "EXE-000041",
+            "EXE-000042",
+            "EXE-000043",
+            "EXE-000044",
+            "EXE-000045"
+          ],
+          "executions": [
+            {
+              "actual": "把 visualViewport.height 由 390 覆写为 460（模拟浏览器工具栏收起，全程不派发任何事件）后静置 700ms：__probe.viewBox() 变为 {w:844,h:460}，画布由 693×390 自动变为 818×460，__probe.fitCount() 由 3 增至 4，期间没有任何用户点击。",
+              "agent": "octie-agent",
+              "baseline_id": "BASE-000006",
+              "condition_digest": "00c70aab7505a1f4910d6de2824b972fe50f3928a0fd4e34006363beb6325c12",
+              "condition_id": "AC-000027",
+              "cycle": 1,
+              "delivery_id": "crab-coast-v6",
+              "event_id": "EVT-000163",
+              "event_sequence": 163,
+              "evidence": "evidence/req7_landscape.json 步骤 1→2；另于本地 8099 与线上 ?v=10 各复测一次，结果一致",
+              "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+              "id": "EXE-000041",
+              "implemented_event_id": "EVT-000162",
+              "kind": "条件执行",
+              "method": "移动模拟（844×390、hasTouch）下用 Object.defineProperty 覆写 visualViewport.height，读取 __probe.canvasRect() / viewBox() / fitCount()。",
+              "reason": "按实测数据登记该条件的验收结果",
+              "requirement_id": "REQ-000007",
+              "result": "通过",
+              "revision": 1,
+              "time": "2026-10-28T10:29:20.102849+00:00",
+              "waiver_id": null
+            },
+            {
+              "actual": "把 visualViewport.height 由 460 改回 390（同样不发事件）后静置 700ms：画布自动由 818×460 回到 693×390，fitCount 由 4 增至 5。",
+              "agent": "octie-agent",
+              "baseline_id": "BASE-000006",
+              "condition_digest": "aa758490649c9401eb53d055b8f4fc955c35c884e615a4585821c81fb5e8595e",
+              "condition_id": "AC-000028",
+              "cycle": 1,
+              "delivery_id": "crab-coast-v6",
+              "event_id": "EVT-000164",
+              "event_sequence": 164,
+              "evidence": "evidence/req7_landscape.json 步骤 2→3",
+              "expected": "画布自动回到 693×390，fitCount 再增加 1",
+              "id": "EXE-000042",
+              "implemented_event_id": "EVT-000162",
+              "kind": "条件执行",
+              "method": "与上一条同一套覆写手段，反向修改高度后读取画布尺寸与 fitCount。",
+              "reason": "按实测数据登记该条件的验收结果",
+              "requirement_id": "REQ-000007",
+              "result": "通过",
+              "revision": 1,
+              "time": "2026-10-28T10:29:22.644825+00:00",
+              "waiver_id": null
+            },
+            {
+              "actual": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow：fitCount 分别 +1、+1、+1；随后静置 900ms，fitCount 增量为 0（不空转）。",
+              "agent": "octie-agent",
+              "baseline_id": "BASE-000006",
+              "condition_digest": "1ed4040b5e8b96cae838da9db1b0761c5689bcb5981fcc26ecc15a8bd6c87eb3",
+              "condition_id": "AC-000029",
+              "cycle": 1,
+              "delivery_id": "crab-coast-v6",
+              "event_id": "EVT-000165",
+              "event_sequence": 165,
+              "evidence": "evidence/req7_landscape.json 的 events 字段：{vvResize:1, windowResize:1, pageshow:1, idle900ms:0}",
+              "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+              "id": "EXE-000043",
+              "implemented_event_id": "EVT-000162",
+              "kind": "条件执行",
+              "method": "派发合成事件并在每步后读取 __probe.fitCount() 的增量。",
+              "reason": "按实测数据登记该条件的验收结果",
+              "requirement_id": "REQ-000007",
+              "result": "通过",
+              "revision": 1,
+              "time": "2026-10-28T10:29:25.058760+00:00",
+              "waiver_id": null
+            },
+            {
+              "actual": "竖屏 390×844 下画布为 390×219（宽度完全铺满，改动前为 382×215）；横屏 844×390 下画布为 693×390（高度完全铺满，改动前为 652×367）。收起虚拟按键后操作带由 236px 归零、场景重新居中，再展开恢复原状。",
+              "agent": "octie-agent",
+              "baseline_id": "BASE-000006",
+              "condition_digest": "a11965f1d7d38e284f9f62fd7889938f1649c18aed2ce4e02e149059e914bd1f",
+              "condition_id": "AC-000030",
+              "cycle": 1,
+              "delivery_id": "crab-coast-v6",
+              "event_id": "EVT-000166",
+              "event_sequence": 166,
+              "evidence": "evidence/req7_portrait.json（竖屏与收起/恢复）、evidence/req7_landscape.json（横屏）",
+              "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+              "id": "EXE-000044",
+              "implemented_event_id": "EVT-000162",
+              "kind": "条件执行",
+              "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight，并调用 __touch.hide()/show() 观察居中变化。",
+              "reason": "按实测数据登记该条件的验收结果",
+              "requirement_id": "REQ-000007",
+              "result": "通过",
+              "revision": 1,
+              "time": "2026-10-28T10:29:27.546277+00:00",
+              "waiver_id": null
+            },
+            {
+              "actual": "桌面 852×875 视口（未做触屏模拟，html 无 touch-mode、无触屏覆盖层）下画布为 835×470，与 0.98/0.94 公式计算值 835×470 逐像素一致，铺满逻辑未误用在桌面。",
+              "agent": "octie-agent",
+              "baseline_id": "BASE-000006",
+              "condition_digest": "6f7524cbc2e578130912d5f7095faabb96a9870e3e46c666a9552ab3911b01ef",
+              "condition_id": "AC-000031",
+              "cycle": 1,
+              "delivery_id": "crab-coast-v6",
+              "event_id": "EVT-000167",
+              "event_sequence": 167,
+              "evidence": "evidence/req7_desktop.json",
+              "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+              "id": "EXE-000045",
+              "implemented_event_id": "EVT-000162",
+              "kind": "条件执行",
+              "method": "在未模拟触屏的桌面页读取 __probe.canvasRect() 与 __probe.viewBox()，并用同一公式计算期望值比较。",
+              "reason": "按实测数据登记该条件的验收结果",
+              "requirement_id": "REQ-000007",
+              "result": "通过",
+              "revision": 1,
+              "time": "2026-10-28T10:29:30.109385+00:00",
+              "waiver_id": null
+            }
+          ],
+          "id": "REQ-000007",
+          "implemented_event_id": "EVT-000162",
+          "revision": 1
+        }
+      ],
+      "reason": "在基线 BASE-000006 下发布 crab-coast-v6：新增 REQ-000007，并重发本次重验的 REQ-000001 / REQ-000004",
+      "revalidation": [
+        {
+          "basis": {
+            "delivery_id": "crab-coast-v6",
+            "execution_id": "EXE-000046",
+            "type": "执行"
+          },
+          "disposition": "通过",
+          "execution": {
+            "actual": "线上 ?v=10 画面可逐一指出海水（上方整片）、沙滩（中部大片沙地）、红树林（左上与中部气根树丛）、海藻床（水中成片海草）、珊瑚礁（浅水区礁石）、台阶（左侧木台阶）、高脚屋（右侧木屋）共 7 类元素，无缺失。",
+            "agent": "octie-agent",
+            "baseline_id": "BASE-000006",
+            "condition_digest": "5a55b7e4eacf288acc838fbf9f1cc658aa0d858c8dce1d271dd5fbbe9fbc9a95",
+            "condition_id": "AC-000001",
+            "cycle": 2,
+            "delivery_id": "crab-coast-v6",
+            "event_id": "EVT-000168",
+            "event_sequence": 168,
+            "evidence": "evidence/req7_scene_seven.png（线上 ?v=10 全屏截图，七类元素均可见）",
+            "expected": "画面内可逐一指出海水、沙滩、红树林、海藻床、珊瑚礁、台阶、房屋，共 7 类元素",
+            "id": "EXE-000046",
+            "implemented_event_id": "EVT-000064",
+            "kind": "条件执行",
+            "method": "截取整页画面，按七类元素清单逐项勾选并标注位置；同时在画布上确认元素分布区域。",
+            "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+            "requirement_id": "REQ-000001",
+            "result": "通过",
+            "revision": 1,
+            "time": "2026-10-28T10:31:16.434824+00:00",
+            "waiver_id": null
+          },
+          "obligation": {
+            "change_id": "CHG-000005",
+            "change_revision": 1,
+            "condition_id": "AC-000001",
+            "requirement_id": "REQ-000001",
+            "revision": 1
+          }
+        },
+        {
+          "basis": {
+            "delivery_id": "crab-coast-v6",
+            "execution_id": "EXE-000050",
+            "type": "执行"
+          },
+          "disposition": "通过",
+          "execution": {
+            "actual": "按住右键移动，连续三轮各 5 秒：平均帧率均为 82.5 fps，\u003e50ms 长帧均为 0 次。",
+            "agent": "octie-agent",
+            "baseline_id": "BASE-000006",
+            "condition_digest": "fa690f9f7d82a761fbc002eaae727344e98bedd6ec47b1f3d9b7f6dbf5c66e7c",
+            "condition_id": "AC-000013",
+            "cycle": 2,
+            "delivery_id": "crab-coast-v6",
+            "event_id": "EVT-000172",
+            "event_sequence": 172,
+            "evidence": "本次测量返回值 {runs:[{fps:82.5,longFrames:0},{fps:82.5,longFrames:0},{fps:82.5,longFrames:0}]}",
+            "expected": "平均帧率不低于 55 帧每秒，且最长单帧间隔不超过 50 毫秒",
+            "id": "EXE-000050",
+            "implemented_event_id": "EVT-000070",
+            "kind": "条件执行",
+            "method": "每轮先 __probe.resetStats()，按住右键 5 秒后读 __probe.fps() 与 __probe.longFrames()，共三轮。",
+            "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+            "requirement_id": "REQ-000004",
+            "result": "通过",
+            "revision": 1,
+            "time": "2026-10-28T10:31:27.595106+00:00",
+            "waiver_id": null
+          },
+          "obligation": {
+            "change_id": "CHG-000005",
+            "change_revision": 1,
+            "condition_id": "AC-000013",
+            "requirement_id": "REQ-000004",
+            "revision": 1
+          }
+        },
+        {
+          "basis": {
+            "delivery_id": "crab-coast-v6",
+            "execution_id": "EXE-000051",
+            "type": "执行"
+          },
+          "disposition": "通过",
+          "execution": {
+            "actual": "画布 2D 上下文 imageSmoothingEnabled = false，CSS image-rendering = crisp-edges，且绘制使用最近邻放大，像素边缘为硬边。",
+            "agent": "octie-agent",
+            "baseline_id": "BASE-000006",
+            "condition_digest": "bdfffabb94225564c4917f0948403d9b143b6aab8349987b535ff57680a8c31e",
+            "condition_id": "AC-000014",
+            "cycle": 2,
+            "delivery_id": "crab-coast-v6",
+            "event_id": "EVT-000173",
+            "event_sequence": 173,
+            "evidence": "本次测量返回值 {imageSmoothingEnabled: false, imageRendering: 'crisp-edges'}；另见 evidence/req7_scene_seven.png 中的硬边像素",
+            "expected": "像素边缘为硬边，无平滑模糊的插值过渡",
+            "id": "EXE-000051",
+            "implemented_event_id": "EVT-000070",
+            "kind": "条件执行",
+            "method": "读取 canvas.getContext('2d').imageSmoothingEnabled 与 getComputedStyle(canvas).imageRendering。",
+            "reason": "CHG-000005 重验义务：按实测数据登记本交付的执行结果",
+            "requirement_id": "REQ-000004",
+            "result": "通过",
+            "revision": 1,
+            "time": "2026-10-28T10:31:30.475121+00:00",
+            "waiver_id": null
+          },
+          "obligation": {
+            "change_id": "CHG-000005",
+            "change_revision": 1,
+            "condition_id": "AC-000014",
+            "requirement_id": "REQ-000004",
+            "revision": 1
+          }
+        },
+        {
+          "basis": {
+            "delivery_id": "crab-coast-v6",
+            "execution_id": "EXE-000041",
+            "type": "执行"
+          },
+          "disposition": "通过",
+          "execution": {
+            "actual": "把 visualViewport.height 由 390 覆写为 460（模拟浏览器工具栏收起，全程不派发任何事件）后静置 700ms：__probe.viewBox() 变为 {w:844,h:460}，画布由 693×390 自动变为 818×460，__probe.fitCount() 由 3 增至 4，期间没有任何用户点击。",
+            "agent": "octie-agent",
+            "baseline_id": "BASE-000006",
+            "condition_digest": "00c70aab7505a1f4910d6de2824b972fe50f3928a0fd4e34006363beb6325c12",
+            "condition_id": "AC-000027",
+            "cycle": 1,
+            "delivery_id": "crab-coast-v6",
+            "event_id": "EVT-000163",
+            "event_sequence": 163,
+            "evidence": "evidence/req7_landscape.json 步骤 1→2；另于本地 8099 与线上 ?v=10 各复测一次，结果一致",
+            "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+            "id": "EXE-000041",
+            "implemented_event_id": "EVT-000162",
+            "kind": "条件执行",
+            "method": "移动模拟（844×390、hasTouch）下用 Object.defineProperty 覆写 visualViewport.height，读取 __probe.canvasRect() / viewBox() / fitCount()。",
+            "reason": "按实测数据登记该条件的验收结果",
+            "requirement_id": "REQ-000007",
+            "result": "通过",
+            "revision": 1,
+            "time": "2026-10-28T10:29:20.102849+00:00",
+            "waiver_id": null
+          },
+          "obligation": {
+            "change_id": "CHG-000005",
+            "change_revision": 1,
+            "condition_id": "AC-000027",
+            "requirement_id": "REQ-000007",
+            "revision": 1
+          }
+        },
+        {
+          "basis": {
+            "delivery_id": "crab-coast-v6",
+            "execution_id": "EXE-000042",
+            "type": "执行"
+          },
+          "disposition": "通过",
+          "execution": {
+            "actual": "把 visualViewport.height 由 460 改回 390（同样不发事件）后静置 700ms：画布自动由 818×460 回到 693×390，fitCount 由 4 增至 5。",
+            "agent": "octie-agent",
+            "baseline_id": "BASE-000006",
+            "condition_digest": "aa758490649c9401eb53d055b8f4fc955c35c884e615a4585821c81fb5e8595e",
+            "condition_id": "AC-000028",
+            "cycle": 1,
+            "delivery_id": "crab-coast-v6",
+            "event_id": "EVT-000164",
+            "event_sequence": 164,
+            "evidence": "evidence/req7_landscape.json 步骤 2→3",
+            "expected": "画布自动回到 693×390，fitCount 再增加 1",
+            "id": "EXE-000042",
+            "implemented_event_id": "EVT-000162",
+            "kind": "条件执行",
+            "method": "与上一条同一套覆写手段，反向修改高度后读取画布尺寸与 fitCount。",
+            "reason": "按实测数据登记该条件的验收结果",
+            "requirement_id": "REQ-000007",
+            "result": "通过",
+            "revision": 1,
+            "time": "2026-10-28T10:29:22.644825+00:00",
+            "waiver_id": null
+          },
+          "obligation": {
+            "change_id": "CHG-000005",
+            "change_revision": 1,
+            "condition_id": "AC-000028",
+            "requirement_id": "REQ-000007",
+            "revision": 1
+          }
+        },
+        {
+          "basis": {
+            "delivery_id": "crab-coast-v6",
+            "execution_id": "EXE-000043",
+            "type": "执行"
+          },
+          "disposition": "通过",
+          "execution": {
+            "actual": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow：fitCount 分别 +1、+1、+1；随后静置 900ms，fitCount 增量为 0（不空转）。",
+            "agent": "octie-agent",
+            "baseline_id": "BASE-000006",
+            "condition_digest": "1ed4040b5e8b96cae838da9db1b0761c5689bcb5981fcc26ecc15a8bd6c87eb3",
+            "condition_id": "AC-000029",
+            "cycle": 1,
+            "delivery_id": "crab-coast-v6",
+            "event_id": "EVT-000165",
+            "event_sequence": 165,
+            "evidence": "evidence/req7_landscape.json 的 events 字段：{vvResize:1, windowResize:1, pageshow:1, idle900ms:0}",
+            "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+            "id": "EXE-000043",
+            "implemented_event_id": "EVT-000162",
+            "kind": "条件执行",
+            "method": "派发合成事件并在每步后读取 __probe.fitCount() 的增量。",
+            "reason": "按实测数据登记该条件的验收结果",
+            "requirement_id": "REQ-000007",
+            "result": "通过",
+            "revision": 1,
+            "time": "2026-10-28T10:29:25.058760+00:00",
+            "waiver_id": null
+          },
+          "obligation": {
+            "change_id": "CHG-000005",
+            "change_revision": 1,
+            "condition_id": "AC-000029",
+            "requirement_id": "REQ-000007",
+            "revision": 1
+          }
+        },
+        {
+          "basis": {
+            "delivery_id": "crab-coast-v6",
+            "execution_id": "EXE-000044",
+            "type": "执行"
+          },
+          "disposition": "通过",
+          "execution": {
+            "actual": "竖屏 390×844 下画布为 390×219（宽度完全铺满，改动前为 382×215）；横屏 844×390 下画布为 693×390（高度完全铺满，改动前为 652×367）。收起虚拟按键后操作带由 236px 归零、场景重新居中，再展开恢复原状。",
+            "agent": "octie-agent",
+            "baseline_id": "BASE-000006",
+            "condition_digest": "a11965f1d7d38e284f9f62fd7889938f1649c18aed2ce4e02e149059e914bd1f",
+            "condition_id": "AC-000030",
+            "cycle": 1,
+            "delivery_id": "crab-coast-v6",
+            "event_id": "EVT-000166",
+            "event_sequence": 166,
+            "evidence": "evidence/req7_portrait.json（竖屏与收起/恢复）、evidence/req7_landscape.json（横屏）",
+            "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+            "id": "EXE-000044",
+            "implemented_event_id": "EVT-000162",
+            "kind": "条件执行",
+            "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight，并调用 __touch.hide()/show() 观察居中变化。",
+            "reason": "按实测数据登记该条件的验收结果",
+            "requirement_id": "REQ-000007",
+            "result": "通过",
+            "revision": 1,
+            "time": "2026-10-28T10:29:27.546277+00:00",
+            "waiver_id": null
+          },
+          "obligation": {
+            "change_id": "CHG-000005",
+            "change_revision": 1,
+            "condition_id": "AC-000030",
+            "requirement_id": "REQ-000007",
+            "revision": 1
+          }
+        },
+        {
+          "basis": {
+            "delivery_id": "crab-coast-v6",
+            "execution_id": "EXE-000045",
+            "type": "执行"
+          },
+          "disposition": "通过",
+          "execution": {
+            "actual": "桌面 852×875 视口（未做触屏模拟，html 无 touch-mode、无触屏覆盖层）下画布为 835×470，与 0.98/0.94 公式计算值 835×470 逐像素一致，铺满逻辑未误用在桌面。",
+            "agent": "octie-agent",
+            "baseline_id": "BASE-000006",
+            "condition_digest": "6f7524cbc2e578130912d5f7095faabb96a9870e3e46c666a9552ab3911b01ef",
+            "condition_id": "AC-000031",
+            "cycle": 1,
+            "delivery_id": "crab-coast-v6",
+            "event_id": "EVT-000167",
+            "event_sequence": 167,
+            "evidence": "evidence/req7_desktop.json",
+            "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+            "id": "EXE-000045",
+            "implemented_event_id": "EVT-000162",
+            "kind": "条件执行",
+            "method": "在未模拟触屏的桌面页读取 __probe.canvasRect() 与 __probe.viewBox()，并用同一公式计算期望值比较。",
+            "reason": "按实测数据登记该条件的验收结果",
+            "requirement_id": "REQ-000007",
+            "result": "通过",
+            "revision": 1,
+            "time": "2026-10-28T10:29:30.109385+00:00",
+            "waiver_id": null
+          },
+          "obligation": {
+            "change_id": "CHG-000005",
+            "change_revision": 1,
+            "condition_id": "AC-000031",
+            "requirement_id": "REQ-000007",
+            "revision": 1
+          }
+        }
+      ],
+      "time": "2026-10-28T10:31:42.628728+00:00"
     }
   ],
   "requirements": [
@@ -75538,6 +96536,156 @@
           "type": "功能"
         }
       ]
+    },
+    {
+      "id": "REQ-000007",
+      "revisions": [
+        {
+          "acceptance": [
+            {
+              "allow_na": false,
+              "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图",
+              "exception": {
+                "expected": "判定不通过并记录 fitCount 未增长",
+                "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460",
+                "scenario": "静置超过 1 秒画布尺寸仍未变化"
+              },
+              "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+              "id": "AC-000027",
+              "input": "把可见高度由 390 改为 460，不派发任何事件",
+              "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+              "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+              "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+              "role": "移动端验收者",
+              "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件"
+            },
+            {
+              "allow_na": false,
+              "evidence": "前后画布尺寸数值与 fitCount 变化",
+              "exception": {
+                "expected": "判定不通过",
+                "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向",
+                "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉"
+              },
+              "expected": "画布自动回到 693×390，fitCount 再增加 1",
+              "id": "AC-000028",
+              "input": "把可见高度由 460 改回 390，不派发任何事件",
+              "method": "与上一条同一套模拟手段，反向修改高度",
+              "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+              "preconditions": "承接上一条，画布当前为 818×460",
+              "role": "移动端验收者",
+              "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件"
+            },
+            {
+              "allow_na": false,
+              "evidence": "三次事件与静置期的 fitCount 数值",
+              "exception": {
+                "expected": "判定不通过，说明存在空转",
+                "handling": "检查轮询是否在尺寸未变时仍调用 fit()",
+                "scenario": "静置期间 fitCount 持续增长"
+              },
+              "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+              "id": "AC-000029",
+              "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+              "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+              "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+              "preconditions": "页面稳定，画布尺寸已确定",
+              "role": "移动端验收者",
+              "scenario": "核对各事件通道与空闲开销"
+            },
+            {
+              "allow_na": false,
+              "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图",
+              "exception": {
+                "expected": "判定不通过",
+                "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名",
+                "scenario": "画布仍保留 2% / 6% 边距"
+              },
+              "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+              "id": "AC-000030",
+              "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+              "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+              "operation": "读取画布尺寸与可见区域尺寸",
+              "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+              "role": "移动端验收者",
+              "scenario": "触屏设备上画布铺满可见区域"
+            },
+            {
+              "allow_na": false,
+              "evidence": "视口尺寸、画布尺寸与公式计算值",
+              "exception": {
+                "expected": "判定不通过",
+                "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏",
+                "scenario": "桌面画布被拉伸到 929 以上或出现裁剪"
+              },
+              "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+              "id": "AC-000031",
+              "input": "视口 947×972",
+              "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+              "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+              "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+              "role": "桌面验收者",
+              "scenario": "桌面端不出现铺满带来的回归"
+            }
+          ],
+          "boundaries": [
+            {
+              "expected": "画布的 CSS 尺寸保持不变",
+              "handling": "viewBox() 退回 innerWidth / innerHeight，跳过本次重排，避免放大过程中画面跳动",
+              "scenario": "用户正在双指放大（visualViewport.scale 大于 1）"
+            }
+          ],
+          "created_at": "2026-10-28T10:24:35.811740+00:00",
+          "created_by": "octie-agent",
+          "dependencies": [],
+          "description": "手机浏览器的工具栏（地址栏、底部导航）收起或展开会改变页面可见高度，但部分浏览器在此时不派发 window.resize（iOS Safari 尤其常见）。当前实现只监听 window.resize，所以可见区域变大后画布仍保持旧尺寸，必须等其它事件（例如点击「收起按键」触发的那一次 resize）才会重排。本需求要求以真实可见区域（visualViewport）为准，在可见区域变化后自动重算画布尺寸，把它放大到当前可见区域内能放下的最大值，并在触屏设备上去掉原来预留的 2% / 6% 边距。",
+          "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+          "event_id": "EVT-000150",
+          "excluded": [
+            "双指放大（visualViewport.scale 大于 1）过程中的重新排版",
+            "桌面端留边距策略的变更，桌面仍保持 0.98 / 0.94",
+            "虚拟按键的位置、显隐与输入通道逻辑"
+          ],
+          "id": "REQ-000007",
+          "included": [
+            "以 visualViewport 的宽高作为可见区域，在工具栏收起或展开后自动重算画布尺寸",
+            "触屏设备上画布铺满可见区域，不再保留原来的 2% 宽度与 6% 高度边距",
+            "同时监听 window resize、visualViewport resize、visualViewport scroll、orientationchange、pageshow、visibilitychange 六条来源",
+            "增加 400ms 的可见区域尺寸比对兜底，应对浏览器完全不发事件的情况"
+          ],
+          "module": "画面自适应（可见区域适配）",
+          "necessity": "去掉本项，画面会在工具栏收起后长期偏小：横屏实测少用约 6% 的高度（693×390 而非应有的 818×460），竖屏少用 8px 宽度；且表现为“点了某个按钮才放大”的怪异时序，用户会以为页面卡住。",
+          "normal_behavior": {
+            "behavior": "页面以 visualViewport 为准重新计算画布缩放",
+            "expected": "画布在一个 400ms 轮询周期内由 693×390 自动变为 818×460，全程无需用户点击任何按钮",
+            "scenario": "手机横屏下收起浏览器工具栏，可见高度由 390 变为 460，浏览器没有派发 resize"
+          },
+          "placement": {
+            "kind": "页面",
+            "other": [],
+            "primary": {
+              "page_id": "PAGE-000001",
+              "page_revision": 1,
+              "region_id": "REG-000001-0001-0001"
+            }
+          },
+          "priority": "P1",
+          "purpose": "让手机玩家收起浏览器工具栏后立刻得到更大的画面，不需要手动触发任何按钮。",
+          "questions": [],
+          "revision": 1,
+          "sources": [
+            {
+              "source_id": "SRC-000003",
+              "source_revision": 1
+            }
+          ],
+          "status": "完整草稿",
+          "tags": [],
+          "technical": "实现位于 main.js：viewBox() 在 visualViewport.scale 约等于 1 时取 visualViewport 的宽高，否则退回 innerWidth/innerHeight；fit() 依据 html.touch-mode 决定铺满还是保留边距；事件监听与 400ms 轮询兜底同在 fit() 附近注册；另暴露 __probe.fitCount() 与 __probe.viewBox() 供验收读取。",
+          "title": "手机隐藏浏览器工具栏后画面自动放大到最大",
+          "type": "功能"
+        }
+      ]
     }
   ],
   "retirements": [],
@@ -75893,6 +97041,54 @@
       "target_id": "BASE-000005",
       "target_revision": 1,
       "target_type": "baseline"
+    },
+    {
+      "acceptance_review": "5 条验收均具备角色、场景、前置、输入、操作、预期、异常、方法与证据，且可执行：前两条通过覆写 visualViewport.height 模拟工具栏收起与恢复，第三条核对三个事件通道与静置期不空转，第四条在竖屏与横屏核对铺满尺寸，第五条核对桌面端 928×522 不回归。预期均为可读数值或明确现象。",
+      "basis": "依据 target_digest 171736a1 指向的 REQ-000007 第 1 次内容修订，对照来源 SRC-000003 r1 记录的用户原话逐字段审阅。声明式审核，Agent 身份仅作操作归因。",
+      "completeness_review": "逐项核对：说明、目的、必要性、类型（功能）、模块、优先级 P1、页面归属（PAGE-000001 r1 场景画布区）、来源（SRC-000003 r1）、纳入 4 条、排除 3 条、正常行为、边界 1 条、验收 5 条、开放问题为空。范围边界清晰，未与既有需求冲突（虚拟按键与输入通道已明确排除）。",
+      "conclusion": "通过",
+      "created_at": "2026-10-28T10:24:59.327083+00:00",
+      "created_by": "review-agent",
+      "event_id": "EVT-000152",
+      "event_sequence": 152,
+      "id": "REV-000023",
+      "necessity_review": "必要性已核对：工具栏收起后若不重排，横屏画布会长期停在 693×390 而不是应有的 818×460，竖屏少 8px 宽度，而且表现为“点某个按钮才放大”的时序错觉。删除本项会让移动端可见画面长期偏小，判断成立。",
+      "target_digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+      "target_id": "REQ-000007",
+      "target_revision": 1,
+      "target_type": "requirement"
+    },
+    {
+      "acceptance_review": "评估给出 8 项精确重验义务，逐条对照候选纳入条件：REQ-000001 的 AC-000001（场景仍完整呈现、不变形）、REQ-000004 的 AC-000013 与 AC-000014（放大后帧率与像素硬边）、REQ-000007 的 AC-000027 至 AC-000031（自动放大、自动缩回、事件通道与空闲、触屏铺满、桌面不回归）。条数与重验清单一致，均为可执行的具体条件，没有用“整体回归”这类笼统说法替代。",
+      "basis": "依据 target_digest ea172f2a 指向的 CHG-000005 第 1 修订（propose 后经 evaluate 的当前摘要，非 propose 时的 fa5f6f11），结合 REQ-000007 已确认事件与 BASE-000005 成员快照审阅。声明式审核，Agent 身份仅作操作归因。",
+      "completeness_review": "差异完整：actions 仅一条 {新增, REQ-000007, old_revision=null, new_revision=1}，恰好对应已确认的 REQ-000007 第 1 修订；predecessor 指向当前有效基线 BASE-000005；候选成员为原 6 条加新增 1 条，其余成员保持原修订未动。impact_objects 列出 REQ-000001 / REQ-000004 / REQ-000007，覆盖了受画布缩放影响的既有需求与新需求本身。",
+      "conclusion": "通过",
+      "created_at": "2026-10-28T10:26:36.861548+00:00",
+      "created_by": "review-agent",
+      "event_id": "EVT-000156",
+      "event_sequence": 156,
+      "id": "REV-000024",
+      "necessity_review": "必要性核对：REQ-000007 已确认纳入，而基线 BASE-000005 的成员集合不含它，若直接封新基线会被“非初始成员差异须经变更”这道门禁拦住；走 CHG-000005 是唯一合规路径，且差异确实只有一条新增，没有夹带替换或移除。",
+      "target_digest": "ea172f2a692d679024b59f612fd1241d308fc7ff08614b04a4ffe7e7cfe228b5",
+      "target_id": "CHG-000005",
+      "target_revision": 1,
+      "target_type": "change"
+    },
+    {
+      "acceptance_review": "该基线对应的重验义务来自 CHG-000005 的 8 项清单（AC-000001、AC-000013、AC-000014、AC-000027 至 AC-000031），均可执行且与本次差异相关；这些义务尚未登记执行结果，属于后续开发与验收环节，不在本审核中声称已通过。",
+      "basis": "依据 BASE-000006 第 1 修订摘要 29ff1fe3 与 CHG-000005 已应用后的候选成员映射审阅。声明式审核，Agent 身份仅作操作归因。",
+      "completeness_review": "成员完整：在原 6 条（REQ-000001 r1、REQ-000002 r1、REQ-000003 r2、REQ-000004 r1、REQ-000005 r1、REQ-000006 r3）之上新增 REQ-000007 r1，未变成员一律保留原修订；版本自 V1.4 递增为 V1.5，前驱 BASE-000005，页面与来源快照随封存一并固定。",
+      "conclusion": "通过",
+      "created_at": "2026-10-28T10:27:19.179482+00:00",
+      "created_by": "review-agent",
+      "event_id": "EVT-000159",
+      "event_sequence": 159,
+      "id": "REV-000025",
+      "necessity_review": "必要性核对：REQ-000007 已确认纳入且不在 BASE-000005 成员内，需要一个新的基线版本来固定“七条需求一起成立”的这份快照；候选由 CHG-000005 按批准差异生成，前驱正确指向当前有效基线。",
+      "target_digest": "29ff1fe352b768deddffe0178f94864d266b72557fd5189b4a5ed6ce218ff046",
+      "target_id": "BASE-000006",
+      "target_revision": 1,
+      "target_type": "baseline"
     }
   ],
   "sources": [
@@ -75933,6 +97129,26 @@
           "quote": "推荐技术栈：AI 生图 + Python Pillow + HTML5 Canvas 2D。整体采用三个独立层：固定背景、循环环境特效、角色精灵。不要让 AI 一次生成整张背景和全部角色动作后直接投入使用。游戏逻辑画布 960 × 540 px；背景 960 × 540 PNG；角色逻辑帧 64 × 64 px；四向动画 Down / Left / Right / Up，每方向 4 帧，总帧数 16 帧，最终 Sprite Sheet 256 × 256 PNG；行走动画 8 FPS；游戏渲染 requestAnimationFrame，通常目标 60 FPS；移动速度 110 px/s。推荐先生成一张角色母版（Character Reference），确认角色外观后，再生成四个方向的动作。不要首先要求模型直接输出 256 × 256 的成品 Sheet，更稳妥的方法是生成较大的 4 × 4 等分网格，再用代码裁切。",
           "revision": 1,
           "summary": "建议采用固定背景层 + 循环环境特效层 + 角色精灵层三层结构，画布 960×540、单帧 64×64、四向各 4 帧共 16 帧、8fps 行走、110px/s 移动；AI 先出角色母版与 4×4 网格大图，再用 Pillow 裁切、抠底、统一对齐得到可用 sprite sheet。"
+        }
+      ]
+    },
+    {
+      "id": "SRC-000003",
+      "revisions": [
+        {
+          "created_at": "2026-10-28T10:24:10.851262+00:00",
+          "created_by": "octie-agent",
+          "date_note": "2026-10-28 用户消息",
+          "digest": "ddf640df9e4d1bbd434e4ab85bd1e7ac6d19794064dd9c94565faa4675a8fbd2",
+          "event_id": "EVT-000149",
+          "id": "SRC-000003",
+          "kind": "用户消息",
+          "location": null,
+          "manual_note": "用户在本次会话中以文字直接提出的原始需求，未经整理",
+          "name": "用户提出画面自适应需求（手机隐藏工具栏后自动放大）",
+          "quote": "手机浏览器有一个问题就是，刚开始的时候如果游戏页面小，我隐藏工具栏之后页面不会自动放大，而是点收起按钮的时候才会自适应放大，让页面自动放大最大，新需求创建修改",
+          "revision": 1,
+          "summary": "用户指出：手机隐藏浏览器工具栏后可见区域变大，画面却不会自动放大，要点「收起按键」才重排；要求画面自动放大到最大。"
         }
       ]
     }

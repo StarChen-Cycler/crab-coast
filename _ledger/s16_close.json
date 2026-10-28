@@ -1,0 +1,56 @@
+{
+  "operation_id": "crab-chg5-close-2",
+  "agent": "octie-agent",
+  "reason": "变更已应用、基线已激活、已随 REL-000006 发布，逐动作与逐义务关闭",
+  "expected_revision": 174,
+  "data": {
+    "id": "CHG-000005",
+    "revision": 1,
+    "digest": "ea172f2a692d679024b59f612fd1241d308fc7ff08614b04a4ffe7e7cfe228b5",
+    "action_closures": [
+      {
+        "action": {
+          "type": "新增",
+          "requirement_id": "REQ-000007",
+          "old_revision": null,
+          "new_revision": 1
+        },
+        "basis": { "type": "发布", "release_id": "REL-000006" }
+      }
+    ],
+    "obligation_closures": [
+      {
+        "obligation": { "change_id": "CHG-000005", "change_revision": 1, "requirement_id": "REQ-000001", "revision": 1, "condition_id": "AC-000001" },
+        "basis": { "type": "执行", "executions": [{ "execution_id": "EXE-000046", "delivery_id": "crab-coast-v6" }] }
+      },
+      {
+        "obligation": { "change_id": "CHG-000005", "change_revision": 1, "requirement_id": "REQ-000004", "revision": 1, "condition_id": "AC-000013" },
+        "basis": { "type": "执行", "executions": [{ "execution_id": "EXE-000050", "delivery_id": "crab-coast-v6" }] }
+      },
+      {
+        "obligation": { "change_id": "CHG-000005", "change_revision": 1, "requirement_id": "REQ-000004", "revision": 1, "condition_id": "AC-000014" },
+        "basis": { "type": "执行", "executions": [{ "execution_id": "EXE-000051", "delivery_id": "crab-coast-v6" }] }
+      },
+      {
+        "obligation": { "change_id": "CHG-000005", "change_revision": 1, "requirement_id": "REQ-000007", "revision": 1, "condition_id": "AC-000027" },
+        "basis": { "type": "执行", "executions": [{ "execution_id": "EXE-000041", "delivery_id": "crab-coast-v6" }] }
+      },
+      {
+        "obligation": { "change_id": "CHG-000005", "change_revision": 1, "requirement_id": "REQ-000007", "revision": 1, "condition_id": "AC-000028" },
+        "basis": { "type": "执行", "executions": [{ "execution_id": "EXE-000042", "delivery_id": "crab-coast-v6" }] }
+      },
+      {
+        "obligation": { "change_id": "CHG-000005", "change_revision": 1, "requirement_id": "REQ-000007", "revision": 1, "condition_id": "AC-000029" },
+        "basis": { "type": "执行", "executions": [{ "execution_id": "EXE-000043", "delivery_id": "crab-coast-v6" }] }
+      },
+      {
+        "obligation": { "change_id": "CHG-000005", "change_revision": 1, "requirement_id": "REQ-000007", "revision": 1, "condition_id": "AC-000030" },
+        "basis": { "type": "执行", "executions": [{ "execution_id": "EXE-000044", "delivery_id": "crab-coast-v6" }] }
+      },
+      {
+        "obligation": { "change_id": "CHG-000005", "change_revision": 1, "requirement_id": "REQ-000007", "revision": 1, "condition_id": "AC-000031" },
+        "basis": { "type": "执行", "executions": [{ "execution_id": "EXE-000045", "delivery_id": "crab-coast-v6" }] }
+      }
+    ]
+  }
+}

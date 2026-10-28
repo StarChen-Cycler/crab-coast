@@ -1,0 +1,12 @@
+{
+  "operation_id": "crab-req7-confirm",
+  "agent": "octie-agent",
+  "reason": "审核通过且无开放问题，确认纳入范围为后续变更加入基线",
+  "expected_revision": 152,
+  "data": {
+    "id": "REQ-000007",
+    "revision": 1,
+    "digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+    "scope": { "decision": "纳入" }
+  }
+}

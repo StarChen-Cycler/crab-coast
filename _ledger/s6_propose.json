@@ -1,0 +1,18 @@
+{
+  "operation_id": "crab-chg5-propose",
+  "agent": "octie-agent",
+  "reason": "把已确认的 REQ-000007 新增进基线，走变更而不是直接封基线",
+  "expected_revision": 153,
+  "data": {
+    "predecessor": "BASE-000005",
+    "actions": [
+      {
+        "type": "新增",
+        "requirement_id": "REQ-000007",
+        "old_revision": null,
+        "new_revision": 1
+      }
+    ],
+    "impact_objects": ["REQ-000001", "REQ-000004", "REQ-000007"]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "operation_id": "crab-chg5-evaluate",
+  "agent": "octie-agent",
+  "reason": "补齐变更影响评估与精确重验清单",
+  "expected_revision": 154,
+  "data": {
+    "id": "CHG-000005",
+    "revision": 1,
+    "digest": "fa5f6f11c13d50aa2357543396ae9496bef922898194ab898484537abf55106e",
+    "impact_analysis": "本次变更只新增一条需求（REQ-000007 手机隐藏工具栏后画面自动放大到最大），落地改动集中在 main.js 的画布尺寸计算：新增 viewBox() 取 visualViewport、fit() 增加触屏铺满分支、注册 resize / visualViewport.resize / visualViewport.scroll / orientationchange / pageshow / visibilitychange 六条监听与 400ms 轮询兜底。不涉及场景贴图、角色精灵、朝向状态机、碰撞网格、帧序与音频，因此这些既有需求的内容不需要修改。仍然受影响的点有三类：一是画布缩放比例发生变化后，场景是否仍完整呈现且不变形（REQ-000001）；二是触屏上画布被放大到铺满后，帧率与像素硬边是否仍然达标（REQ-000004）；三是新需求自身的五条验收条件需要逐条实测（REQ-000007）。已排除的虚拟按键显隐与输入通道、双指放大过程中的重排，均不在本次差异内。",
+    "retests": [
+      { "requirement_id": "REQ-000001", "revision": 1, "condition_id": "AC-000001" },
+      { "requirement_id": "REQ-000004", "revision": 1, "condition_id": "AC-000013" },
+      { "requirement_id": "REQ-000004", "revision": 1, "condition_id": "AC-000014" },
+      { "requirement_id": "REQ-000007", "revision": 1, "condition_id": "AC-000027" },
+      { "requirement_id": "REQ-000007", "revision": 1, "condition_id": "AC-000028" },
+      { "requirement_id": "REQ-000007", "revision": 1, "condition_id": "AC-000029" },
+      { "requirement_id": "REQ-000007", "revision": 1, "condition_id": "AC-000030" },
+      { "requirement_id": "REQ-000007", "revision": 1, "condition_id": "AC-000031" }
+    ]
+  }
+}

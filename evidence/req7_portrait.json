@@ -1,0 +1,18 @@
+{
+  "url": "https://starchen-cycler.github.io/crab-coast/?v=10",
+  "viewport": [390, 844],
+  "visualViewport": [390, 844],
+  "note": "竖屏 390x844 移动模拟，重载后测量（避免上一轮覆写 visualViewport.height 的桩残留）",
+  "before": {
+    "box": { "w": 390, "h": 844 },
+    "canvas": { "x": 0, "y": 194.5, "w": 390, "h": 219 },
+    "band": "236px"
+  },
+  "collapsed": { "canvas": { "x": 0, "y": 312.5, "w": 390, "h": 219 }, "band": "0px" },
+  "restored": {
+    "box": { "w": 390, "h": 844 },
+    "canvas": { "x": 0, "y": 194.5, "w": 390, "h": 219 },
+    "band": "236px"
+  },
+  "conclusion": "竖屏宽度铺满：390×219（改动前为 382×215）；收起虚拟按键后操作带归零、场景重新居中，再展开恢复"
+}

@@ -1,0 +1,15 @@
+{
+  "operation_id": "crab-release-v6",
+  "agent": "octie-agent",
+  "reason": "在基线 BASE-000006 下发布 crab-coast-v6：新增 REQ-000007，并重发本次重验的 REQ-000001 / REQ-000004",
+  "expected_revision": 173,
+  "data": {
+    "baseline_id": "BASE-000006",
+    "delivery_id": "crab-coast-v6",
+    "members": [
+      { "id": "REQ-000001", "revision": 1, "cycle": 2 },
+      { "id": "REQ-000004", "revision": 1, "cycle": 2 },
+      { "id": "REQ-000007", "revision": 1, "cycle": 1 }
+    ]
+  }
+}

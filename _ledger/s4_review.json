@@ -1,0 +1,17 @@
+{
+  "operation_id": "crab-req7-review",
+  "agent": "review-agent",
+  "reason": "对 REQ-000007 第 1 修订做逐字段语义审核",
+  "expected_revision": 151,
+  "data": {
+    "target_type": "requirement",
+    "target_id": "REQ-000007",
+    "target_revision": 1,
+    "target_digest": "171736a197ff5129a35768e68da1c1bf509e0e9d23292f1f08bc0b8f818524ff",
+    "conclusion": "通过",
+    "necessity_review": "必要性已核对：工具栏收起后若不重排，横屏画布会长期停在 693×390 而不是应有的 818×460，竖屏少 8px 宽度，而且表现为“点某个按钮才放大”的时序错觉。删除本项会让移动端可见画面长期偏小，判断成立。",
+    "completeness_review": "逐项核对：说明、目的、必要性、类型（功能）、模块、优先级 P1、页面归属（PAGE-000001 r1 场景画布区）、来源（SRC-000003 r1）、纳入 4 条、排除 3 条、正常行为、边界 1 条、验收 5 条、开放问题为空。范围边界清晰，未与既有需求冲突（虚拟按键与输入通道已明确排除）。",
+    "acceptance_review": "5 条验收均具备角色、场景、前置、输入、操作、预期、异常、方法与证据，且可执行：前两条通过覆写 visualViewport.height 模拟工具栏收起与恢复，第三条核对三个事件通道与静置期不空转，第四条在竖屏与横屏核对铺满尺寸，第五条核对桌面端 928×522 不回归。预期均为可读数值或明确现象。",
+    "basis": "依据 target_digest 171736a1 指向的 REQ-000007 第 1 次内容修订，对照来源 SRC-000003 r1 记录的用户原话逐字段审阅。声明式审核，Agent 身份仅作操作归因。"
+  }
+}

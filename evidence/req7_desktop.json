@@ -1,0 +1,11 @@
+{
+  "url": "https://starchen-cycler.github.io/crab-coast/?v=10",
+  "touchMode": false,
+  "touchUI": false,
+  "viewport": [852, 875],
+  "viewBox": { "w": 852, "h": 875.3333129882812 },
+  "canvas": { "x": 8.5, "y": 202.6666717529297, "w": 835, "h": 470 },
+  "expected": { "w": 835, "h": 470 },
+  "match": true,
+  "note": "桌面（未做触屏模拟）：无 touch-mode、无触屏覆盖层；画布尺寸与 0.98/0.94 公式逐像素一致，铺满逻辑未误用在桌面"
+}

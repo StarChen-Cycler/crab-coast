@@ -1,0 +1,129 @@
+{
+  "operation_id": "crab-req7-add",
+  "agent": "octie-agent",
+  "reason": "提交画面自适应需求的完整可审阅草稿",
+  "expected_revision": 149,
+  "data": {
+    "title": "手机隐藏浏览器工具栏后画面自动放大到最大",
+    "description": "手机浏览器的工具栏（地址栏、底部导航）收起或展开会改变页面可见高度，但部分浏览器在此时不派发 window.resize（iOS Safari 尤其常见）。当前实现只监听 window.resize，所以可见区域变大后画布仍保持旧尺寸，必须等其它事件（例如点击「收起按键」触发的那一次 resize）才会重排。本需求要求以真实可见区域（visualViewport）为准，在可见区域变化后自动重算画布尺寸，把它放大到当前可见区域内能放下的最大值，并在触屏设备上去掉原来预留的 2% / 6% 边距。",
+    "purpose": "让手机玩家收起浏览器工具栏后立刻得到更大的画面，不需要手动触发任何按钮。",
+    "necessity": "去掉本项，画面会在工具栏收起后长期偏小：横屏实测少用约 6% 的高度（693×390 而非应有的 818×460），竖屏少用 8px 宽度；且表现为“点了某个按钮才放大”的怪异时序，用户会以为页面卡住。",
+    "type": "功能",
+    "module": "画面自适应（可见区域适配）",
+    "priority": "P1",
+    "placement": {
+      "kind": "页面",
+      "other": [],
+      "primary": {
+        "page_id": "PAGE-000001",
+        "page_revision": 1,
+        "region_id": "REG-000001-0001-0001"
+      }
+    },
+    "sources": [
+      { "source_id": "SRC-000003", "source_revision": 1 }
+    ],
+    "included": [
+      "以 visualViewport 的宽高作为可见区域，在工具栏收起或展开后自动重算画布尺寸",
+      "触屏设备上画布铺满可见区域，不再保留原来的 2% 宽度与 6% 高度边距",
+      "同时监听 window resize、visualViewport resize、visualViewport scroll、orientationchange、pageshow、visibilitychange 六条来源",
+      "增加 400ms 的可见区域尺寸比对兜底，应对浏览器完全不发事件的情况"
+    ],
+    "excluded": [
+      "双指放大（visualViewport.scale 大于 1）过程中的重新排版",
+      "桌面端留边距策略的变更，桌面仍保持 0.98 / 0.94",
+      "虚拟按键的位置、显隐与输入通道逻辑"
+    ],
+    "normal_behavior": {
+      "scenario": "手机横屏下收起浏览器工具栏，可见高度由 390 变为 460，浏览器没有派发 resize",
+      "behavior": "页面以 visualViewport 为准重新计算画布缩放",
+      "expected": "画布在一个 400ms 轮询周期内由 693×390 自动变为 818×460，全程无需用户点击任何按钮"
+    },
+    "boundaries": [
+      {
+        "scenario": "用户正在双指放大（visualViewport.scale 大于 1）",
+        "expected": "画布的 CSS 尺寸保持不变",
+        "handling": "viewBox() 退回 innerWidth / innerHeight，跳过本次重排，避免放大过程中画面跳动"
+      }
+    ],
+    "acceptance": [
+      {
+        "role": "移动端验收者",
+        "scenario": "工具栏收起后可见高度变大且浏览器不派发任何事件",
+        "preconditions": "页面已加载完成，触屏控件已挂载，当前可见高度为 390，画布为 693×390",
+        "input": "把可见高度由 390 改为 460，不派发任何事件",
+        "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+        "expected": "画布自动变为 818×460，fitCount 增加 1，期间没有任何用户点击",
+        "exception": {
+          "scenario": "静置超过 1 秒画布尺寸仍未变化",
+          "expected": "判定不通过并记录 fitCount 未增长",
+          "handling": "检查 400ms 轮询定时器是否被中断，以及 __probe.viewBox() 是否已返回 460"
+        },
+        "method": "在移动模拟环境下覆写 visualViewport.height 模拟工具栏收起，对比前后 __probe.canvasRect() 与 __probe.fitCount()",
+        "evidence": "前后画布尺寸数值、fitCount 变化、以及该状态的截图"
+      },
+      {
+        "role": "移动端验收者",
+        "scenario": "工具栏重新出现，可见高度由 460 回到 390，同样不发事件",
+        "preconditions": "承接上一条，画布当前为 818×460",
+        "input": "把可见高度由 460 改回 390，不派发任何事件",
+        "operation": "静置 700ms 后读取画布尺寸与 __probe.fitCount()",
+        "expected": "画布自动回到 693×390，fitCount 再增加 1",
+        "exception": {
+          "scenario": "画布没有缩回，仍显示 818×460 并把下半部分裁掉",
+          "expected": "判定不通过",
+          "handling": "检查 viewBox() 是否仍缓存在旧高度，以及轮询是否只处理了变大的方向"
+        },
+        "method": "与上一条同一套模拟手段，反向修改高度",
+        "evidence": "前后画布尺寸数值与 fitCount 变化"
+      },
+      {
+        "role": "移动端验收者",
+        "scenario": "核对各事件通道与空闲开销",
+        "preconditions": "页面稳定，画布尺寸已确定",
+        "input": "依次派发 visualViewport 的 resize、window 的 resize、window 的 pageshow，然后静置 900ms",
+        "operation": "每派发一个事件读取一次 __probe.fitCount()，静置后再读一次",
+        "expected": "三个事件各自使 fitCount 增加 1；静置 900ms 期间 fitCount 不增长",
+        "exception": {
+          "scenario": "静置期间 fitCount 持续增长",
+          "expected": "判定不通过，说明存在空转",
+          "handling": "检查轮询是否在尺寸未变时仍调用 fit()"
+        },
+        "method": "派发合成事件并读取 __probe.fitCount() 的增量",
+        "evidence": "三次事件与静置期的 fitCount 数值"
+      },
+      {
+        "role": "移动端验收者",
+        "scenario": "触屏设备上画布铺满可见区域",
+        "preconditions": "触屏模式已挂载（html 带 touch-mode）",
+        "input": "分别在 390×844 竖屏与 844×390 横屏下打开页面",
+        "operation": "读取画布尺寸与可见区域尺寸",
+        "expected": "竖屏画布为 390×219（宽度铺满），横屏为 693×390（高度铺满），不再保留原来的 382×215 与 652×367",
+        "exception": {
+          "scenario": "画布仍保留 2% / 6% 边距",
+          "expected": "判定不通过",
+          "handling": "检查 fit() 中触屏分支是否真的取到了 touch-mode 类名"
+        },
+        "method": "在两个移动视口下读取 __probe.canvasRect() 与 innerWidth/innerHeight",
+        "evidence": "两个视口下的画布尺寸与视口尺寸数值、截图"
+      },
+      {
+        "role": "桌面验收者",
+        "scenario": "桌面端不出现铺满带来的回归",
+        "preconditions": "普通桌面浏览器打开页面，html 不带 touch-mode",
+        "input": "视口 947×972",
+        "operation": "读取画布尺寸并与 0.98 / 0.94 公式对比",
+        "expected": "画布为 928×522，与公式逐像素一致，未被铺满逻辑影响",
+        "exception": {
+          "scenario": "桌面画布被拉伸到 929 以上或出现裁剪",
+          "expected": "判定不通过",
+          "handling": "检查 fit() 的触屏判断是否误把桌面当成触屏"
+        },
+        "method": "在桌面视口读取 __probe.canvasRect() 并与公式计算值比较",
+        "evidence": "视口尺寸、画布尺寸与公式计算值"
+      }
+    ],
+    "questions": [],
+    "technical": "实现位于 main.js：viewBox() 在 visualViewport.scale 约等于 1 时取 visualViewport 的宽高，否则退回 innerWidth/innerHeight；fit() 依据 html.touch-mode 决定铺满还是保留边距；事件监听与 400ms 轮询兜底同在 fit() 附近注册；另暴露 __probe.fitCount() 与 __probe.viewBox() 供验收读取。"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "operation_id": "crab-base6-review",
+  "agent": "review-agent",
+  "reason": "对候选基线 BASE-000006 做封存审核",
+  "expected_revision": 158,
+  "data": {
+    "target_type": "baseline",
+    "target_id": "BASE-000006",
+    "target_revision": 1,
+    "target_digest": "29ff1fe352b768deddffe0178f94864d266b72557fd5189b4a5ed6ce218ff046",
+    "conclusion": "通过",
+    "necessity_review": "必要性核对：REQ-000007 已确认纳入且不在 BASE-000005 成员内，需要一个新的基线版本来固定“七条需求一起成立”的这份快照；候选由 CHG-000005 按批准差异生成，前驱正确指向当前有效基线。",
+    "completeness_review": "成员完整：在原 6 条（REQ-000001 r1、REQ-000002 r1、REQ-000003 r2、REQ-000004 r1、REQ-000005 r1、REQ-000006 r3）之上新增 REQ-000007 r1，未变成员一律保留原修订；版本自 V1.4 递增为 V1.5，前驱 BASE-000005，页面与来源快照随封存一并固定。",
+    "acceptance_review": "该基线对应的重验义务来自 CHG-000005 的 8 项清单（AC-000001、AC-000013、AC-000014、AC-000027 至 AC-000031），均可执行且与本次差异相关；这些义务尚未登记执行结果，属于后续开发与验收环节，不在本审核中声称已通过。",
+    "basis": "依据 BASE-000006 第 1 修订摘要 29ff1fe3 与 CHG-000005 已应用后的候选成员映射审阅。声明式审核，Agent 身份仅作操作归因。"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "url": "https://starchen-cycler.github.io/crab-coast/?v=10",
+  "viewport": [844, 390],
+  "note": "横屏 844x390 移动模拟（hasTouch），通过覆写 visualViewport.height 模拟浏览器工具栏收起/恢复，全程不派发任何事件",
+  "steps": [
+    {
+      "label": "初始（工具栏在）",
+      "box": { "w": 844, "h": 390 },
+      "canvas": { "x": 75.5, "y": 0, "w": 693, "h": 390 },
+      "fits": 3
+    },
+    {
+      "label": "工具栏收起后静置 700ms（未发事件）",
+      "box": { "w": 844, "h": 460 },
+      "canvas": { "x": 13, "y": 0, "w": 818, "h": 460 },
+      "fits": 4
+    },
+    {
+      "label": "工具栏回来后静置 700ms（未发事件）",
+      "box": { "w": 844, "h": 390 },
+      "canvas": { "x": 75.5, "y": 0, "w": 693, "h": 390 },
+      "fits": 5
+    },
+    {
+      "label": "结束",
+      "box": { "w": 844, "h": 390 },
+      "canvas": { "x": 75.5, "y": 0, "w": 693, "h": 390 },
+      "fits": 8
+    }
+  ],
+  "events": { "vvResize": 1, "windowResize": 1, "pageshow": 1, "idle900ms": 0 }
+}

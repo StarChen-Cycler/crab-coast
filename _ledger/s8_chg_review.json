@@ -1,0 +1,17 @@
+{
+  "operation_id": "crab-chg5-review",
+  "agent": "review-agent",
+  "reason": "对 CHG-000005 当前修订（已评估）做变更审核",
+  "expected_revision": 155,
+  "data": {
+    "target_type": "change",
+    "target_id": "CHG-000005",
+    "target_revision": 1,
+    "target_digest": "ea172f2a692d679024b59f612fd1241d308fc7ff08614b04a4ffe7e7cfe228b5",
+    "conclusion": "通过",
+    "necessity_review": "必要性核对：REQ-000007 已确认纳入，而基线 BASE-000005 的成员集合不含它，若直接封新基线会被“非初始成员差异须经变更”这道门禁拦住；走 CHG-000005 是唯一合规路径，且差异确实只有一条新增，没有夹带替换或移除。",
+    "completeness_review": "差异完整：actions 仅一条 {新增, REQ-000007, old_revision=null, new_revision=1}，恰好对应已确认的 REQ-000007 第 1 修订；predecessor 指向当前有效基线 BASE-000005；候选成员为原 6 条加新增 1 条，其余成员保持原修订未动。impact_objects 列出 REQ-000001 / REQ-000004 / REQ-000007，覆盖了受画布缩放影响的既有需求与新需求本身。",
+    "acceptance_review": "评估给出 8 项精确重验义务，逐条对照候选纳入条件：REQ-000001 的 AC-000001（场景仍完整呈现、不变形）、REQ-000004 的 AC-000013 与 AC-000014（放大后帧率与像素硬边）、REQ-000007 的 AC-000027 至 AC-000031（自动放大、自动缩回、事件通道与空闲、触屏铺满、桌面不回归）。条数与重验清单一致，均为可执行的具体条件，没有用“整体回归”这类笼统说法替代。",
+    "basis": "依据 target_digest ea172f2a 指向的 CHG-000005 第 1 修订（propose 后经 evaluate 的当前摘要，非 propose 时的 fa5f6f11），结合 REQ-000007 已确认事件与 BASE-000005 成员快照审阅。声明式审核，Agent 身份仅作操作归因。"
+  }
+}
