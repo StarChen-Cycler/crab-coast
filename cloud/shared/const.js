@@ -14,6 +14,8 @@ module.exports = {
   SNAPSHOT_HZ: 10,          // 浏览器广播频率
   NEARBY_RADIUS: 200,       // 「附近」半径（逻辑像素）
   INTENT_TTL_MS: 3000,      // 超过这么久没新意图就停车（防止一直飘）
+  MAX_SESSIONS: 2,          // 每只动物最多同时两个活跃 WebSocket 会话（FIFO 淘汰最早）
+  KEEPALIVE_MS: 1000,       // 客户端按住期间每 1 秒续期一次
 
   // 角色脚底判定框（与单机版一致）
   HITBOX: { half: 11, foot: 6 },

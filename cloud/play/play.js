@@ -25,6 +25,9 @@
   let cardOf = {};            // id → Image
   let ws = null;
   let retry = 0;
+  let stopped = false;
+  let keepTimer = null;
+  const KEEPALIVE_MS = 1000;
   let snapshot = null;
   let lastSnapAt = 0;
   let intent = null;
@@ -95,7 +98,16 @@
       try { msg = JSON.parse(m.data); } catch { return; }
       if (msg.type === 'snapshot') { snapshot = msg; lastSnapAt = performance.now(); }
     };
-    ws.onclose = () => {
+    ws.onclose = (ev) => {
+      // 被更新的会话取代：不自作主张重连，否则两个标签页会互相顶掉
+      if (ev && ev.code === 1008 && /replace/i.test(ev.reason || '')) {
+        stopped = true;
+        stopKeepalive();
+        linkHud.textContent = '已在别处被接管';
+        linkHud.classList.add('bad');
+        return;
+      }
+      if (stopped) return;
       linkHud.textContent = '重连中…';
       linkHud.classList.add('bad');
       retry = Math.min(retry + 1, 6);
@@ -104,10 +116,27 @@
     ws.onerror = () => { try { ws.close(); } catch { /* ignore */ } };
   }
 
+  // 按住期间每 1 秒续期一次，使服务端的 3 秒 TTL 只作用于真正失联的来源
+  function startKeepalive() {
+    if (keepTimer) return;
+    keepTimer = setInterval(() => {
+      if (intent && ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ type: 'intent', dir: intent }));
+      }
+    }, KEEPALIVE_MS);
+  }
+  function stopKeepalive() {
+    if (keepTimer) { clearInterval(keepTimer); keepTimer = null; }
+  }
+
   function sendIntent(dir) {
     intent = dir;
+    if (dir) startKeepalive(); else stopKeepalive();
     if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'intent', dir }));
   }
+
+  // 离开页面时主动松开，别让动物一直走
+  window.addEventListener('pagehide', () => { if (intent) sendIntent(null); });
 
   // ---------------- 输入 ----------------
   const KEY = { ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down',
@@ -166,7 +195,8 @@
       selfHud.textContent = `${s.id} ${s.name} · (${s.x}, ${s.y}) · ${s.facing}`;
       const n = snapshot.nearby.length;
       nearHud.textContent = n ? `附近 ${n} 只：${snapshot.nearby[0].name} ${snapshot.nearby[0].distance}px` : '附近：无';
-      if (now - lastSnapAt > 3000) { linkHud.textContent = '快照中断'; linkHud.classList.add('bad'); }
+      // 被淘汰（stopped）时保留「已在别处被接管」的提示，不要被"快照中断"覆盖
+      if (!stopped && now - lastSnapAt > 3000) { linkHud.textContent = '快照中断'; linkHud.classList.add('bad'); }
     }
     requestAnimationFrame(loop);
   }

@@ -1,7 +1,7 @@
 {
-  "when": "2026-10-28T11:11:50.720Z",
-  "port": 8345,
-  "dataDir": "C:\\Users\\LENOVO\\AppData\\Local\\Temp\\crab-e2e-waESld",
+  "when": "2026-10-29T15:13:03.917Z",
+  "port": 8291,
+  "dataDir": "C:\\Users\\LENOVO\\AppData\\Local\\Temp\\crab-e2e-3LgNRr",
   "total": 21,
   "failed": 0,
   "results": [
@@ -33,7 +33,7 @@
       "id": "AC-000036",
       "name": "库里只有 64 位哈希、无明文",
       "pass": true,
-      "detail": "3956a6001a5a"
+      "detail": "5fa245429017"
     },
     {
       "id": "AC-000037",
@@ -75,25 +75,25 @@
       "id": "AC-000034",
       "name": "1 秒位移 99–121 px",
       "pass": true,
-      "detail": "dist=114.0"
+      "detail": "dist=116.0"
     },
     {
       "id": "AC-000033",
       "name": "意图 3 秒后自动停车",
       "pass": true,
-      "detail": "x 683→683 moving=false"
+      "detail": "x 684→684 moving=false"
     },
     {
       "id": "AC-000032",
       "name": "朝墙走 3 秒，全部采样都在可行走格内",
       "pass": true,
-      "detail": "末点 500,324；采样 15 次"
+      "detail": "末点 500,323；采样 15 次"
     },
     {
       "id": "AC-000052",
       "name": "半径 50 不含对方、半径 400 含对方且距离正确",
       "pass": true,
-      "detail": "实际距离=203.1 nearby(400)={\"id\":\"A-0002\",\"name\":\"B\",\"x\":500,\"y\":324,\"facing\":\"up\",\"distance\":203}"
+      "detail": "实际距离=204.4 nearby(400)={\"id\":\"A-0002\",\"name\":\"B\",\"x\":500,\"y\":323,\"facing\":\"up\",\"distance\":204}"
     },
     {
       "id": "AC-000054",
@@ -116,7 +116,7 @@
       "id": "AC-000042",
       "name": "WS 下发意图后 x 减少（四向固定朝向生效）",
       "pass": true,
-      "detail": "x 683→615 facing=left"
+      "detail": "x 684→615 facing=left"
     },
     {
       "id": "AC-000057",

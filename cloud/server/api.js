@@ -113,6 +113,8 @@ function createApi({ world, cfg, store }) {
         return send(res, 403, { error: 'FORBIDDEN', message: 'token 不属于这只动物' }), true;
       }
       world.markSeen(id);
+      // REST 调用方也是一种"来源"（与 WebSocket 会话平级，服务端不区分 Agent 与人）
+      const sourceKey = world.sourceKeyFor(bearer(req, u));
 
       if (sub === '/state' && req.method === 'GET') {
         return send(res, 200, world.buildState(id, u.searchParams.get('radius'))), true;
@@ -131,7 +133,7 @@ function createApi({ world, cfg, store }) {
         let body = {};
         try { body = await readBody(req, 64 * 1024); } catch (e) { return send(res, 400, { error: e.code, message: e.message }), true; }
         try {
-          world.setIntent(id, body.dir === undefined ? null : body.dir);
+          world.setIntent(id, body.dir === undefined ? null : body.dir, sourceKey);
         } catch (e) {
           return send(res, 400, { error: 'BAD_DIR', message: 'dir 只能是 up/down/left/right 或 null' }), true;
         }

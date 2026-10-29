@@ -26,6 +26,7 @@ class World {
     this.grid = grid;
     this.scene = scene;
     this.animals = new Map();
+    this.holds = new Map();          // animalId -> Map<sourceKey, {dir, at}>（REQ-000016）
     this.seenAt = new Map();
     this.dirty = new Set();
     this.persistMs = persistMs;
@@ -43,9 +44,7 @@ class World {
         x: row.x,
         y: row.y,
         facing: row.facing || 'down',
-        intentDir: null,          // 意图不跨进程恢复
-        intentAt: null,
-        moving: false,
+        moving: false,            // 按住状态不跨进程恢复（窗口由客户端续期重建）
         card: row.card_path
           ? { width: row.card_w, height: row.card_h, digest: row.card_digest, path: row.card_path }
           : null,
@@ -98,22 +97,50 @@ class World {
     if (id) this.seenAt.set(id, Date.now());
   }
 
-  setIntent(id, dir) {
+  /** 设置某个来源的按住方向；dir=null 表示该来源松开。
+   *  同一来源重复发同一个方向 → 视为"保持按住"，只续命（aliveAt），不抬高优先级（pressedAt）。 */
+  setIntent(id, dir, sourceKey = 'default') {
     const a = this.animals.get(id);
     if (!a) return null;
+    if (!this.holds.has(id)) this.holds.set(id, new Map());
+    const m = this.holds.get(id);
     if (dir === null || dir === undefined) {
-      a.intentDir = null;
-      a.intentAt = null;
-      a.moving = false;
+      m.delete(sourceKey);                       // 只移除本来源的记录，其它来源不受影响
     } else {
       if (!C.DIR_VEC[dir]) throw Object.assign(new Error(`非法方向：${dir}`), { code: 'BAD_DIR' });
-      a.intentDir = dir;
-      a.intentAt = Date.now();
-      a.facing = dir;                 // 四向固定朝向：意图即朝向
+      const now = Date.now();
+      const cur = m.get(sourceKey);
+      if (cur && cur.dir === dir) {
+        cur.aliveAt = now;                       // 续期：不改 pressedAt，别抢走优先级
+      } else {
+        m.set(sourceKey, { dir, pressedAt: now, aliveAt: now });
+      }
     }
     this.markSeen(id);
     this.dirty.add(id);
     return a;
+  }
+
+  /** 有效方向 = pressedAt 最大（最近按下）且 aliveAt 未过期的来源；顺手清掉失联来源。 */
+  effectiveDir(id) {
+    const m = this.holds.get(id);
+    if (!m || m.size === 0) return null;
+    const now = Date.now();
+    let best = null;
+    for (const [key, v] of m) {
+      if (now - v.aliveAt > C.INTENT_TTL_MS) { m.delete(key); continue; }  // 失联来源自动松开
+      if (!best || v.pressedAt >= best.pressedAt) best = { dir: v.dir, pressedAt: v.pressedAt };
+    }
+    return best ? best.dir : null;
+  }
+
+  /** 同一条 token 的重复调用视为同一来源（服务端不区分 Agent 与人）。 */
+  static sourceKeyForToken(token) {
+    return 't:' + hashToken(token).slice(0, 16);
+  }
+
+  sourceKeyFor(token) {
+    return World.sourceKeyForToken(token);
   }
 
   /** 推进一个 tick；返回发生变化的动物 id 列表。 */
@@ -121,16 +148,16 @@ class World {
     const now = Date.now();
     const changed = [];
     for (const a of this.animals.values()) {
-      if (!a.intentDir) continue;
-      if (a.intentAt != null && now - a.intentAt > C.INTENT_TTL_MS) {
-        a.intentDir = null;
-        a.intentAt = null;
-        a.moving = false;
-        changed.push(a.id);
-        this.dirty.add(a.id);
+      const dir = this.effectiveDir(a.id);
+      if (!dir) {
+        if (a.moving) {
+          a.moving = false;
+          changed.push(a.id);
+          this.dirty.add(a.id);
+        }
         continue;
       }
-      const v = C.DIR_VEC[a.intentDir];
+      const v = C.DIR_VEC[dir];
       const step = C.SPEED * (dtMs / 1000);
       let moved = false;
       if (v.x !== 0) {
@@ -141,7 +168,7 @@ class World {
         const ny = a.y + v.y * step;
         if (this.grid.canStand(a.x, ny)) { a.y = ny; moved = true; }
       }
-      a.facing = a.intentDir;
+      a.facing = dir;                 // 四向固定朝向：有效方向即朝向
       a.moving = moved;
       if (moved) {
         changed.push(a.id);
@@ -158,7 +185,7 @@ class World {
       if (!a) continue;
       this.store.savePosition(id, {
         x: a.x, y: a.y, facing: a.facing,
-        intentDir: a.intentDir, intentAt: a.intentAt,
+        intentDir: this.effectiveDir(id), intentAt: Date.now(),
       });
     }
     this.dirty.clear();
