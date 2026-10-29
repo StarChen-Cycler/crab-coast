@@ -11,7 +11,6 @@
   const selfHud = document.getElementById('self-hud');
   const nearHud = document.getElementById('near-hud');
   const linkHud = document.getElementById('link-hud');
-  const dpad = document.getElementById('dpad');
   const dz = document.getElementById('dropzone');
   const dzBox = document.getElementById('dz-box');
   const dzErr = document.getElementById('dz-err');
@@ -67,8 +66,8 @@
   async function startGame() {
     dz.classList.remove('show');
     bg = await loadImage('/assets/bg_base.png');
-    if (typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches) dpad.classList.add('show');
     fit();
+    mountTouchControls();
     connect();
     requestAnimationFrame(loop);
   }
@@ -138,6 +137,16 @@
   // 离开页面时主动松开，别让动物一直走
   window.addEventListener('pagehide', () => { if (intent) sendIntent(null); });
 
+  // 触屏控件层（与单机版同一套手感）：摇杆产生意图，折叠/展开后重算画布
+  let touchCtl = null;
+  function mountTouchControls() {
+    if (touchCtl || typeof window.createTouchControls !== 'function') return;
+    touchCtl = window.createTouchControls({
+      onIntent: (dir) => sendIntent(dir),
+      onCollapse: () => fit(),
+    });
+  }
+
   // ---------------- 输入 ----------------
   const KEY = { ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down',
                 ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right' };
@@ -153,17 +162,15 @@
     sendIntent(null);
   });
 
-  for (const btn of dpad.querySelectorAll('button')) {
-    const d = btn.dataset.dir;
-    btn.addEventListener('pointerdown', (e) => { e.preventDefault(); sendIntent(d); });
-    btn.addEventListener('pointerup', (e) => { e.preventDefault(); sendIntent(null); });
-    btn.addEventListener('pointercancel', () => sendIntent(null));
-    btn.addEventListener('pointerleave', () => sendIntent(null));
-  }
 
   // ---------------- 渲染 ----------------
   function fit() {
-    const w = innerWidth, h = innerHeight;
+    // 竖屏底部会预留操作带（--touch-band），可用高度要跟着扣掉
+    const band = parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue('--touch-band')
+    ) || 0;
+    const w = innerWidth;
+    const h = Math.max(120, innerHeight - band);
     const s = Math.min(w * 0.98 / 960, h * 0.96 / 540);
     cv.style.width = Math.round(960 * s) + 'px';
     cv.style.height = Math.round(540 * s) + 'px';
@@ -256,6 +263,7 @@
     sendIntent,
     // 测试钩子：主动断开 WebSocket，用来验证自动重连（AC-000044）
     _drop() { if (ws) ws.close(); },
+    get touch() { return touchCtl; },
     _uploadForTest: (b64) => upload([new File([Uint8Array.from(atob(b64.split(',')[1] || b64), (c) => c.charCodeAt(0))], 'card.png', { type: 'image/png' })]),
   };
 

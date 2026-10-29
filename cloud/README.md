@@ -56,6 +56,23 @@ REGISTER_CODE=<口令> PORT=8090 npm start
 - 多人前端：`http://127.0.0.1:8090/play?t=<token>`
 - 健康检查：`http://127.0.0.1:8090/healthz`
 
+## 手机端控件（与单机版一致）
+
+多人前端不再使用 4 键 D-pad，改为单机版已验证的那套：
+
+| 控件 | 规则 |
+| --- | --- |
+| 左半透明摇杆 | 132px 底座、58px 摇杆头、死区 10px、最大位移 44px、按主导轴四向 |
+| 右 ABXY 菱形 | Y/X/B/A 四键**全部禁用占位**（多人版没有尺寸轮询，不为 A 编造功能） |
+| 收起/显示开关 | 竖屏右上、横屏左上；只藏摇杆与 ABXY，开关自身保留 |
+| 竖屏操作带 | `--touch-band: 236px`，收起后归零并重新居中 |
+| 矮屏横屏 | `(max-height: 560px)` 时 ABXY 缩 0.78、摇杆缩 0.84 |
+| 安全区 | 所有固定元素用 `env(safe-area-inset-*)` |
+
+实现是 `play/touch.js`（从单机 `touch-controls.js` 泛化的 `createTouchControls()`），由 `play.js` 注入
+`onIntent`（发服务端意图）与 `onCollapse`（重算画布）。验收脚本：`node tools/e2e_touch_ui.js`
+（复用已开浏览器的 CDP 端口，四档视口断言，结果写 `evidence/touch_ui.json`）。
+
 ## Agent 接入（三步）
 
 ```bash

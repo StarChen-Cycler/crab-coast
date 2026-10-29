@@ -20,9 +20,13 @@
   .panel { position: fixed; padding: 7px 11px; border-radius: 10px; font-size: 13px;
            background: rgba(6,26,34,.62); border: 1px solid rgba(240,226,199,.22);
            backdrop-filter: blur(4px); pointer-events: none; }
-  #self-hud { left: 14px; top: 14px; }
-  #near-hud { left: 14px; top: 56px; }
-  #link-hud { right: 14px; top: 14px; }
+  /* HUD 胶囊（沿用单机版样式）+ 安全区：刘海/手势条不遮挡 */
+  #self-hud { left: calc(14px + env(safe-area-inset-left, 0px));
+              top: calc(14px + env(safe-area-inset-top, 0px)); }
+  #near-hud { left: calc(14px + env(safe-area-inset-left, 0px));
+              top: calc(56px + env(safe-area-inset-top, 0px)); }
+  #link-hud { right: calc(14px + env(safe-area-inset-right, 0px));
+              top: calc(14px + env(safe-area-inset-top, 0px)); }
   #link-hud.bad { color: #ffb4b4; }
 
   /* 无卡片时的上传页（REQ-000013） */
@@ -38,16 +42,6 @@
              font: 14px/1 inherit; color: #06222c; background: #f5d38c; border: 0; }
   #dz-err { margin-top: 12px; font-size: 12.5px; color: #ffb4b4; white-space: pre-wrap; text-align: left; }
 
-  /* 触屏方向键 */
-  #dpad { position: fixed; left: 16px; bottom: 16px; width: 156px; height: 156px; display: none; }
-  #dpad.show { display: block; }
-  #dpad button { position: absolute; width: 52px; height: 52px; border-radius: 12px;
-                 background: rgba(6,26,34,.5); border: 2px solid rgba(243,231,207,.5);
-                 color: var(--ink); font-size: 20px; touch-action: none; }
-  #dpad .up { left: 52px; top: 0; }
-  #dpad .down { left: 52px; bottom: 0; }
-  #dpad .left { left: 0; top: 52px; }
-  #dpad .right { right: 0; top: 52px; }
 </style>
 </head>
 <body>
@@ -57,12 +51,6 @@
   <div id="near-hud" class="panel">附近：—</div>
   <div id="link-hud" class="panel">连接中</div>
 
-  <div id="dpad">
-    <button class="up" data-dir="up">↑</button>
-    <button class="down" data-dir="down">↓</button>
-    <button class="left" data-dir="left">←</button>
-    <button class="right" data-dir="right">→</button>
-  </div>
 
   <div id="dropzone">
     <div class="dz-box" id="dz-box">
@@ -75,6 +63,7 @@
     </div>
   </div>
 
+  <script src="/play/touch.js"></script>
   <script src="/play/play.js"></script>
 </body>
 </html>
