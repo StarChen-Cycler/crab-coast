@@ -14,9 +14,10 @@
     font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
     touch-action: manipulation; -webkit-tap-highlight-color: transparent;
   }
-  #stage { position: fixed; inset: 0; display: grid; place-items: center; }
-  #world { display: block; image-rendering: pixelated; background: #0c3446;
-           box-shadow: 0 0 0 2px #071e29, 0 18px 50px rgba(0,0,0,.55); }
+  /* 相机窗口 = 画布：画布贴在可用视口左上角，尺寸由 play.js 按视口设置（REQ-000018） */
+  #stage { position: fixed; inset: 0; }
+  #world { position: absolute; left: 0; top: 0; display: block; image-rendering: pixelated;
+           background: #0c3446; }
   .panel { position: fixed; padding: 7px 11px; border-radius: 10px; font-size: 13px;
            background: rgba(6,26,34,.62); border: 1px solid rgba(240,226,199,.22);
            backdrop-filter: blur(4px); pointer-events: none; }

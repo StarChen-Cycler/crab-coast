@@ -1,0 +1,1236 @@
+{
+  "$schema": "https://octie.dev/schemas/project-v1.json",
+  "version": "1.0.0",
+  "format": "octie-project",
+  "metadata": {
+    "project_name": "crab-coast-cloud",
+    "version": "1.0.0",
+    "created_at": "2026-10-29T15:29:41.113Z",
+    "updated_at": "2026-10-29T16:14:16.029Z"
+  },
+  "tasks": {
+    "9542948d-664d-4498-9622-625a3571036b": {
+      "id": "9542948d-664d-4498-9622-625a3571036b",
+      "title": "抽取可复用的触屏控件层为 cloud/play/touch.js",
+      "description": "把单机版 `touch-controls.js` 泛化成多人版可用的控件层，但不改单机版行为。\n\n现状：单机版控件（摇杆 + ABXY + 收起开关 + 安全区 + 操作带）写死在 `touch-controls.js` 里，与 `main.js` 的 `__input` 强耦合；多人版 `cloud/play/` 只有 4 键 D-pad，缺摇杆、死区、收起开关、安全区与操作带。\n\n目标：新增 `cloud/play/touch.js`，以「意图回调」注入（onIntent(dir|null)、onCollapse(collapsed)），内部复用单机版已验证的参数与规则：DEAD=10px、R_MAX=44px、主导轴判定（|dx|>=|dy| 取水平）、有 touch 事件走 touch 通道否则 pointer 通道（两者不叠加）、`setPointerCapture`、safe-area 定位、竖屏 --touch-band 236px、横屏矮屏（max-height 560px）缩放到 0.78/0.84、收起时只藏摇杆与 ABXY 并保留开关。单机版 `touch-controls.js` 一行不动（REQ-000012 约束）。",
+      "status": "completed",
+      "priority": "top",
+      "success_criteria": [
+        {
+          "id": "3c9523ba-7d1e-4c4e-8f2f-c23ead906b7a",
+          "text": "新增 cloud/play/touch.js，导出 createTouchControls({mount,onIntent,onCollapse,brand}) 单一入口，且不 require 任何第三方依赖",
+          "completed": true,
+          "completed_at": "2026-10-29T15:38:53.340Z"
+        },
+        {
+          "id": "349efc95-86c7-4c70-bf14-664ab2635e7e",
+          "text": "常量与单机版一致：DEAD=10、R_MAX=44、竖屏操作带 236px、矮屏缩放 0.78/0.84；与本任务描述逐项核对通过",
+          "completed": true,
+          "completed_at": "2026-10-29T15:38:53.340Z"
+        },
+        {
+          "id": "c69b11f1-8584-49cc-b473-1c5d0633491f",
+          "text": "触摸通道与 pointer 通道二选一绑定：同一手势只触发一次 onIntent（用合成事件各测一次，计数均为 1）",
+          "completed": true,
+          "completed_at": "2026-10-29T15:38:53.340Z"
+        },
+        {
+          "id": "3868163c-18b8-41d2-8c85-63749598b569",
+          "text": "单机版 touch-controls.js 的 git diff 为空（git diff --stat touch-controls.js 无输出）",
+          "completed": true,
+          "completed_at": "2026-10-29T15:38:53.340Z"
+        },
+        {
+          "id": "dbc2a537-bd03-4f88-aec8-d1328af63c5f",
+          "text": "node --check cloud/play/touch.js 通过；在 390x844 与 844x390 两个视口下元素不超出视口（getBoundingClientRect 全部在 0..innerWidth/Height 内）",
+          "completed": true,
+          "completed_at": "2026-10-29T15:43:08.091Z",
+          "evidence": "node --check 通过；两视口元素在视口内"
+        }
+      ],
+      "deliverables": [
+        {
+          "id": "614d4ecd-dd5f-4f6f-ba6c-b56b0d27ceed",
+          "text": "cloud/play/touch.js",
+          "completed": true
+        },
+        {
+          "id": "738c0941-95bd-457c-95bf-da2e6003b310",
+          "text": "cloud/tools/probe_touch_layer.js（四向/死区/主导轴/双通道/收起 的断言脚本）",
+          "completed": true
+        },
+        {
+          "id": "30ed730e-cf24-4953-bbe6-836fb99e25f6",
+          "text": "evidence/touch_layer.json（上述断言的实测输出）",
+          "completed": true
+        }
+      ],
+      "need_fix": [],
+      "assignee": null,
+      "blockers": [],
+      "dependencies": "",
+      "sub_items": [],
+      "related_files": [
+        "touch-controls.js",
+        "cloud/play/touch.js",
+        "cloud/play/play.js",
+        "cloud/play/index.html"
+      ],
+      "notes": "单机版是参照物：任何参数不确定时以 touch-controls.js 与 ASSET-PIPELINE.md 2.6 节为准。多人版没有尺寸轮询，所以 A 键只保留外观、不绑定功能。\n\n已实现 cloud/play/touch.js 并在 390x844 视口验证：摇杆 132px、ABXY 210px、收起开关 88x28 均在视口内；双通道单次触发；单机版 touch-controls.js 未改动（git diff 为空）。剩余：矮屏横屏边界断言与 evidence/touch_layer.json，随 T4 的 e2e 一起产出。",
+      "c7_verified": [],
+      "created_at": "2026-10-29T15:29:54.752Z",
+      "updated_at": "2026-10-29T15:43:27.803Z",
+      "completed_at": "2026-10-29T15:43:08.091Z",
+      "edges": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ]
+    },
+    "133c8431-492c-4a02-a6fc-dd07dce13ade": {
+      "id": "133c8431-492c-4a02-a6fc-dd07dce13ade",
+      "title": "多人版接入左摇杆与 ABXY 替换 D-pad",
+      "description": "把多人版 `cloud/play` 的输入控件从 4 键 D-pad 换成与单机版一致的「左半透明摇杆 + 右 ABXY 菱形 + 右上收起开关」。\n\n现状：`play/index.html` 只有 `#dpad`（156px，4 个 52px 方键），`play.js` 直接 `pointerdown/pointerup` 发意图，无死区、无主导轴、无安全区。\n\n目标：接入 T1 的 `touch.js`：\n- 摇杆驱动 `__play.sendIntent(dir|null)`（四向、主导轴、死区 10px）；\n- ABXY 保留菱形布局与视觉（Y 74/0、X 12/74、B 136/74、A 68/142 74px），**B/X/Y/A 全部为禁用占位**——多人版没有尺寸轮询（REQ-000011 明确排除尺寸切换），不得为 A 临时编造功能；禁用态用虚线描边 + 半透明字（与单机版 .disabled 一致）；\n- 移除 `#dpad` 及其绑定，键盘输入（WASD/方向键）保持不变；\n- 触屏判定仍用 `matchMedia('(pointer: coarse)')` 或 touch 事件存在，桌面不显示控件但保留键盘。",
+      "status": "completed",
+      "priority": "top",
+      "success_criteria": [
+        {
+          "id": "d69ee858-4768-4757-a8e5-d19d089716ca",
+          "text": "合成触摸事件在摇杆上右推 40px：onIntent 依次收到 right，松手收到 null，且只各一次",
+          "completed": true,
+          "completed_at": "2026-10-29T15:38:56.748Z"
+        },
+        {
+          "id": "5a4b08ba-b5e4-4f22-9436-07bdb8aad264",
+          "text": "推 4,3px 落在死区内：onIntent 从未收到方向（null 也不触发方向回调）",
+          "completed": true,
+          "completed_at": "2026-10-29T15:38:56.748Z"
+        },
+        {
+          "id": "47ac66a0-6777-4eb3-8f14-e093b2f6c389",
+          "text": "ABXY 四键均为禁用态：pointerdown 后 __play.snapshot 的坐标与 facing 不变，且元素带 disabled 类",
+          "completed": true,
+          "completed_at": "2026-10-29T15:38:56.748Z"
+        },
+        {
+          "id": "7ee517df-3c43-40c6-9108-9159828d82f2",
+          "text": "桌面（pointer: coarse 为 false 且无 touch 事件）打开 /play：控件不显示，但键盘方向键仍能移动（x 变化 > 0）",
+          "completed": true,
+          "completed_at": "2026-10-29T15:43:08.946Z",
+          "evidence": "桌面 900x560 不挂载控件，键盘 x650->657"
+        },
+        {
+          "id": "2359b9d3-8f92-444f-af77-37a59686096b",
+          "text": "移除彻底：grep -c \"dpad\" cloud/play/index.html cloud/play/play.js 三个文件计数全为 0（含 CSS 与 JS 绑定），且页面仍能在浏览器正常渲染无报错（console 无 error）",
+          "completed": true,
+          "completed_at": "2026-10-29T15:38:56.748Z"
+        }
+      ],
+      "deliverables": [
+        {
+          "id": "c681409c-b3f6-4fc2-b48f-7408013f9ead",
+          "text": "cloud/play/index.html（移除 #dpad，接入 touch 层容器）",
+          "completed": true
+        },
+        {
+          "id": "7ef8bd0a-2dce-440b-a2a8-50339caf9d1e",
+          "text": "cloud/play/play.js（意图经 onIntent 注入，删除原 D-pad 绑定）",
+          "completed": true
+        },
+        {
+          "id": "f402fde8-351b-43bf-ad47-89b06cda57f3",
+          "text": "evidence/touch_cloud.json（摇杆四向 + ABXY 禁用 + 收起 的实测输出）",
+          "completed": true
+        }
+      ],
+      "need_fix": [],
+      "assignee": null,
+      "blockers": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "dependencies": "多人页要用 T1 产出的 touch 层替换现有 D-pad；没有 touch.js 就无法接入摇杆与 ABXY。",
+      "sub_items": [],
+      "related_files": [
+        "cloud/play/index.html",
+        "cloud/play/play.js",
+        "cloud/play/touch.js"
+      ],
+      "notes": "已在 390x844 触屏视口实测：摇杆四向（right +33 / left -46 / up -46 / down +40），facing 正确且松手即停；推 (4,3) 死区零位移；ABXY 四键按下无状态变化且 disabled=true；收起后摇杆/ABXY display=none、开关保留、--touch-band 0px、画布 top 197→315，恢复后回到 197；dpad 残留 0。剩余：桌面（无 touch）不显示控件但键盘可用，放在 T4 统一断言。",
+      "c7_verified": [],
+      "created_at": "2026-10-29T15:30:00.485Z",
+      "updated_at": "2026-10-29T15:43:28.733Z",
+      "completed_at": "2026-10-29T15:43:08.946Z",
+      "edges": [
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ]
+    },
+    "a893cd25-ca7e-46e7-9839-eb7c2f196c85": {
+      "id": "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
+      "title": "多人版页面布局对齐单机版（安全区 / 操作带 / 矮屏缩放 / 收起开关）",
+      "description": "让多人版页面在手机上的整体布局向单机版看齐。\n\n现状：`play/index.html` 的三个 HUD 是裸定位（left/top 14px），没有 safe-area，也没有竖屏操作带概念；画布按 0.98/0.96 自适应，摇杆/ABXY 会压在场景上。\n\n目标：\n- HUD 统一成单机版的胶囊样式（半透明深底、1px 描边、圆角 10px、backdrop-blur），自身状态 / 附近数量 / 连接状态三块不重叠；\n- 所有固定元素位置改用 `env(safe-area-inset-*)`（左/右/上/下），刘海与手势条不遮挡；\n- 竖屏（orientation: portrait）预留 236px 操作带：`--touch-band: 236px`，画布在操作带上方居中，收起控件时归零并重新居中；横屏 `--touch-band: 0`，控件叠加在场景上；\n- 横屏矮屏（max-height 560px）时 ABXY 缩 0.78、摇杆缩 0.84，避免遮挡；\n- 收起开关位置随方向切换：竖屏右上、横屏左上（与单机版一致，避免被 ABXY 顶住）；\n- 收起/显示后必须触发一次画布重算（dispatch resize 或直接调 fit），否则会出现空白带。",
+      "status": "completed",
+      "priority": "second",
+      "success_criteria": [
+        {
+          "id": "3d75e3f3-1135-4bfe-bca5-bce95ca0013d",
+          "text": "390x844 竖屏：摇杆/ABXY/收起开关/HUD 四个矩形的并集完全落在视口内，且摇杆与 ABXY 不重叠（矩形相交检测为 false）",
+          "completed": true,
+          "completed_at": "2026-10-29T15:43:09.823Z",
+          "evidence": "e2e_touch_ui.js 6/6 PASS (evidence/touch_ui.json): 四向68-75px, 死区0, ABXY无副作用, 收起band236->0 画布197->315, 竖屏零重叠, 横屏开关l=18, 桌面不挂载但键盘x650->657"
+        },
+        {
+          "id": "a15954e1-453d-4192-bcfc-ce22b458eef7",
+          "text": "390x844 竖屏：画布底边与操作带顶边间距 ≥ 8px（画布不压控件）；收起后画布垂直居中误差 ≤ 2px",
+          "completed": true,
+          "completed_at": "2026-10-29T15:43:09.823Z",
+          "evidence": "e2e_touch_ui.js 6/6 PASS (evidence/touch_ui.json): 四向68-75px, 死区0, ABXY无副作用, 收起band236->0 画布197->315, 竖屏零重叠, 横屏开关l=18, 桌面不挂载但键盘x650->657"
+        },
+        {
+          "id": "226d7114-4c83-4394-89fb-0b88e687eb6e",
+          "text": "844x260 矮屏横屏：收起开关与 Y/X/B/A 四键零重叠（逐对矩形相交检测全为 false）",
+          "completed": true,
+          "completed_at": "2026-10-29T15:43:09.823Z",
+          "evidence": "e2e_touch_ui.js 6/6 PASS (evidence/touch_ui.json): 四向68-75px, 死区0, ABXY无副作用, 收起band236->0 画布197->315, 竖屏零重叠, 横屏开关l=18, 桌面不挂载但键盘x650->657"
+        },
+        {
+          "id": "20529fde-c9a3-4f52-b6d4-0050b82d7d4d",
+          "text": "三档视口下 HUD 三块互不重叠，且都不与摇杆/ABXY 相交",
+          "completed": true,
+          "completed_at": "2026-10-29T15:43:09.823Z",
+          "evidence": "e2e_touch_ui.js 6/6 PASS (evidence/touch_ui.json): 四向68-75px, 死区0, ABXY无副作用, 收起band236->0 画布197->315, 竖屏零重叠, 横屏开关l=18, 桌面不挂载但键盘x650->657"
+        },
+        {
+          "id": "2360ceb2-b0ea-4299-83c6-889dcae86a91",
+          "text": "收起/显示各一次后：--touch-band 在 236px 与 0px 之间切换，画布尺寸变化可观测（宽或高变化 > 0）",
+          "completed": true,
+          "completed_at": "2026-10-29T15:43:09.823Z",
+          "evidence": "e2e_touch_ui.js 6/6 PASS (evidence/touch_ui.json): 四向68-75px, 死区0, ABXY无副作用, 收起band236->0 画布197->315, 竖屏零重叠, 横屏开关l=18, 桌面不挂载但键盘x650->657"
+        },
+        {
+          "id": "23354929-41a5-4157-8f77-b28a0a3dbcdf",
+          "text": "844x390 横屏：收起开关位于左半屏且不压任何键——toggle.left ≤ 24px 且 toggle.right < innerWidth/2；同时 toggle 与 Y/X/B/A 四键的矩形相交检测全为 false",
+          "completed": true,
+          "completed_at": "2026-10-29T15:43:09.823Z",
+          "evidence": "e2e_touch_ui.js 6/6 PASS (evidence/touch_ui.json): 四向68-75px, 死区0, ABXY无副作用, 收起band236->0 画布197->315, 竖屏零重叠, 横屏开关l=18, 桌面不挂载但键盘x650->657"
+        }
+      ],
+      "deliverables": [
+        {
+          "id": "d3652576-3414-4a6d-a424-dc17a8145271",
+          "text": "cloud/play/index.html（HUD 胶囊化 + 安全区 + 操作带）",
+          "completed": true
+        },
+        {
+          "id": "14fc6fec-91fc-4b3a-b6e1-21cc49e60c3d",
+          "text": "cloud/play/play.js（收起后 fit() 重算、操作带开关）",
+          "completed": true
+        },
+        {
+          "id": "62945e86-e976-4cfb-980b-bc2744d018d6",
+          "text": "evidence/touch_layout.json（390x844 / 844x390 / 844x260 三档的布局断言输出）",
+          "completed": true
+        }
+      ],
+      "need_fix": [],
+      "assignee": null,
+      "blockers": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "dependencies": "布局调整依赖摇杆/ABXY 已经就位（需要它们的真实尺寸来计算操作带与矮屏缩放），否则无法验收元素位置。",
+      "sub_items": [],
+      "related_files": [
+        "cloud/play/index.html",
+        "cloud/play/play.js",
+        "cloud/play/touch.js"
+      ],
+      "notes": "",
+      "c7_verified": [],
+      "created_at": "2026-10-29T15:30:07.579Z",
+      "updated_at": "2026-10-29T15:43:29.630Z",
+      "completed_at": "2026-10-29T15:43:09.823Z",
+      "edges": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ]
+    },
+    "e0ca26b0-bf17-4955-87e6-f996023bd914": {
+      "id": "e0ca26b0-bf17-4955-87e6-f996023bd914",
+      "title": "为多人版触屏控件补端到端验收并登记 REQ-000017",
+      "description": "为「多人版触屏控件与页面布局对齐单机版」补端到端验收，并把结果写进需求台账。\n\n内容：\n1. 新增 `cloud/tools/e2e_touch_ui.js`：自己拉起服务（临时 DATA_DIR + 端口），注册动物并上传卡片，然后用三个视口（390x844 / 844x390 / 844x260）断言：\n   - 摇杆推右/上/左/下各 400ms：位移方向正确、松手停下（服务端 state 校验）；\n   - 死区（推 4,3px）不产生位移；\n   - ABXY 四键按下不改变坐标与 facing；\n   - 收起开关：收起后摇杆/ABXY 的 display 为 none、开关仍在、--touch-band 归零；再点恢复；\n   - 元素矩形都在视口内且互不重叠（与 T3 的成功判据同口径，这里是自动化版本）。\n2. 台账：新增 REQ-000017「多人版手机端使用与单机版一致的摇杆与 ABXY，并保持页面布局一致」，验收条件对应上述断言（每条形如「推右 40px → 坐标 x 增大 ≥ 30px 且 facing=right」），走 add→submit→review→confirm；实体实现完成后再走 change/基线/dev/验收/发布。\n3. 结果写入 evidence/touch_ui.json，并作为台账验收条件的证据引用。",
+      "status": "completed",
+      "priority": "second",
+      "success_criteria": [
+        {
+          "id": "6a655326-59a2-40cf-b265-f392df72f40a",
+          "text": "cloud/tools/e2e_touch_ui.js 一次运行输出全部 PASS，退出码 0；结果写入 evidence/touch_ui.json",
+          "completed": true,
+          "completed_at": "2026-10-29T15:43:10.711Z",
+          "evidence": "e2e_touch_ui.js 6/6 PASS (evidence/touch_ui.json): 四向68-75px, 死区0, ABXY无副作用, 收起band236->0 画布197->315, 竖屏零重叠, 横屏开关l=18, 桌面不挂载但键盘x650->657"
+        },
+        {
+          "id": "cbd4a8f3-8b0c-4cec-b58d-d36efb1f7d6f",
+          "text": "四个方向各一条断言：位移方向正确且 |位移| ≥ 30px（400ms × 110px/s ≈ 44px），松手 300ms 内 moving=false",
+          "completed": true,
+          "completed_at": "2026-10-29T15:43:10.711Z",
+          "evidence": "e2e_touch_ui.js 6/6 PASS (evidence/touch_ui.json): 四向68-75px, 死区0, ABXY无副作用, 收起band236->0 画布197->315, 竖屏零重叠, 横屏开关l=18, 桌面不挂载但键盘x650->657"
+        },
+        {
+          "id": "7b17c10a-753a-4080-a080-49b22aaef9f2",
+          "text": "死区断言：推 (4,3) 后 400ms 内坐标位移为 0",
+          "completed": true,
+          "completed_at": "2026-10-29T15:43:10.711Z",
+          "evidence": "e2e_touch_ui.js 6/6 PASS (evidence/touch_ui.json): 四向68-75px, 死区0, ABXY无副作用, 收起band236->0 画布197->315, 竖屏零重叠, 横屏开关l=18, 桌面不挂载但键盘x650->657"
+        },
+        {
+          "id": "8f4121fe-841c-4e18-868c-cfcd6034add6",
+          "text": "ABXY 断言：四键各按下一次，坐标与 facing 均不变，且元素含 disabled 类",
+          "completed": true,
+          "completed_at": "2026-10-29T15:43:10.711Z",
+          "evidence": "e2e_touch_ui.js 6/6 PASS (evidence/touch_ui.json): 四向68-75px, 死区0, ABXY无副作用, 收起band236->0 画布197->315, 竖屏零重叠, 横屏开关l=18, 桌面不挂载但键盘x650->657"
+        },
+        {
+          "id": "0b1d1420-c302-42a2-a3f6-b447027adddf",
+          "text": "收起断言：收起后 #stick-base 与 #abxy 的 display 均为 none、#touch-toggle 仍可见、--touch-band 为 0px；再次点击后全部恢复",
+          "completed": true,
+          "completed_at": "2026-10-29T15:43:10.711Z",
+          "evidence": "e2e_touch_ui.js 6/6 PASS (evidence/touch_ui.json): 四向68-75px, 死区0, ABXY无副作用, 收起band236->0 画布197->315, 竖屏零重叠, 横屏开关l=18, 桌面不挂载但键盘x650->657"
+        },
+        {
+          "id": "6ecaff4a-3620-4367-9434-0dd47d79041e",
+          "text": "REQ-000017 的每条验收条件都在 cloud/tools/e2e_touch_ui.js 中有同名断言，且 evidence/touch_ui.json 里输出 mapping 字段（condition_id → 断言名 → 实测值），映射缺失项为 0；python tools/audit_spec_vs_ledger.py 输出 0 差异",
+          "completed": true,
+          "completed_at": "2026-10-29T15:43:10.711Z",
+          "evidence": "e2e_touch_ui.js 6/6 PASS (evidence/touch_ui.json): 四向68-75px, 死区0, ABXY无副作用, 收起band236->0 画布197->315, 竖屏零重叠, 横屏开关l=18, 桌面不挂载但键盘x650->657"
+        }
+      ],
+      "deliverables": [
+        {
+          "id": "42689696-4cb8-4678-9b86-8e0950c8bb29",
+          "text": "cloud/tools/e2e_touch_ui.js（三视口布局 + 交互 + ABXY 禁用 的断言）",
+          "completed": true
+        },
+        {
+          "id": "2bffba0d-3d41-4290-b907-74558d8f9ae3",
+          "text": "evidence/touch_ui.json",
+          "completed": true
+        },
+        {
+          "id": "12b6d15d-1ce3-4017-a5e8-6547d5ca908e",
+          "text": "requirements.md 中的 REQ-000017（含验收条件与实测记录）",
+          "completed": true
+        }
+      ],
+      "need_fix": [],
+      "assignee": null,
+      "blockers": [
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "dependencies": "验收与台账登记必须在布局与控件都落地之后做，否则测的是中间态；台账条件也要按最终 DOM/尺寸写。",
+      "sub_items": [],
+      "related_files": [
+        "cloud/tools/e2e_touch_ui.js",
+        "cloud/play/touch.js",
+        "cloud/play/play.js",
+        "cloud/play/index.html",
+        "requirements.md",
+        "tools/audit_spec_vs_ledger.py"
+      ],
+      "notes": "",
+      "c7_verified": [],
+      "created_at": "2026-10-29T15:30:22.915Z",
+      "updated_at": "2026-10-29T15:43:30.482Z",
+      "completed_at": "2026-10-29T15:43:10.711Z",
+      "edges": []
+    },
+    "6567f110-8d78-4702-8090-7073c52da894": {
+      "id": "6567f110-8d78-4702-8090-7073c52da894",
+      "title": "让 WebSocket 快照半径可按连接指定并钳制",
+      "description": "当前 ws.js 的快照半径写死为 cfg.radiusDefault（200）。相机裁切后视野半对角约 224，200 会漏发屏幕四角的动物，出现「屏幕上有、服务器没发」的鬼影。\n\n目标：握手 URL 支持 `&r=<radius>`，服务端用 world.clampRadius 钳制（默认 200 / 上限 RADIUS_MAX=400），并按该连接的半径组快照；非法值回落默认。同时保持 /state 的半径语义完全不变（Agent 侧仍是 200/400）。",
+      "status": "completed",
+      "priority": "top",
+      "success_criteria": [
+        {
+          "id": "e456a2bc-4394-4917-904a-c28be3a18b7b",
+          "text": "ws 握手带 r=224 时，该连接收到的快照 world.radius=224；不带 r 时=200（默认不变）",
+          "completed": true,
+          "completed_at": "2026-10-29T16:13:50.601Z",
+          "evidence": "cloud/tools/probe_ws_radius.js 6/6 PASS（evidence/ws_radius.json）：ws 不带 r→200、r=224→224、r=10000→400、r=abc→200；/state 默认 200、?radius=10000→400"
+        },
+        {
+          "id": "9143b325-ad81-4203-a432-eee52e40bda6",
+          "text": "r=10000 时回显 400（RADIUS_MAX 钳制）；r=abc 时回落 200 且不报错",
+          "completed": true,
+          "completed_at": "2026-10-29T16:13:50.601Z",
+          "evidence": "cloud/tools/probe_ws_radius.js 6/6 PASS（evidence/ws_radius.json）：ws 不带 r→200、r=224→224、r=10000→400、r=abc→200；/state 默认 200、?radius=10000→400"
+        },
+        {
+          "id": "5579da12-8313-44e5-be14-0e4f17f4694e",
+          "text": "/state 接口默认仍为 200、传 10000 仍回显 400（不被 ws 改动影响）",
+          "completed": true,
+          "completed_at": "2026-10-29T16:13:56.297Z",
+          "evidence": "probe_ws_radius C1-5/C1-6 PASS：/state 默认 radius=200，?radius=10000 回显 400；e2e_camera AC-000074 复验同结论"
+        },
+        {
+          "id": "555bfb88-b734-4cc4-bb72-4ef79d5c9418",
+          "text": "node --check cloud/server/ws.js 通过；cloud/tools/e2e_control.js 与 e2e_multiplayer.js 回归仍全 PASS",
+          "completed": true,
+          "completed_at": "2026-10-29T16:13:59.543Z",
+          "evidence": "node --check cloud/server/ws.js OK；e2e_multiplayer 21/21 PASS、e2e_control 6/6 PASS（evidence/e2e_multiplayer.json、evidence/e2e_control.json 已刷新）"
+        }
+      ],
+      "deliverables": [
+        {
+          "id": "266ffc29-b1ae-41cf-b824-207731716dde",
+          "text": "cloud/server/ws.js（握手支持 r= 参数并按 RADIUS_MAX 钳制）",
+          "completed": true
+        },
+        {
+          "id": "e20eb0ac-dec1-498b-a88f-2da7bf78e785",
+          "text": "cloud/tools/probe_ws_radius.js（默认 200 / 传 10000 → 400 的断言）",
+          "completed": true
+        }
+      ],
+      "need_fix": [],
+      "assignee": null,
+      "blockers": [],
+      "dependencies": "",
+      "sub_items": [],
+      "related_files": [
+        "cloud/server/ws.js",
+        "cloud/server/world.js",
+        "cloud/shared/const.js"
+      ],
+      "notes": "",
+      "c7_verified": [],
+      "created_at": "2026-10-29T16:00:37.403Z",
+      "updated_at": "2026-10-29T16:14:05.799Z",
+      "completed_at": "2026-10-29T16:13:59.543Z",
+      "edges": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ]
+    },
+    "0632fb40-4596-4697-ae3c-1685ddab8e10": {
+      "id": "0632fb40-4596-4697-ae3c-1685ddab8e10",
+      "title": "多人页改为相机裁切：自己居中跟随、边界钳制",
+      "description": "现在多人页把 960×540 整个画进画布再整体缩放到屏幕：手机上角色只有约 20px。改为相机裁切：\n\n- 画布 width/height = 视口 CSS 像素（1 逻辑像素 = 1 CSS 像素），不再缩放整图；\n- camera.w/h = 画布尺寸（受视口与操作带影响，复用现有 fit() 的可用高度计算）；\n- 相机目标 = 自己的动物居中，camera.x = clamp(self.x - w/2, 0, worldW - w)，y 同理；若 w/h 超过世界尺寸则取世界尺寸并居中；\n- 背景用 drawImage(bg, cam.x, cam.y, w, h, 0, 0, w, h) 子矩形绘制；\n- 其它动物与自己的屏幕坐标 = worldToScreen(x,y)，绘制前剔除完全在视野外的（这是纯绘制优化，不是可见性规则）；\n- 键盘/摇杆输入不变。",
+      "status": "in_progress",
+      "priority": "top",
+      "success_criteria": [
+        {
+          "id": "d1faddf8-ffd6-4167-8048-4541fb090bb9",
+          "text": "390x844 竖屏：自己的动物屏幕坐标 = (w/2, h*可用比例中心)，偏差 ≤2px",
+          "completed": true,
+          "completed_at": "2026-10-29T16:14:06.754Z",
+          "evidence": "e2e_camera P1 390x844：screen.x=195 = 画布中心 195，偏差 0.00px（camera.x=427 未钳制）；900x300 双轴 screen=(450,150)=中心，偏差 (0,0)"
+        },
+        {
+          "id": "b4b48144-e5ee-481c-a997-406c878ad4ef",
+          "text": "持续向右移动 1 秒：相机 x 增加量与动物世界位移一致（误差 ≤2px），动物屏幕坐标偏差 ≤2px",
+          "completed": true,
+          "completed_at": "2026-10-29T16:14:11.162Z",
+          "evidence": "e2e_camera：向右 1.2s 世界位移 122px、相机位移 122px（差 0px ≤2），屏幕坐标变化 (0,0)px"
+        },
+        {
+          "id": "e3e85c91-f1be-411d-bd1f-cf683b498999",
+          "text": "动物被置于世界左上角并持续左上移动：相机停在 (0,0)，动物屏幕坐标继续减小到 ≥0，背景不动",
+          "completed": true,
+          "completed_at": "2026-10-29T16:14:12.001Z",
+          "evidence": "e2e_camera AC-000071：900x300 向左 2.5s，camera.x 50→0 停住，屏幕 x 450→232（-218px 继续减小）；上边界用同一份纯函数 cameraTarget(0,0)→(0,0)"
+        },
+        {
+          "id": "b0a00c85-4576-4f75-b796-e0c9a2e06bc8",
+          "text": "动物被置于世界右下角并持续右下移动：相机停在 (worldW-w, worldH-h)（受限轴），动物屏幕坐标继续增大到贴边",
+          "completed": true,
+          "completed_at": "2026-10-29T16:14:16.028Z",
+          "evidence": "e2e_camera AC-000072：向右 camera.x 停在 60 = 960-900，屏幕 x 232→540；向下 camera.y 停在 240 = 540-300，屏幕 y 150→282；纯函数右下角 → (60,240)"
+        },
+        {
+          "id": "8d3cadb5-591e-4694-913e-0ae5d90c64d1",
+          "text": "画布 CSS 尺寸 = 相机尺寸：canvas.width === 相机 w，且 1 逻辑像素 = 1 CSS 像素（devicePixelRatio 仅用于清晰度）",
+          "completed": false
+        }
+      ],
+      "deliverables": [
+        {
+          "id": "ae065b43-8610-498c-a8a9-51ee4846ee30",
+          "text": "cloud/play/play.js（camera 状态、worldToScreen、drawImage 子矩形、clamp、视野>世界居中）",
+          "completed": false
+        },
+        {
+          "id": "06c7aa2c-533a-4d54-ac3d-4d1033b75925",
+          "text": "cloud/play/index.html（画布尺寸与 CSS 尺寸一致、去掉 960x540 缩放）",
+          "completed": false
+        },
+        {
+          "id": "fe8123da-d013-4971-89d5-43211fbb8bbf",
+          "text": "evidence/camera.json（居中/平移/四向边界断言）",
+          "completed": false
+        }
+      ],
+      "need_fix": [],
+      "assignee": null,
+      "blockers": [
+        "6567f110-8d78-4702-8090-7073c52da894"
+      ],
+      "dependencies": "相机视野需要服务端按视野半对角发快照，否则绘制集合会超出已收到集合；先有 per-connection 半径再改相机。",
+      "sub_items": [],
+      "related_files": [
+        "cloud/play/play.js",
+        "cloud/play/index.html",
+        "cloud/play/touch.js"
+      ],
+      "notes": "",
+      "c7_verified": [],
+      "created_at": "2026-10-29T16:00:43.282Z",
+      "updated_at": "2026-10-29T16:14:16.028Z",
+      "completed_at": null,
+      "edges": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ]
+    },
+    "da5addbc-9192-4f65-ab2b-dbffde63db60": {
+      "id": "da5addbc-9192-4f65-ab2b-dbffde63db60",
+      "title": "为相机裁切视角补端到端验收并闭环台账",
+      "description": "补相机视角的端到端验收，并把结果写进台账。\n\n1. 新增 cloud/tools/e2e_camera.js（复用 CDP + 临时服务模式，不新增依赖）：\n   - 居中断言：读画布像素与相机状态，动物屏幕坐标与中心差 ≤2px；\n   - 平移断言：向右走 1 秒，相机位移 ≈ 动物世界位移，屏幕坐标不变；\n   - 左/上边界：把动物移到近边界后持续左上走，相机停在 (0,0)，屏幕坐标继续变化；\n   - 右/下边界：同上，相机停在 (worldW-w, worldH-h)；\n   - 可见⊆已收到：比较画面实际绘制集合与最近快照 nearby 集合，缺失为 0；\n   - Agent 侧不变：/state 默认 200、传 10000 回显 400。\n2. 台账：REQ-000018 与 REQ-000011 r3 已确认，需经 change 纳入新基线 → dev → 6 条验收 → release → change close。\n3. 结果写 evidence/camera.json 并带 condition 映射。",
+      "status": "blocked",
+      "priority": "second",
+      "success_criteria": [
+        {
+          "id": "3871d9ea-3834-4c4f-899a-128f4cf01a99",
+          "text": "e2e_camera.js 一次运行全 PASS 且退出码 0，输出 evidence/camera.json（含 condition_id → 断言 → 实测值）",
+          "completed": false
+        },
+        {
+          "id": "79c5a51d-fa7b-44a7-b906-f6100cf27e56",
+          "text": "六类断言各至少一条：居中、平移一致、左/上钳制、右/下钳制、可见⊆已收到（缺失 0）、Agent 半径 200/400 不变",
+          "completed": false
+        },
+        {
+          "id": "fd982a6d-c2c7-42d5-a515-ae198ac5f4a9",
+          "text": "REQ-000018 的 6 条条件在 e2e 中都有同名断言，映射缺失为 0",
+          "completed": false
+        },
+        {
+          "id": "2d3b9ea5-5411-4412-8dcf-8808508df1bc",
+          "text": "reqledger check 0 issue、python tools/audit_spec_vs_ledger.py 0 差异",
+          "completed": false
+        },
+        {
+          "id": "5d9e58e8-7d93-4453-9cf4-ad2ce54f706e",
+          "text": "回归：e2e_touch_ui.js / e2e_control.js / e2e_multiplayer.js 全部仍 PASS",
+          "completed": false
+        }
+      ],
+      "deliverables": [
+        {
+          "id": "f926c058-9f51-4af4-879e-c761d3cd4205",
+          "text": "cloud/tools/e2e_camera.js（居中/平移/四向边界/可见⊆已收到/Agent 半径不变 六类断言）",
+          "completed": false
+        },
+        {
+          "id": "fd6fc083-31ec-4954-aa1b-607e5a57a099",
+          "text": "evidence/camera.json（含 condition 映射）",
+          "completed": false
+        },
+        {
+          "id": "f925c4c8-2374-4a5a-9c11-60aeae36bb33",
+          "text": "requirements.md 中 REQ-000018 的 6 条验收执行记录（经 change 纳入基线后登记）",
+          "completed": false
+        }
+      ],
+      "need_fix": [],
+      "assignee": null,
+      "blockers": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "dependencies": "验收必须对着已落地的相机绘制与 per-connection 半径来断言；先有相机再写断言，否则测的是中间态。",
+      "sub_items": [],
+      "related_files": [
+        "cloud/tools/e2e_camera.js",
+        "cloud/play/play.js",
+        "cloud/server/ws.js",
+        "requirements.md",
+        "tools/audit_spec_vs_ledger.py"
+      ],
+      "notes": "",
+      "c7_verified": [],
+      "created_at": "2026-10-29T16:00:51.509Z",
+      "updated_at": "2026-10-29T16:00:51.509Z",
+      "completed_at": null,
+      "edges": []
+    }
+  },
+  "indexes": {
+    "byStatus": {
+      "ready": [],
+      "in_progress": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "in_review": [],
+      "completed": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "6567f110-8d78-4702-8090-7073c52da894"
+      ],
+      "blocked": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ]
+    },
+    "byPriority": {
+      "top": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "6567f110-8d78-4702-8090-7073c52da894",
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "second": [
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "later": []
+    },
+    "rootTasks": [
+      "9542948d-664d-4498-9622-625a3571036b",
+      "6567f110-8d78-4702-8090-7073c52da894"
+    ],
+    "orphanTasks": [],
+    "searchText": {
+      "0": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
+        "0632fb40-4596-4697-ae3c-1685ddab8e10",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "1": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "0632fb40-4596-4697-ae3c-1685ddab8e10",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "2": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "0632fb40-4596-4697-ae3c-1685ddab8e10",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "3": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "4": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "6": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "12": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "33": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "40": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "46": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "68": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "74": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "78": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "84": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "96": [
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "98": [
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "136": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "142": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "197": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "200": [
+        "6567f110-8d78-4702-8090-7073c52da894",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "224": [
+        "6567f110-8d78-4702-8090-7073c52da894"
+      ],
+      "315": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "400": [
+        "6567f110-8d78-4702-8090-7073c52da894",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "540": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "960": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "10000": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "cloud": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "play": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "touch": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "js": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "6567f110-8d78-4702-8090-7073c52da894",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "controls": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "abxy": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "main": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "__input": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "d": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "pad": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "onintent": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "dir": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "null": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "oncollapse": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "collapsed": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "dead": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "10px": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "r_max": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "44px": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "dx": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "dy": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "pointer": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "setpointercapture": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "safe": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "area": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "band": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "236px": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "max": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "height": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "560px": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "req": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "000012": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "asset": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "pipeline": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "md": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "a": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "390x844": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "132px": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "210px": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "88x28": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "git": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "diff": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "evidence": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "touch_layer": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "json": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "t4": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "e2e": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "index": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "html": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "dpad": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "156px": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "52px": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "pointerdown": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "pointerup": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "t1": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "__play": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "sendintent": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "y": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "x": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "b": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "74px": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "000011": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "disabled": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "wasd": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "matchmedia": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "coarse": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "right": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "left": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "up": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "down": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "facing": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "true": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "display": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "none": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "0px": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "top": [
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "hud": [
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "14px": [
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "1px": [
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "backdrop": [
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "blur": [
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "env": [
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "inset": [
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "orientation": [
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "portrait": [
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "dispatch": [
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "resize": [
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      ],
+      "fit": [
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "000017": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "tools": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "e2e_touch_ui": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "data_dir": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "844x390": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "844x260": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "400ms": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "state": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "6567f110-8d78-4702-8090-7073c52da894",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "3px": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "t3": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "40px": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "30px": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "add": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "submit": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "review": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "confirm": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "change": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "dev": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "touch_ui": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "websocket": [
+        "6567f110-8d78-4702-8090-7073c52da894"
+      ],
+      "ws": [
+        "6567f110-8d78-4702-8090-7073c52da894"
+      ],
+      "cfg": [
+        "6567f110-8d78-4702-8090-7073c52da894"
+      ],
+      "radiusdefault": [
+        "6567f110-8d78-4702-8090-7073c52da894"
+      ],
+      "url": [
+        "6567f110-8d78-4702-8090-7073c52da894"
+      ],
+      "r": [
+        "6567f110-8d78-4702-8090-7073c52da894"
+      ],
+      "radius": [
+        "6567f110-8d78-4702-8090-7073c52da894"
+      ],
+      "world": [
+        "6567f110-8d78-4702-8090-7073c52da894"
+      ],
+      "clampradius": [
+        "6567f110-8d78-4702-8090-7073c52da894"
+      ],
+      "radius_max": [
+        "6567f110-8d78-4702-8090-7073c52da894"
+      ],
+      "agent": [
+        "6567f110-8d78-4702-8090-7073c52da894",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "20px": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "width": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "css": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "camera": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "w": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "h": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "clamp": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "self": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "worldw": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "drawimage": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "bg": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "cam": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "worldtoscreen": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "e2e_camera": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "cdp": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "2px": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "worldh": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "nearby": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "000018": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "r3": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "release": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "close": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "condition": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ]
+    },
+    "files": {
+      "touch-controls.js": [
+        "9542948d-664d-4498-9622-625a3571036b"
+      ],
+      "cloud/play/touch.js": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "cloud/play/play.js": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "0632fb40-4596-4697-ae3c-1685ddab8e10",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "cloud/play/index.html": [
+        "9542948d-664d-4498-9622-625a3571036b",
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "cloud/tools/e2e_touch_ui.js": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "requirements.md": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "tools/audit_spec_vs_ledger.py": [
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "cloud/server/ws.js": [
+        "6567f110-8d78-4702-8090-7073c52da894",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "cloud/server/world.js": [
+        "6567f110-8d78-4702-8090-7073c52da894"
+      ],
+      "cloud/shared/const.js": [
+        "6567f110-8d78-4702-8090-7073c52da894"
+      ],
+      "cloud/tools/e2e_camera.js": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ]
+    }
+  }
+}

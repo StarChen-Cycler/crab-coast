@@ -1,6 +1,6 @@
 {
-  "when": "2026-10-29T15:12:42.761Z",
-  "port": 8487,
+  "when": "2026-10-29T16:13:29.055Z",
+  "port": 8471,
   "total": 6,
   "failed": 0,
   "results": [
@@ -14,19 +14,19 @@
       "id": "AC-000060",
       "name": "续期组 t=3.2s 仍在移动且位移 ≥330px；对照组按 TTL 在 t≈3s 停下",
       "pass": true,
-      "detail": "续期 dx=383.0 moving@3.2=true；对照 dx=327.0 moving@3.2=false"
+      "detail": "续期 dx=383.0 moving@3.2=true；对照 dx=328.0 moving@3.2=false"
     },
     {
       "id": "AC-000058",
       "name": "后按的「右」优先（facing=right 且 x 增大）",
       "pass": true,
-      "detail": "facing=right x 500→569"
+      "detail": "facing=right x 500→568"
     },
     {
       "id": "AC-000059",
       "name": "松开「右」后回落到仍按住的「上」（不停车）",
       "pass": true,
-      "detail": "facing=up y 385→330"
+      "detail": "facing=up y 392→332"
     },
     {
       "id": "AC-000062",

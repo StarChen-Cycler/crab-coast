@@ -1,5 +1,5 @@
 {
-  "when": "2026-10-29T15:42:32.733Z",
+  "when": "2026-10-29T16:10:58.432Z",
   "cdpPort": 9222,
   "total": 6,
   "failed": 0,
@@ -8,7 +8,7 @@
       "condition": "AC-000064",
       "name": "摇杆四向各 400ms：方向正确、位移≥30px、facing 一致、松手即停",
       "pass": true,
-      "detail": "{\"right\":{\"dx\":68,\"dy\":0,\"facing\":\"right\",\"moved\":68,\"stopped\":true},\"left\":{\"dx\":-69,\"dy\":0,\"facing\":\"left\",\"moved\":69,\"stopped\":true},\"up\":{\"dx\":0,\"dy\":-75,\"facing\":\"up\",\"moved\":75,\"stopped\":true},\"down\":{\"dx\":0,\"dy\":75,\"facing\":\"down\",\"moved\":75,\"stopped\":true}}"
+      "detail": "{\"right\":{\"dx\":144,\"dy\":0,\"facing\":\"right\",\"moved\":144,\"stopped\":true},\"left\":{\"dx\":-106,\"dy\":0,\"facing\":\"left\",\"moved\":106,\"stopped\":true},\"up\":{\"dx\":0,\"dy\":-89,\"facing\":\"up\",\"moved\":89,\"stopped\":true},\"down\":{\"dx\":0,\"dy\":96,\"facing\":\"down\",\"moved\":96,\"stopped\":true}}"
     },
     {
       "condition": "AC-000065",
@@ -24,28 +24,28 @@
     },
     {
       "condition": "AC-000067",
-      "name": "收起只藏控件、开关保留、操作带归零、画布重算；恢复后还原",
+      "name": "收起只藏控件、开关保留、操作带归零、画布重算（高度补回操作带）；恢复后还原",
       "pass": true,
-      "detail": "{\"stickDisplay\":\"none\",\"abxyDisplay\":\"none\",\"toggleVisible\":true,\"band\":\"0px\",\"canvasTop\":315,\"restored\":{\"stickDisplay\":\"block\",\"band\":\"236px\",\"canvasTop\":197}}"
+      "detail": "{\"stickDisplay\":\"none\",\"abxyDisplay\":\"none\",\"toggleVisible\":true,\"band\":\"0px\",\"canvasTop\":0,\"canvasHeight\":844,\"restored\":{\"stickDisplay\":\"block\",\"band\":\"236px\",\"canvasTop\":0,\"canvasHeight\":608}}"
     },
     {
       "condition": "AC-000068",
       "name": "390x844 竖屏：控件在视口内互不重叠、画布不压操作带",
       "pass": true,
-      "detail": "{\"inside\":true,\"overlaps\":{\"stick_abxy\":false,\"toggle_stick\":false,\"toggle_abxy\":false,\"hud_pair\":false},\"band\":\"236px\",\"canvas\":{\"l\":4,\"t\":197,\"r\":386,\"b\":412,\"w\":382,\"h\":215,\"display\":\"block\"}}"
+      "detail": "{\"inside\":true,\"overlaps\":{\"stick_abxy\":false,\"toggle_stick\":false,\"toggle_abxy\":false,\"toggle_self\":false,\"toggle_near\":false,\"toggle_link\":false,\"hud_pair\":false},\"band\":\"236px\",\"canvas\":{\"l\":0,\"t\":0,\"r\":390,\"b\":608,\"w\":390,\"h\":608,\"display\":\"block\"}}"
     },
     {
       "condition": "AC-000069",
       "name": "横屏开关在左半屏且不压键；矮屏不越界不重叠；桌面不显示控件但键盘可用",
       "pass": true,
-      "detail": "{\"landToggle\":{\"l\":18,\"t\":16,\"r\":106,\"b\":44,\"w\":88,\"h\":28,\"display\":\"flex\"},\"landNoOverlap\":true,\"shortOk\":true,\"desk\":{\"touch\":false,\"kb\":{\"x0\":650,\"x1\":657,\"moved\":true}}}"
+      "detail": "{\"landToggle\":{\"l\":378,\"t\":16,\"r\":466,\"b\":44,\"w\":88,\"h\":28,\"display\":\"flex\"},\"landToggleOk\":true,\"landNoOverlap\":true,\"shortOk\":true,\"desk\":{\"touch\":false,\"kb\":{\"x0\":625,\"x1\":659,\"moved\":true}}}"
     }
   ],
   "mapping": [
     {
       "condition_id": "AC-000064",
       "assertion": "摇杆四向各 400ms：方向正确、位移≥30px、facing 一致、松手即停",
-      "detail": "{\"right\":{\"dx\":68,\"dy\":0,\"facing\":\"right\",\"moved\":68,\"stopped\":true},\"left\":{\"dx\":-69,\"dy\":0,\"facing\":\"left\",\"moved\":69,\"stopped\":true},\"up\":{\"dx\":0,\"dy\":-75,\"facing\":\"up\",\"moved\":75,\"stopped\":true},\"down\":{\"dx\":0,\"dy\":75,\"facing\":\"down\",\"moved\":75,\"stopped\":true}}"
+      "detail": "{\"right\":{\"dx\":144,\"dy\":0,\"facing\":\"right\",\"moved\":144,\"stopped\":true},\"left\":{\"dx\":-106,\"dy\":0,\"facing\":\"left\",\"moved\":106,\"stopped\":true},\"up\":{\"dx\":0,\"dy\":-89,\"facing\":\"up\",\"moved\":89,\"stopped\":true},\"down\":{\"dx\":0,\"dy\":96,\"facing\":\"down\",\"moved\":96,\"stopped\":true}}"
     },
     {
       "condition_id": "AC-000065",
@@ -59,18 +59,18 @@
     },
     {
       "condition_id": "AC-000067",
-      "assertion": "收起只藏控件、开关保留、操作带归零、画布重算；恢复后还原",
-      "detail": "{\"stickDisplay\":\"none\",\"abxyDisplay\":\"none\",\"toggleVisible\":true,\"band\":\"0px\",\"canvasTop\":315,\"restored\":{\"stickDisplay\":\"block\",\"band\":\"236px\",\"canvasTop\":197}}"
+      "assertion": "收起只藏控件、开关保留、操作带归零、画布重算（高度补回操作带）；恢复后还原",
+      "detail": "{\"stickDisplay\":\"none\",\"abxyDisplay\":\"none\",\"toggleVisible\":true,\"band\":\"0px\",\"canvasTop\":0,\"canvasHeight\":844,\"restored\":{\"stickDisplay\":\"block\",\"band\":\"236px\",\"canvasTop\":0,\"canvasHeight\":608}}"
     },
     {
       "condition_id": "AC-000068",
       "assertion": "390x844 竖屏：控件在视口内互不重叠、画布不压操作带",
-      "detail": "{\"inside\":true,\"overlaps\":{\"stick_abxy\":false,\"toggle_stick\":false,\"toggle_abxy\":false,\"hud_pair\":false},\"band\":\"236px\",\"canvas\":{\"l\":4,\"t\":197,\"r\":386,\"b\":412,\"w\":382,\"h\":215,\"display\":\"block\"}}"
+      "detail": "{\"inside\":true,\"overlaps\":{\"stick_abxy\":false,\"toggle_stick\":false,\"toggle_abxy\":false,\"toggle_self\":false,\"toggle_near\":false,\"toggle_link\":false,\"hud_pair\":false},\"band\":\"236px\",\"canvas\":{\"l\":0,\"t\":0,\"r\":390,\"b\":608,\"w\":390,\"h\":608,\"display\":\"block\"}}"
     },
     {
       "condition_id": "AC-000069",
       "assertion": "横屏开关在左半屏且不压键；矮屏不越界不重叠；桌面不显示控件但键盘可用",
-      "detail": "{\"landToggle\":{\"l\":18,\"t\":16,\"r\":106,\"b\":44,\"w\":88,\"h\":28,\"display\":\"flex\"},\"landNoOverlap\":true,\"shortOk\":true,\"desk\":{\"touch\":false,\"kb\":{\"x0\":650,\"x1\":657,\"moved\":true}}}"
+      "detail": "{\"landToggle\":{\"l\":378,\"t\":16,\"r\":466,\"b\":44,\"w\":88,\"h\":28,\"display\":\"flex\"},\"landToggleOk\":true,\"landNoOverlap\":true,\"shortOk\":true,\"desk\":{\"touch\":false,\"kb\":{\"x0\":625,\"x1\":659,\"moved\":true}}}"
     }
   ]
 }

@@ -1,0 +1,34 @@
+{
+  "when_utc": "2026-10-29T16:15:00Z",
+  "where": "局域网部署实例 http://192.168.1.29:8090（cloud/serve-lan.cmd，PORT 8090 / REGISTER_CODE lobby-2026 / DATA_DIR cloud/data）",
+  "purpose": "REQ-000018 生效验证：部署后的实例真的在跑相机裁切（不是只在测试端口上）",
+  "http": [
+    { "path": "/healthz", "status": 200, "bytes": 40, "body": "{\"ok\":true,\"online\":1,\"version\":\"0.2.0\"}" },
+    { "path": "/", "status": 200, "bytes": 3637, "note": "单机版首页（file:// 用的同一份文件）" },
+    { "path": "/play", "status": 200, "bytes": 3624 },
+    { "path": "/play/play.js", "status": 200, "bytes": 16544, "note": "含 cameraTarget / desiredRadius / worldToScreen（相机代码已上线）" },
+    { "path": "/play/touch.js", "status": 200, "bytes": 12194 },
+    { "path": "/cards/A-0004.png", "status": 200, "bytes": 8271 },
+    { "path": "/api/v1/world", "status": 200, "bytes": 169, "body": "{\"w\":960,\"h\":540,\"online\":1,\"radius\":200,\"radiusMax\":400,\"speed\":110,\"card\":{...}}" }
+  ],
+  "phone_emulation": {
+    "viewport": [390, 844],
+    "devicePixelRatio": 2,
+    "band": "236px",
+    "canvas": { "rect": [0, 0, 390, 608], "bitmap": [390, 608] },
+    "camera_before_walk": { "x": 0, "y": 0, "w": 390, "h": 608, "vw": 390, "vh": 540, "radius": 386 },
+    "server_radius": 386,
+    "self_before": [172, 360],
+    "screen_before": { "x": 172, "y": 394 },
+    "note_before": "相机已顶到世界左边界（x=0），动物在中心左侧 23px —— 「到边界画面停住、动物继续走」",
+    "walk": "向右 1.5 秒",
+    "self_after": [335, 360],
+    "camera_after": { "x": 140, "y": 0 },
+    "screen_after": { "x": 195, "y": 394 },
+    "center_diff_x": 0,
+    "note_after": "相机跟随到 x=140，动物屏幕 x=195 = 画布中心 195，偏差 0px —— 「自己居中跟随」",
+    "nearby_on_screen": ["A-0001", "A-0002", "A-0003"],
+    "screenshots": ["evidence/camera_lan_left_edge.png", "evidence/camera_lan_centered.png", "docs/camera_follow.png"]
+  },
+  "result": "通过"
+}

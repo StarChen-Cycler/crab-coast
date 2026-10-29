@@ -38,10 +38,13 @@ function createWsHub({ world, cfg, server, log = console }) {
       socket.destroy();
       return;
     }
+    // 每个连接自带视角半径（REQ-000018）：相机裁切后视野半对角约 224 > 默认 200，
+    // 靠 URL 上的 r= 要更大半径；仍走世界里的 clampRadius，所以 RADIUS_MAX 依旧生效。
+    const radius = world.clampRadius(u.searchParams.get('r'));
 
     wss.handleUpgrade(req, socket, head, (ws) => {
       const list = listFor(animal.id);
-      const sess = { ws, sid: ++seq, at: Date.now() };
+      const sess = { ws, sid: ++seq, at: Date.now(), radius };
       ws.animalId = animal.id;
       ws.sid = sess.sid;
       ws.sourceKey = `ws:${sess.sid}`;          // 每个会话是一个独立来源
@@ -72,13 +75,13 @@ function createWsHub({ world, cfg, server, log = console }) {
     });
   });
 
-  // 每个连接推它自己的视角（自己 + 附近）
+  // 每个连接推它自己的视角（自己 + 附近），半径来自握手参数
   const snapshotTimer = setInterval(() => {
     for (const list of sessions.values()) {
       for (const sess of list) {
         const ws = sess.ws;
         if (ws.readyState !== 1) continue;
-        const st = world.buildState(ws.animalId, cfg.radiusDefault);
+        const st = world.buildState(ws.animalId, sess.radius);
         if (!st) continue;
         ws.send(JSON.stringify({ type: 'snapshot', ...st }));
       }

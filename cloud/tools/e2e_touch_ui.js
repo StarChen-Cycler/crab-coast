@@ -191,7 +191,9 @@ const PAGE_PROBE = async function probe() {
     abxyDisplay: getComputedStyle(document.getElementById('abxy')).display,
     toggleVisible: getComputedStyle(toggle).display !== 'none',
     band: getComputedStyle(document.documentElement).getPropertyValue('--touch-band').trim(),
+    // 相机裁切后画布贴视口左上角（top 恒为 0），「画布重算」表现为高度变化（REQ-000018）
     canvasTop: Math.round(document.getElementById('world').getBoundingClientRect().top),
+    canvasHeight: Math.round(document.getElementById('world').getBoundingClientRect().height),
   };
   tapToggle();
   await sleep(320);
@@ -199,6 +201,7 @@ const PAGE_PROBE = async function probe() {
     stickDisplay: getComputedStyle(base).display,
     band: getComputedStyle(document.documentElement).getPropertyValue('--touch-band').trim(),
     canvasTop: Math.round(document.getElementById('world').getBoundingClientRect().top),
+    canvasHeight: Math.round(document.getElementById('world').getBoundingClientRect().height),
   };
 
   // 桌面：用键盘驱动（仅桌面档调用时会再单独跑）
@@ -217,6 +220,10 @@ const PAGE_PROBE = async function probe() {
     stick_abxy: overlap(out.rects.stick, out.rects.abxy),
     toggle_stick: overlap(out.rects.toggle, out.rects.stick),
     toggle_abxy: overlap(out.rects.toggle, out.rects.abxy),
+    // 上一版漏了这三项，导致「横屏开关压住自身状态 HUD」没被发现（用户实测发现）
+    toggle_self: overlap(out.rects.toggle, out.rects.self),
+    toggle_near: overlap(out.rects.toggle, out.rects.near),
+    toggle_link: overlap(out.rects.toggle, out.rects.link),
     hud_pair: overlap(out.rects.self, out.rects.near) || overlap(out.rects.self, out.rects.link),
   };
   out.inside = Object.entries(out.rects).filter(([, v]) => v).every(([, v]) => v.l >= 0 && v.t >= 0 && v.r <= innerWidth && v.b <= innerHeight);
@@ -326,16 +333,17 @@ async function main() {
 
     // ---------- AC-000067 收起 ----------
     const c = portrait.collapse;
-    check('AC-000067', '收起只藏控件、开关保留、操作带归零、画布重算；恢复后还原',
+    check('AC-000067', '收起只藏控件、开关保留、操作带归零、画布重算（高度补回操作带）；恢复后还原',
       c.stickDisplay === 'none' && c.abxyDisplay === 'none' && c.toggleVisible
-      && c.band === '0px' && c.canvasTop !== portrait.rects.canvas.t
+      && c.band === '0px' && c.canvasHeight === c.canvasTop + 844
       && c.restored.stickDisplay === 'block' && c.restored.band === '236px'
-      && c.restored.canvasTop === portrait.rects.canvas.t,
+      && c.restored.canvasHeight === c.restored.canvasTop + 844 - 236,
       JSON.stringify(c));
 
     // ---------- AC-000068 竖屏布局 ----------
     const pOk = portrait.inside
       && !portrait.overlaps.stick_abxy && !portrait.overlaps.toggle_stick && !portrait.overlaps.toggle_abxy
+      && !portrait.overlaps.toggle_self && !portrait.overlaps.toggle_near && !portrait.overlaps.toggle_link
       && !portrait.overlaps.hud_pair
       && (844 - 0) > 0   // 占位：确保分支可读
       && portrait.canvasClearOfBand;
@@ -343,13 +351,16 @@ async function main() {
       pOk, JSON.stringify({ inside: portrait.inside, overlaps: portrait.overlaps, band: portrait.band, canvas: portrait.rects.canvas }));
 
     // ---------- AC-000069 横屏与桌面 ----------
-    const landToggleLeft = land.rects.toggle && land.rects.toggle.l <= 24 && land.rects.toggle.r < 844 / 2;
-    const landNoOverlap = !land.overlaps.toggle_abxy && !land.overlaps.toggle_stick;
-    const shortOk = short.inside && !short.overlaps.toggle_abxy && !short.overlaps.toggle_stick;
+    // 开关落在顶部一行（t<60）且与 HUD/按键都不重叠即可；不再绑定「左半屏」这种实现细节
+    const landToggleOk = !!land.rects.toggle && land.rects.toggle.t < 60 && land.inside;
+    const landNoOverlap = !land.overlaps.toggle_abxy && !land.overlaps.toggle_stick
+      && !land.overlaps.toggle_self && !land.overlaps.toggle_near && !land.overlaps.toggle_link;
+    const shortOk = short.inside && !short.overlaps.toggle_abxy && !short.overlaps.toggle_stick
+      && !short.overlaps.toggle_self && !short.overlaps.toggle_near && !short.overlaps.toggle_link;
     const deskOk = !desk.touchMounted && desk.desktop.keyboardMoves.moved;
-    check('AC-000069', '横屏开关在左半屏且不压键；矮屏不越界不重叠；桌面不显示控件但键盘可用',
-      landToggleLeft && landNoOverlap && shortOk && deskOk,
-      JSON.stringify({ landToggle: land.rects.toggle, landNoOverlap, shortOk, desk: { touch: desk.touchMounted, kb: desk.desktop.keyboardMoves } }));
+    check('AC-000069', '横屏开关在顶部一行且水平居中、不压 HUD/四键；矮屏不越界不重叠；桌面不显示控件但键盘可用',
+      landToggleOk && landNoOverlap && shortOk && deskOk,
+      JSON.stringify({ landToggle: land.rects.toggle, landToggleOk, landNoOverlap, shortOk, desk: { touch: desk.touchMounted, kb: desk.desktop.keyboardMoves } }));
   } finally {
     child.kill();
     try { bws.close(); } catch { /* ignore */ }

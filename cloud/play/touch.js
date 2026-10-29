@@ -102,9 +102,12 @@
                       backdrop-filter: blur(4px); pointer-events: auto; touch-action: none;
                       -webkit-appearance: none; appearance: none; }
       /* 横屏：顶部只放得下一行，开关移到左上与右上音乐位置对称，避免被 ABXY 顶住 */
+      /* 横屏：两侧顶角已被 HUD 占用（左：自身/附近，右：连接状态），开关放顶部居中，
+         既不压 HUD 也不压右下 ABXY；矮屏也安全 */
       @media (orientation: landscape) {
-        #touch-toggle { left: calc(18px + env(safe-area-inset-left, 0px));
-                        right: auto; top: calc(16px + env(safe-area-inset-top, 0px)); }
+        #touch-toggle { left: 50%; right: auto;
+                        top: calc(16px + env(safe-area-inset-top, 0px));
+                        transform: translateX(-50%); }
       }
       @media (orientation: landscape) and (max-height: ${SHORT_LANDSCAPE_MAX_H}px) {
         #abxy { transform: scale(${ABXY_SCALE_SHORT}); }

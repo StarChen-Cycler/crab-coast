@@ -1,0 +1,45 @@
+{
+  "at": "2026-10-29T16:12:47.308Z",
+  "port": 8509,
+  "total": 6,
+  "passed": 6,
+  "failed": 0,
+  "results": [
+    {
+      "id": "C1-1",
+      "name": "ws 不带 r → 快照半径 200",
+      "pass": true,
+      "detail": "radius=200"
+    },
+    {
+      "id": "C1-2",
+      "name": "ws r=224 → 快照半径 224",
+      "pass": true,
+      "detail": "radius=224"
+    },
+    {
+      "id": "C1-3",
+      "name": "ws r=10000 → 钳制到 400",
+      "pass": true,
+      "detail": "radius=400"
+    },
+    {
+      "id": "C1-4",
+      "name": "ws r=abc → 回落 200 且连接正常",
+      "pass": true,
+      "detail": "radius=200"
+    },
+    {
+      "id": "C1-5",
+      "name": "/state 默认 radius 200",
+      "pass": true,
+      "detail": "status=200 radius=200"
+    },
+    {
+      "id": "C1-6",
+      "name": "/state?radius=10000 回显 400",
+      "pass": true,
+      "detail": "status=200 radius=400"
+    }
+  ]
+}

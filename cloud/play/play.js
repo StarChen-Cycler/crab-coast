@@ -18,6 +18,23 @@
 
   const CARD_ORDER = ['down', 'left', 'right', 'up'];
   const FRAME = 48;
+  const FOOT_OFFSET = 43;        // 卡片里脚底线在第 43 行（与 shared/const.js CARD.footLine 一致）
+  // 相机视野半对角之外的余量（逻辑像素）：快照 10Hz、速度 110px/s ⇒ 两帧间最多挪 11px，
+  // 再留出整数取整与往返抖动的空间，24px 足以覆盖（REQ-000018 边界「视野内出现其它动物」）。
+  const RADIUS_MARGIN = 24;
+  const VIEW_MIN_PX = 120;       // 视口异常（隐藏标签页等）时的兜底尺寸
+  const REFIT_POLL_MS = 400;     // 浏览器工具栏收放不派发 resize，靠轮询补一次重算
+
+  // 世界尺寸与半径上限：启动时从 /api/v1/world 拿，取不到就用默认值（与 shared/const.js 一致）
+  let worldW = 960;
+  let worldH = 540;
+  let radiusMax = 400;
+  // 相机窗口：w/h = 画布 CSS 尺寸（1 逻辑像素 = 1 CSS 像素）；
+  // vw/vh = 实际可见的世界范围（超过世界时取世界尺寸）；ox/oy = 世界在画布内的居中留白
+  const camera = { x: 0, y: 0, w: 960, h: 540, vw: 960, vh: 540, ox: 0, oy: 0 };
+  let drawnIds = [];             // 本帧真正绘制出来的 id（AC-000073 用）
+  let serverRadius = 0;          // 当前这条 WS 握手时请求的快照半径
+  let swapping = false;          // 主动换连接（半径变化）时不要走重连退避
   let animalId = null;
   let bg = null;
   let cardImg = null;
@@ -65,11 +82,23 @@
 
   async function startGame() {
     dz.classList.remove('show');
+    await loadWorld();
     bg = await loadImage('/assets/bg_base.png');
     fit();
     mountTouchControls();
     connect();
     requestAnimationFrame(loop);
+  }
+
+  /** 世界尺寸与半径上限（服务端仍是权威；这里只用于相机与半径推导）。 */
+  async function loadWorld() {
+    try {
+      const r = await fetch('/api/v1/world');
+      if (!r.ok) return;
+      const j = await r.json();
+      if (j && j.w > 0 && j.h > 0) { worldW = j.w; worldH = j.h; }
+      if (j && j.radiusMax > 0) radiusMax = j.radiusMax;
+    } catch { /* 拿不到就用默认值，不阻塞进游戏 */ }
   }
 
   function loadImage(src) {
@@ -85,7 +114,9 @@
   function connect() {
     if (!token) return;
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-    ws = new WebSocket(`${proto}://${location.host}/ws?t=${encodeURIComponent(token)}`);
+    // 半径跟着相机视野走：屏幕四角上的动物必须也在快照里（AC-000073）
+    serverRadius = desiredRadius();
+    ws = new WebSocket(`${proto}://${location.host}/ws?t=${encodeURIComponent(token)}&r=${serverRadius}`);
     ws.onopen = () => {
       retry = 0;
       linkHud.textContent = '已连接';
@@ -107,6 +138,8 @@
         return;
       }
       if (stopped) return;
+      // 视野尺寸变了（旋屏/收起控件）→ 主动换一条半径正确的连接，不算断线
+      if (swapping) { swapping = false; connect(); return; }
       linkHud.textContent = '重连中…';
       linkHud.classList.add('bad');
       retry = Math.min(retry + 1, 6);
@@ -163,47 +196,121 @@
   });
 
 
-  // ---------------- 渲染 ----------------
-  function fit() {
-    // 竖屏底部会预留操作带（--touch-band），可用高度要跟着扣掉
-    const band = parseFloat(
+  // ---------------- 相机与渲染（REQ-000018） ----------------
+  function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+
+  /** 纯函数：自己位置 + 画布尺寸 → 相机。实现与验收共用这一份逻辑，
+   *  世界边界处相机停住（clamp），视野大于世界时取世界尺寸并在画布内居中。 */
+  function cameraTarget(x, y, w, h) {
+    const vw = Math.min(w, worldW);
+    const vh = Math.min(h, worldH);
+    return {
+      x: clamp(x - vw / 2, 0, Math.max(0, worldW - vw)),
+      y: clamp(y - vh / 2, 0, Math.max(0, worldH - vh)),
+      vw, vh,
+      ox: Math.floor((w - vw) / 2),
+      oy: Math.floor((h - vh) / 2),
+    };
+  }
+
+  function applyCamera(x, y) {
+    Object.assign(camera, cameraTarget(x, y, camera.w, camera.h));
+  }
+
+  /** 世界坐标 → 画布坐标（与背景用同一份整数取整，避免「人比地面快一像素」）。 */
+  function worldToScreen(x, y) {
+    return {
+      x: Math.round(x) - Math.round(camera.x) + camera.ox,
+      y: Math.round(y) - Math.round(camera.y) + camera.oy,
+    };
+  }
+
+  /** 请求的快照半径 = 视野半对角 + 余量，并被服务端上限钳制（服务端还会再钳一次）。 */
+  function desiredRadius() {
+    const half = Math.ceil(Math.hypot(camera.w, camera.h) / 2);
+    return Math.min(half + RADIUS_MARGIN, radiusMax);
+  }
+
+  function bandPx() {
+    return parseFloat(
       getComputedStyle(document.documentElement).getPropertyValue('--touch-band')
     ) || 0;
-    const w = innerWidth;
-    const h = Math.max(120, innerHeight - band);
-    const s = Math.min(w * 0.98 / 960, h * 0.96 / 540);
-    cv.style.width = Math.round(960 * s) + 'px';
-    cv.style.height = Math.round(540 * s) + 'px';
   }
-  window.addEventListener('resize', fit);
 
+  function fit() {
+    // 竖屏底部会预留操作带（--touch-band），可用高度要跟着扣掉
+    const w = Math.max(VIEW_MIN_PX, Math.floor(innerWidth));
+    const h = Math.max(VIEW_MIN_PX, Math.floor(innerHeight - bandPx()));
+    // 相机窗口 = 可用视口；位图 1 像素 = CSS 1 像素，放大交给 CSS 的 image-rendering: pixelated
+    camera.w = w;
+    camera.h = h;
+    if (cv.width !== w) cv.width = w;
+    if (cv.height !== h) cv.height = h;
+    cv.style.width = w + 'px';
+    cv.style.height = h + 'px';
+    const s = snapshot && snapshot.self;
+    applyCamera(s ? s.x : worldW / 2, s ? s.y : worldH / 2);
+  }
+
+  // 旋屏、收起/展开控件、工具栏收放都可能改变可用视口：尺寸变了就重算相机，
+  // 半径也跟着变（否则屏幕四角会丢动物），需要换一条握手半径正确的连接。
+  function refit() {
+    const before = { w: camera.w, h: camera.h, r: serverRadius };
+    fit();
+    if (camera.w === before.w && camera.h === before.h) return;
+    const want = desiredRadius();
+    if (ws && want !== before.r) { swapping = true; try { ws.close(); } catch { /* ignore */ } }
+  }
+
+  window.addEventListener('resize', refit);
+  window.addEventListener('orientationchange', refit);
+  setInterval(() => {
+    const w = Math.max(VIEW_MIN_PX, Math.floor(innerWidth));
+    const h = Math.max(VIEW_MIN_PX, Math.floor(innerHeight - bandPx()));
+    if (w !== camera.w || h !== camera.h) refit();
+  }, REFIT_POLL_MS);
+
+  // ---------------- 绘制 ----------------
   async function animalImage(id) {
     if (cardOf[id]) return cardOf[id];
     try { cardOf[id] = await loadImage(`/cards/${id}.png`); } catch { cardOf[id] = null; }
     return cardOf[id];
   }
 
+  /** 画一只动物；返回是否真的画上去了（卡片没加载完就是 false）。 */
   function drawAnimal(a, now) {
     const img = cardOf[a.id];
-    if (!img) { animalImage(a.id); return; }
+    if (!img) { animalImage(a.id); return false; }
     const row = Math.max(0, CARD_ORDER.indexOf(a.facing));
     const frame = a.moving ? Math.floor(now / (1000 / 8)) % 4 : 0;
-    ctx.drawImage(img, frame * FRAME, row * FRAME, FRAME, FRAME,
-      Math.round(a.x - FRAME / 2), Math.round(a.y - 43), FRAME, FRAME);
+    const p = worldToScreen(a.x, a.y);
+    const dx = Math.round(p.x - FRAME / 2);
+    const dy = Math.round(p.y - FOOT_OFFSET);
+    // 完全在画布外的直接跳过（纯绘制优化，可见性由快照决定）
+    if (dx + FRAME < 0 || dx > camera.w || dy + FRAME < 0 || dy > camera.h) return false;
+    ctx.drawImage(img, frame * FRAME, row * FRAME, FRAME, FRAME, dx, dy, FRAME, FRAME);
+    return true;
   }
 
   function loop(now) {
     ctx.imageSmoothingEnabled = false;
-    if (bg) ctx.drawImage(bg, 0, 0, 960, 540);
+    ctx.clearRect(0, 0, camera.w, camera.h);
     if (snapshot) {
-      for (const n of snapshot.nearby) drawAnimal(n, now);
-      drawAnimal(snapshot.self, now);
       const s = snapshot.self;
+      applyCamera(s.x, s.y);                 // 相机跟人走，边界处自己停住
+      if (bg) ctx.drawImage(bg, Math.round(camera.x), Math.round(camera.y),
+        camera.vw, camera.vh, camera.ox, camera.oy, camera.vw, camera.vh);
+      drawnIds = [];
+      for (const n of snapshot.nearby) if (drawAnimal(n, now)) drawnIds.push(n.id);
+      drawAnimal(s, now);
       selfHud.textContent = `${s.id} ${s.name} · (${s.x}, ${s.y}) · ${s.facing}`;
       const n = snapshot.nearby.length;
       nearHud.textContent = n ? `附近 ${n} 只：${snapshot.nearby[0].name} ${snapshot.nearby[0].distance}px` : '附近：无';
       // 被淘汰（stopped）时保留「已在别处被接管」的提示，不要被"快照中断"覆盖
       if (!stopped && now - lastSnapAt > 3000) { linkHud.textContent = '快照中断'; linkHud.classList.add('bad'); }
+    } else if (bg) {
+      ctx.drawImage(bg, Math.round(camera.x), Math.round(camera.y),
+        camera.vw, camera.vh, camera.ox, camera.oy, camera.vw, camera.vh);
     }
     requestAnimationFrame(loop);
   }
@@ -261,6 +368,17 @@
     get connected() { return !!ws && ws.readyState === 1; },
     get dropzoneVisible() { return dz.classList.contains('show'); },
     sendIntent,
+    // 相机探针（AC-000070…073）：绘制用的同一个 camera 对象 + 纯函数
+    get camera() {
+      return {
+        x: camera.x, y: camera.y, w: camera.w, h: camera.h,
+        vw: camera.vw, vh: camera.vh, ox: camera.ox, oy: camera.oy,
+        worldW, worldH, radius: serverRadius, desiredRadius: desiredRadius(),
+        drawnIds: drawnIds.slice(),
+      };
+    },
+    worldToScreen,
+    cameraTarget,               // 纯函数：四向边界与「视野大于世界」的单元断言
     // 测试钩子：主动断开 WebSocket，用来验证自动重连（AC-000044）
     _drop() { if (ws) ws.close(); },
     get touch() { return touchCtl; },
