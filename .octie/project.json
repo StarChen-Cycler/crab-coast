@@ -6,7 +6,7 @@
     "project_name": "crab-coast-cloud",
     "version": "1.0.0",
     "created_at": "2026-10-29T15:29:41.113Z",
-    "updated_at": "2026-10-29T16:17:03.519Z"
+    "updated_at": "2026-10-29T16:22:16.369Z"
   },
   "tasks": {
     "9542948d-664d-4498-9622-625a3571036b": {
@@ -567,6 +567,77 @@
       "updated_at": "2026-10-29T16:17:03.520Z",
       "completed_at": "2026-10-29T16:16:58.992Z",
       "edges": []
+    },
+    "8488f778-3790-4d4d-b5a3-a5a9de3de67f": {
+      "id": "8488f778-3790-4d4d-b5a3-a5a9de3de67f",
+      "title": "把 REQ-000011 r3 纳入基线并补页面实测",
+      "description": "收口检查发现：REQ-000011 在台账里已修订到 r3（渲染口径由「半径 200 内的其他动物」改为「相机视野内的其他动物」），但 BASE-000009/010 的成员内容仍是 r2，基线内容与实现不一致（结构校验不会报错）。\n\n做法：①新增 cloud/tools/probe_page.js，用 CDP 打开真实 /play 页面实测 REQ-000011 的 4 个条件（快照条数、右移、nearby 内容与凭据、断线重连），结果写 evidence/page_live.json；②用一次「替换」变更把 r2 → r3 落进新基线 BASE-000011 V1.10，登记 4 条验收执行，发布 crab-coast-v11 并关闭变更。\n\n边界：不改实现代码，只补基线内容与实测证据；不能只靠结构校验（check 通过不代表基线内容正确）。",
+      "status": "completed",
+      "priority": "top",
+      "success_criteria": [
+        {
+          "id": "f3b247d5-dfee-4d43-9f6f-2f50c1fb68c9",
+          "text": "probe_page.js 一次运行 4/4 PASS 且退出码 0，输出 evidence/page_live.json（AC-000041…044 逐条实测值）",
+          "completed": true,
+          "completed_at": "2026-10-29T16:22:08.994Z",
+          "evidence": "node cloud/tools/probe_page.js → 4/4 PASS 退出码 0；evidence/page_live.json（AC-000041 28 条快照/3.03s；AC-000042 +47px；AC-000043 nearby=[A-0002] 无 token 泄漏；AC-000044 506ms 恢复）"
+        },
+        {
+          "id": "e25dbd3e-f643-4bc2-a9fc-63cc0ff7d389",
+          "text": "活动基线 BASE-000011 中 REQ-000011 的成员修订 = 3，与台账最新修订一致；REQ-000017/000018 仍为 r2",
+          "completed": true,
+          "completed_at": "2026-10-29T16:22:09.781Z",
+          "evidence": "BASE-000011 V1.10 成员：REQ-000011 r3（= 台账最新）、REQ-000017 r2、REQ-000018 r2（对照台账最新修订一致）"
+        },
+        {
+          "id": "bd362e7e-c4be-48cd-a51b-63dff8ed287b",
+          "text": "reqledger check issues 为空且 valid=true；python tools/audit_spec_vs_ledger.py 0 差异",
+          "completed": true,
+          "completed_at": "2026-10-29T16:22:13.987Z",
+          "evidence": "reqledger check：issues=[] valid=true doc_rev=416（18 需求/11 基线/10 变更/11 发布/113 执行）；audit_spec_vs_ledger.py → 0 差异"
+        },
+        {
+          "id": "ea6e693c-b6d4-473d-876a-0c032b687267",
+          "text": "REQ-000011 的 4 条执行记录挂在 crab-coast-v11 与 BASE-000011 下，变更 CHG-000010 已关闭",
+          "completed": true,
+          "completed_at": "2026-10-29T16:22:14.852Z",
+          "evidence": "EXE-000110…113 四条执行挂在 CRAB-COAST-V11 + BASE-000011；CHG-000010 已 close（doc_rev 416）"
+        }
+      ],
+      "deliverables": [
+        {
+          "id": "3944e1c1-740c-4911-83c3-7f975c279626",
+          "text": "cloud/tools/probe_page.js（页面级 4 条实测：快照条数 / 右移 / nearby 与凭据 / 断线重连）",
+          "completed": true
+        },
+        {
+          "id": "8f1e75ce-50e9-4a0e-a76c-e97ef5ff7ede",
+          "text": "evidence/page_live.json（4 条断言实测值 + 原始快照）",
+          "completed": true
+        },
+        {
+          "id": "d5f321b3-0033-4af6-9819-a70bf598b93a",
+          "text": "requirements.md 中 CHG-000010 → BASE-000011 V1.10 → REL-000011 的闭环记录",
+          "completed": true
+        }
+      ],
+      "need_fix": [],
+      "assignee": null,
+      "blockers": [],
+      "dependencies": "",
+      "sub_items": [],
+      "related_files": [
+        "cloud/tools/probe_page.js",
+        "evidence/page_live.json",
+        "requirements.md",
+        "tools/ledger_step29_req11_baseline.py"
+      ],
+      "notes": "",
+      "c7_verified": [],
+      "created_at": "2026-10-29T16:22:05.536Z",
+      "updated_at": "2026-10-29T16:22:16.369Z",
+      "completed_at": "2026-10-29T16:22:15.637Z",
+      "edges": []
     }
   },
   "indexes": {
@@ -581,7 +652,8 @@
         "e0ca26b0-bf17-4955-87e6-f996023bd914",
         "6567f110-8d78-4702-8090-7073c52da894",
         "0632fb40-4596-4697-ae3c-1685ddab8e10",
-        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "blocked": []
     },
@@ -590,7 +662,8 @@
         "9542948d-664d-4498-9622-625a3571036b",
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
         "6567f110-8d78-4702-8090-7073c52da894",
-        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+        "0632fb40-4596-4697-ae3c-1685ddab8e10",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "second": [
         "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
@@ -601,9 +674,12 @@
     },
     "rootTasks": [
       "9542948d-664d-4498-9622-625a3571036b",
-      "6567f110-8d78-4702-8090-7073c52da894"
+      "6567f110-8d78-4702-8090-7073c52da894",
+      "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
     ],
-    "orphanTasks": [],
+    "orphanTasks": [
+      "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+    ],
     "searchText": {
       "0": [
         "9542948d-664d-4498-9622-625a3571036b",
@@ -631,11 +707,15 @@
       "4": [
         "9542948d-664d-4498-9622-625a3571036b",
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
-        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "6": [
         "9542948d-664d-4498-9622-625a3571036b",
         "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "10": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "12": [
         "133c8431-492c-4a02-a6fc-dd07dce13ade"
@@ -680,7 +760,8 @@
       ],
       "200": [
         "6567f110-8d78-4702-8090-7073c52da894",
-        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "224": [
         "6567f110-8d78-4702-8090-7073c52da894"
@@ -705,12 +786,14 @@
         "9542948d-664d-4498-9622-625a3571036b",
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
         "e0ca26b0-bf17-4955-87e6-f996023bd914",
-        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "play": [
         "9542948d-664d-4498-9622-625a3571036b",
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
-        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "touch": [
         "9542948d-664d-4498-9622-625a3571036b",
@@ -723,7 +806,8 @@
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
         "e0ca26b0-bf17-4955-87e6-f996023bd914",
         "6567f110-8d78-4702-8090-7073c52da894",
-        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "controls": [
         "9542948d-664d-4498-9622-625a3571036b"
@@ -827,7 +911,8 @@
         "9542948d-664d-4498-9622-625a3571036b",
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
         "e0ca26b0-bf17-4955-87e6-f996023bd914",
-        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "000012": [
         "9542948d-664d-4498-9622-625a3571036b"
@@ -868,7 +953,8 @@
       "evidence": [
         "9542948d-664d-4498-9622-625a3571036b",
         "e0ca26b0-bf17-4955-87e6-f996023bd914",
-        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "touch_layer": [
         "9542948d-664d-4498-9622-625a3571036b"
@@ -876,7 +962,8 @@
       "json": [
         "9542948d-664d-4498-9622-625a3571036b",
         "e0ca26b0-bf17-4955-87e6-f996023bd914",
-        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "t4": [
         "9542948d-664d-4498-9622-625a3571036b",
@@ -934,7 +1021,8 @@
       ],
       "000011": [
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
-        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "disabled": [
         "133c8431-492c-4a02-a6fc-dd07dce13ade"
@@ -1026,7 +1114,8 @@
       ],
       "tools": [
         "e0ca26b0-bf17-4955-87e6-f996023bd914",
-        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "e2e_touch_ui": [
         "e0ca26b0-bf17-4955-87e6-f996023bd914"
@@ -1164,7 +1253,8 @@
         "da5addbc-9192-4f65-ab2b-dbffde63db60"
       ],
       "cdp": [
-        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "2px": [
         "da5addbc-9192-4f65-ab2b-dbffde63db60"
@@ -1173,13 +1263,15 @@
         "da5addbc-9192-4f65-ab2b-dbffde63db60"
       ],
       "nearby": [
-        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "000018": [
         "da5addbc-9192-4f65-ab2b-dbffde63db60"
       ],
       "r3": [
-        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "release": [
         "da5addbc-9192-4f65-ab2b-dbffde63db60"
@@ -1189,6 +1281,39 @@
       ],
       "condition": [
         "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "base": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "000009": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "010": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "r2": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "probe_page": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "page_live": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "v1": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "crab": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "coast": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "v11": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "check": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ]
     },
     "files": {
@@ -1222,7 +1347,8 @@
       ],
       "requirements.md": [
         "e0ca26b0-bf17-4955-87e6-f996023bd914",
-        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "tools/audit_spec_vs_ledger.py": [
         "e0ca26b0-bf17-4955-87e6-f996023bd914",
@@ -1240,6 +1366,15 @@
       ],
       "cloud/tools/e2e_camera.js": [
         "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "cloud/tools/probe_page.js": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "evidence/page_live.json": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "tools/ledger_step29_req11_baseline.py": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ]
     }
   }

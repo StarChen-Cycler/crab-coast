@@ -1,0 +1,125 @@
+{
+  "when": "2026-10-29T16:18:30.238Z",
+  "cdpPort": 9222,
+  "port": 8727,
+  "animals": {
+    "page": "A-0001",
+    "ref": "A-0002"
+  },
+  "total": 4,
+  "failed": 0,
+  "results": [
+    {
+      "condition": "AC-000041",
+      "name": "进场 3 秒内收到 ≥20 条快照，self.id 与注册返回一致",
+      "pass": true,
+      "detail": {
+        "count": 28,
+        "ms": 3033,
+        "selfId": "A-0001",
+        "connected": true
+      }
+    },
+    {
+      "condition": "AC-000042",
+      "name": "按住「右」0.5 秒 x 增大 ≥30px、y 基本不变；松手 300ms 内 moving=false",
+      "pass": true,
+      "detail": {
+        "from": [
+          500,
+          412
+        ],
+        "to": [
+          547,
+          412
+        ],
+        "dx": 47,
+        "dy": 0,
+        "facing": "right",
+        "stopped": true,
+        "movingAfterRelease": false
+      }
+    },
+    {
+      "condition": "AC-000043",
+      "name": "页面 nearby 含参照动物 id 与坐标，且整份快照里搜不到任何 token",
+      "pass": true,
+      "detail": {
+        "ids": [
+          "A-0002"
+        ],
+        "sample": [
+          {
+            "id": "A-0002",
+            "name": "PageB",
+            "x": 500,
+            "y": 412,
+            "facing": "down",
+            "distance": 54
+          }
+        ],
+        "leak": false,
+        "radius": 386
+      }
+    },
+    {
+      "condition": "AC-000044",
+      "name": "主动断开 WebSocket 后 5 秒内自动重连并继续收到快照",
+      "pass": true,
+      "detail": {
+        "droppedConnected": false,
+        "recoveredMs": 506,
+        "snapshotsResumed": true,
+        "connectedAt": 424,
+        "finalConnected": true
+      }
+    }
+  ],
+  "raw": {
+    "snapshots": {
+      "count": 28,
+      "ms": 3033,
+      "selfId": "A-0001",
+      "connected": true
+    },
+    "moveRight": {
+      "from": [
+        500,
+        412
+      ],
+      "to": [
+        547,
+        412
+      ],
+      "dx": 47,
+      "dy": 0,
+      "facing": "right",
+      "stopped": true,
+      "movingAfterRelease": false
+    },
+    "nearby": {
+      "ids": [
+        "A-0002"
+      ],
+      "sample": [
+        {
+          "id": "A-0002",
+          "name": "PageB",
+          "x": 500,
+          "y": 412,
+          "facing": "down",
+          "distance": 54
+        }
+      ],
+      "radius": 386,
+      "jsonBytes": 353
+    },
+    "reconnect": {
+      "droppedConnected": false,
+      "recoveredMs": 506,
+      "snapshotsResumed": true,
+      "connectedAt": 424,
+      "finalConnected": true
+    }
+  }
+}

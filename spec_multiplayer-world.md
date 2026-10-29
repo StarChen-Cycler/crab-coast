@@ -190,6 +190,9 @@ Agent → 把 playUrl 交给用户；自己用 intent / state 接口控制与观
 - 客户端 → 服务端：`{type:"intent", dir:"up"|"down"|"left"|"right"|null}`
 - 断线由客户端指数退避重连；视野尺寸变化（旋屏/收起控件）时主动换一条半径正确的连接，不进退避。
 
+验收脚本：`node tools/probe_page.js`（CDP 打开真实 `/play`，实测快照条数、右移、nearby 内容与凭据、
+断线重连，结果写 `evidence/page_live.json`）。
+
 ### 8.4 无卡片时的上传页（REQ-000013）
 
 `/play?t=<token>` 首屏先查 `card-status`：
