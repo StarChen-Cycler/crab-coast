@@ -16,3 +16,4 @@ cloud/package-lock.json
 Thumbs.db
 desktop.ini
 cloud/build/
+.octie/project.bak.*
