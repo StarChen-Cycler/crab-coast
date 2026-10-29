@@ -1,0 +1,30 @@
+{
+  "$schema": "https://octie.dev/schemas/project-v1.json",
+  "version": "1.0.0",
+  "format": "octie-project",
+  "metadata": {
+    "project_name": "crab-coast-cloud",
+    "version": "1.0.0",
+    "created_at": "2026-10-29T15:29:41.113Z",
+    "updated_at": "2026-10-29T15:29:41.113Z"
+  },
+  "tasks": {},
+  "indexes": {
+    "byStatus": {
+      "ready": [],
+      "in_progress": [],
+      "in_review": [],
+      "completed": [],
+      "blocked": []
+    },
+    "byPriority": {
+      "top": [],
+      "second": [],
+      "later": []
+    },
+    "rootTasks": [],
+    "orphanTasks": [],
+    "searchText": {},
+    "files": {}
+  }
+}

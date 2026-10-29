@@ -2,7 +2,7 @@
 
 项目：深圳海岸螃蟹小世界
 
-台账身份：LED-19d840367862455889aebf797805ea48；格式版本：1；文档修订：339。
+台账身份：LED-19d840367862455889aebf797805ea48；格式版本：1；文档修订：343。
 
 本正文由唯一机器记录确定性生成。声明Agent仅作操作归因，不证明身份或审核独立性。
 
@@ -1411,6 +1411,54 @@ ws\.js 按 animalId 维护一个按建立时间有序的会话队列：握手成
 #### 技术补充
 
 ws\.js 按 animalId 维护一个按建立时间有序的会话队列：握手成功后 push 新会话，若长度 &gt; 2 则 shift 最早的一个并 close\(1008, 'replaced by newer session'\)；play\.js 只在非主动关闭（网络错误/断线）时重连，收到该关闭码时停手并提示「已在别处被接管」。
+
+### REQ-000017 / 内容修订1：多人版手机端沿用单机版的摇杆与 ABXY，并保持页面布局一致
+
+最新提议；当前状态：已确认，不作为施工基线。
+
+类型：功能；模块：多人前端；优先级：P1；声明Agent：octie\-agent；时间：2026-10-29T15:31:06.748408+00:00。
+
+多人前端（/play）在手机上改为与单机版一致的控件与版式：左下 132px 半透明摇杆（死区 10px、最大位移 44px、按主导轴四向判定）、右下 ABXY 菱形（Y 74/0、X 12/74、B 136/74、A 68/142 74px）、右上收起/显示开关；摇杆驱动服务端意图。多人版没有尺寸轮询（REQ\-000011 已排除尺寸切换），因此 ABXY 四键全部为禁用占位，只保留视觉与布局，不绑定任何功能。布局沿用单机版规则：固定元素用 env\(safe\-area\-inset\-\*\)、竖屏预留 236px 操作带（收起后归零）、横屏叠加并在矮屏（max\-height 560px）缩放到 0\.78/0\.84、收起开关竖屏右上 / 横屏左上。现有 4 键 D\-pad 与 156px 方键方案废弃。
+
+目的：让手机用户用与单机版完全一致的手感操作自己的动物，并避免控件压住场景或被刘海/手势条遮挡。
+
+必要性及删除影响：现状是 4 个 52px 方键 D\-pad：无死区、无主导轴判定、无安全区、无法收起，手机上误触多且遮挡场景；单机版已经验证过一套手感更好的摇杆方案，多人版没有理由另造一套。
+
+包含范围：左下 132px 半透明摇杆（死区 10px、最大位移 44px、主导轴四向）；右下 ABXY 菱形（四键均禁用占位，仅保留视觉）；右上收起/显示开关，收起只藏摇杆与 ABXY；竖屏 236px 操作带、横屏叠加与矮屏缩放 0\.78/0\.84；固定元素使用 env\(safe\-area\-inset\-\*\)；桌面不显示控件，键盘 WASD/方向键保持可用。
+
+不包含范围：大/中/小尺寸切换（多人版不做，ABXY 的 A 键不承担该功能）；为 ABXY 临时编造新功能；多人版的真实摇杆（物理手柄）适配。
+
+此内容修订开发状态：未开始；开发轮次：0。
+
+已确认范围：纳入；原因：纳入决定由确认事件明确记录；固定采用审核：REV-000050。
+
+当前最新审核：REV-000050；结论：通过。后续审核不改写已经完成的历史确认。
+
+正常行为：在用户在手机上打开 /play 并操作摇杆时，摇杆按主导轴产生方向意图，经 WebSocket 发往服务端，应观察到动物按方向移动且朝向正确；松手立即停；控件不遮挡场景主体。
+
+- 边界：推杆位移小于 10px；处理：死区内的移动被忽略；可观察结果：不产生任何方向意图。
+- 边界：斜向推杆；处理：按绝对值比较取单轴；可观察结果：只取主导轴（\|dx\|&gt;=\|dy\| 取水平），不出现斜向移动。
+- 边界：按下 ABXY 任意键；处理：四键均为禁用占位，不绑定事件；可观察结果：无任何状态变化。
+- 边界：竖屏收起控件；处理：折叠类 \+ 操作带归零 \+ 触发画布重算；可观察结果：只隐藏摇杆与 ABXY，开关仍在，场景重新居中。
+
+主页面：PAGE-000002 r1，区域REG-000002-0001-0001。
+
+来源：SRC-000004 r1；SRC-000005 r1。
+
+- 验收编号及关联需求修订：AC\-000064 / REQ\-000017 r1：当前端验收者在四向摇杆各推一次都在正确方向产生位移、前置条件为触屏视口，动物在开阔沙地下，使用摇杆分别推右/上/左/下各 400ms 后松手执行读取服务端 state 的坐标与 facing时，应观察到四次位移方向与推杆一致，每次累计位移 ≥30px；松手 300ms 内 moving=false；facing 与方向一致；若方向不符或松手仍移动，则检查主导轴判定与 pointerup 复位，并应观察到判定意图映射或松手逻辑有误，由执行时声明的验证Agent通过合成触摸事件驱动摇杆，每次后读 /api/v1/animals/:id/state核对并保存evidence/touch\_ui\.json 的四向断言。
+- 验收编号及关联需求修订：AC\-000065 / REQ\-000017 r1：当前端验收者在死区内不产生移动、前置条件为同上下，使用把摇杆推到 \(4,3\)（距离 5px，小于死区 10px）保持 400ms执行读取坐标时，应观察到坐标位移为 0，facing 不变；若出现位移，则检查 DEAD 常量与距离比较，并应观察到判定死区未生效，由执行时声明的验证Agent通过合成触摸事件，记录前后坐标核对并保存evidence/touch\_ui\.json 的死区断言。
+- 验收编号及关联需求修订：AC\-000066 / REQ\-000017 r1：当前端验收者在ABXY 四键为禁用占位、前置条件为触屏视口下，使用依次按下 Y/X/B/A执行读取坐标与 facing，并检查元素类名时，应观察到四次均无坐标与 facing 变化；四键都带 disabled 类；若出现任何状态变化，则移除事件绑定，只保留视觉，并应观察到判定占位键被误绑定功能，由执行时声明的验证Agent通过合成 pointerdown 并读 state核对并保存evidence/touch\_ui\.json 的 ABXY 断言。
+- 验收编号及关联需求修订：AC\-000067 / REQ\-000017 r1：当前端验收者在收起/显示开关行为正确、前置条件为触屏视口，控件可见下，使用点收起开关，再点一次恢复执行读取摇杆/ABXY 的 display、开关可见性、\-\-touch\-band 与画布矩形时，应观察到收起后摇杆与 ABXY 的 display 为 none、开关仍可见、\-\-touch\-band 为 0px、画布重新居中；恢复后三者回到原值；若开关随控件一起消失或画布出现空白带，则只隐藏控件并触发一次 fit\(\)，并应观察到判定折叠逻辑或重算缺失，由执行时声明的验证Agent通过点击开关并逐项读取计算样式与矩形核对并保存evidence/touch\_ui\.json 的收起断言。
+- 验收编号及关联需求修订：AC\-000068 / REQ\-000017 r1：当前端验收者在竖屏布局不遮挡、前置条件为390x844 竖屏下，使用打开页面并测量各元素矩形执行读取摇杆/ABXY/开关/HUD/画布的 getBoundingClientRect时，应观察到所有控件矩形落在视口内且互不重叠；画布底边与操作带顶边间距 ≥8px；收起后画布垂直居中误差 ≤2px；若控件越界或压住画布，则核对 \-\-touch\-band 与 fit\(\)，并应观察到判定布局或操作带计算有误，由执行时声明的验证Agent通过读取矩形并做相交/间距计算核对并保存evidence/touch\_ui\.json 的竖屏布局断言。
+- 验收编号及关联需求修订：AC\-000069 / REQ\-000017 r1：当前端验收者在横屏与桌面都不出问题、前置条件为844x390 与 844x260 横屏，以及桌面视口下，使用在三个视口下打开页面并测量执行读取开关与四键矩形、控件可见性；桌面上按方向键时，应观察到横屏开关在左半屏（left ≤24px 且 right &lt; 视口宽/2）且与四键零重叠；矮屏 ABXY 缩放 0\.78 不越界；桌面不显示控件但键盘仍能移动动物；若矮屏重叠或桌面显示控件，则核对 max\-height 560 与 coarse 判定，并应观察到判定矮屏媒体查询或触屏判定有误，由执行时声明的验证Agent通过逐视口读取矩形与显示状态；桌面按方向键后读坐标核对并保存evidence/touch\_ui\.json 的横屏与桌面断言。
+
+开放问题：显式为空。
+
+依赖：空集合；标签：空集合。
+
+#### 技术补充
+
+新增 cloud/play/touch\.js（从单机 touch\-controls\.js 泛化的 createTouchControls），由 play\.js 注入 onIntent=\_\_play\.sendIntent 与 onCollapse=重新 fit；单机版 touch\-controls\.js 不改动。
 
 ## 变更提议与评估
 
@@ -3297,6 +3345,10 @@ ws\.js 按 animalId 维护一个按建立时间有序的会话队列：握手成
 - EVT-000337：acceptance record；声明Agent：octie\-agent；时间：2026-10-29T15:20:36.826397+00:00；原因：按本次实测登记。
 - EVT-000338：release add；声明Agent：octie\-agent；时间：2026-10-29T15:20:43.909879+00:00；原因：在控制语义变更后的基线上发布 crab\-coast\-v8。
 - EVT-000339：change close；声明Agent：octie\-agent；时间：2026-10-29T15:20:53.716892+00:00；原因：变更已应用、基线已激活、重验义务已由本交付执行，逐动作逐义务关闭。
+- EVT-000340：req add；声明Agent：octie\-agent；时间：2026-10-29T15:31:06.748408+00:00；原因：登记多人版手机控件与布局对齐单机版的需求。
+- EVT-000341：req submit；声明Agent：octie\-agent；时间：2026-10-29T15:31:13.102037+00:00；原因：转入待审核。
+- EVT-000342：review add；声明Agent：review\-agent；时间：2026-10-29T15:31:19.336401+00:00；原因：语义审核。
+- EVT-000343：req confirm；声明Agent：octie\-agent；时间：2026-10-29T15:31:25.759740+00:00；原因：确认纳入。
 
 ## 权威机器记录
 
@@ -30271,13 +30323,13 @@ ws\.js 按 animalId 维护一个按建立时间有序的会话队列：握手成
   "counters": {
     "baseline": 8,
     "change": 7,
-    "condition": 63,
-    "event": 339,
+    "condition": 69,
+    "event": 343,
     "execution": 91,
     "page": 2,
     "release": 8,
-    "requirement": 16,
-    "review": 49,
+    "requirement": 17,
+    "review": 50,
     "source": 6
   },
   "development": [
@@ -31050,7 +31102,7 @@ ws\.js 按 animalId 维护一个按建立时间有序的会话队列：握手成
       "time": "2026-10-29T15:18:55.221286+00:00"
     }
   ],
-  "document_revision": 339,
+  "document_revision": 343,
   "events": [
     {
       "agent": "octie-agent",
@@ -187734,6 +187786,920 @@ ws\.js 按 animalId 维护一个按建立时间有序的会话队列：握手成
       },
       "sequence": 339,
       "time": "2026-10-29T15:20:53.716892+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "req add",
+      "fingerprint": "819dc9fb7f0f13f576e259f9a27f29f6365a630cdfae85a7a0ed5fe341db9597",
+      "id": "EVT-000340",
+      "operation_id": "ui-req-add-17",
+      "reason": "登记多人版手机控件与布局对齐单机版的需求",
+      "request": {
+        "agent": "octie-agent",
+        "command": "req add",
+        "data": {
+          "acceptance": [
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的四向断言",
+              "exception": {
+                "expected": "判定意图映射或松手逻辑有误",
+                "handling": "检查主导轴判定与 pointerup 复位",
+                "scenario": "方向不符或松手仍移动"
+              },
+              "expected": "四次位移方向与推杆一致，每次累计位移 ≥30px；松手 300ms 内 moving=false；facing 与方向一致",
+              "input": "摇杆分别推右/上/左/下各 400ms 后松手",
+              "method": "合成触摸事件驱动摇杆，每次后读 /api/v1/animals/:id/state",
+              "operation": "读取服务端 state 的坐标与 facing",
+              "preconditions": "触屏视口，动物在开阔沙地",
+              "role": "前端验收者",
+              "scenario": "四向摇杆各推一次都在正确方向产生位移"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的死区断言",
+              "exception": {
+                "expected": "判定死区未生效",
+                "handling": "检查 DEAD 常量与距离比较",
+                "scenario": "出现位移"
+              },
+              "expected": "坐标位移为 0，facing 不变",
+              "input": "把摇杆推到 (4,3)（距离 5px，小于死区 10px）保持 400ms",
+              "method": "合成触摸事件，记录前后坐标",
+              "operation": "读取坐标",
+              "preconditions": "同上",
+              "role": "前端验收者",
+              "scenario": "死区内不产生移动"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的 ABXY 断言",
+              "exception": {
+                "expected": "判定占位键被误绑定功能",
+                "handling": "移除事件绑定，只保留视觉",
+                "scenario": "出现任何状态变化"
+              },
+              "expected": "四次均无坐标与 facing 变化；四键都带 disabled 类",
+              "input": "依次按下 Y/X/B/A",
+              "method": "合成 pointerdown 并读 state",
+              "operation": "读取坐标与 facing，并检查元素类名",
+              "preconditions": "触屏视口",
+              "role": "前端验收者",
+              "scenario": "ABXY 四键为禁用占位"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的收起断言",
+              "exception": {
+                "expected": "判定折叠逻辑或重算缺失",
+                "handling": "只隐藏控件并触发一次 fit()",
+                "scenario": "开关随控件一起消失或画布出现空白带"
+              },
+              "expected": "收起后摇杆与 ABXY 的 display 为 none、开关仍可见、--touch-band 为 0px、画布重新居中；恢复后三者回到原值",
+              "input": "点收起开关，再点一次恢复",
+              "method": "点击开关并逐项读取计算样式与矩形",
+              "operation": "读取摇杆/ABXY 的 display、开关可见性、--touch-band 与画布矩形",
+              "preconditions": "触屏视口，控件可见",
+              "role": "前端验收者",
+              "scenario": "收起/显示开关行为正确"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的竖屏布局断言",
+              "exception": {
+                "expected": "判定布局或操作带计算有误",
+                "handling": "核对 --touch-band 与 fit()",
+                "scenario": "控件越界或压住画布"
+              },
+              "expected": "所有控件矩形落在视口内且互不重叠；画布底边与操作带顶边间距 ≥8px；收起后画布垂直居中误差 ≤2px",
+              "input": "打开页面并测量各元素矩形",
+              "method": "读取矩形并做相交/间距计算",
+              "operation": "读取摇杆/ABXY/开关/HUD/画布的 getBoundingClientRect",
+              "preconditions": "390x844 竖屏",
+              "role": "前端验收者",
+              "scenario": "竖屏布局不遮挡"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的横屏与桌面断言",
+              "exception": {
+                "expected": "判定矮屏媒体查询或触屏判定有误",
+                "handling": "核对 max-height 560 与 coarse 判定",
+                "scenario": "矮屏重叠或桌面显示控件"
+              },
+              "expected": "横屏开关在左半屏（left ≤24px 且 right \u003c 视口宽/2）且与四键零重叠；矮屏 ABXY 缩放 0.78 不越界；桌面不显示控件但键盘仍能移动动物",
+              "input": "在三个视口下打开页面并测量",
+              "method": "逐视口读取矩形与显示状态；桌面按方向键后读坐标",
+              "operation": "读取开关与四键矩形、控件可见性；桌面上按方向键",
+              "preconditions": "844x390 与 844x260 横屏，以及桌面视口",
+              "role": "前端验收者",
+              "scenario": "横屏与桌面都不出问题"
+            }
+          ],
+          "boundaries": [
+            {
+              "expected": "不产生任何方向意图",
+              "handling": "死区内的移动被忽略",
+              "scenario": "推杆位移小于 10px"
+            },
+            {
+              "expected": "只取主导轴（|dx|\u003e=|dy| 取水平），不出现斜向移动",
+              "handling": "按绝对值比较取单轴",
+              "scenario": "斜向推杆"
+            },
+            {
+              "expected": "无任何状态变化",
+              "handling": "四键均为禁用占位，不绑定事件",
+              "scenario": "按下 ABXY 任意键"
+            },
+            {
+              "expected": "只隐藏摇杆与 ABXY，开关仍在，场景重新居中",
+              "handling": "折叠类 + 操作带归零 + 触发画布重算",
+              "scenario": "竖屏收起控件"
+            }
+          ],
+          "dependencies": [],
+          "description": "多人前端（/play）在手机上改为与单机版一致的控件与版式：左下 132px 半透明摇杆（死区 10px、最大位移 44px、按主导轴四向判定）、右下 ABXY 菱形（Y 74/0、X 12/74、B 136/74、A 68/142 74px）、右上收起/显示开关；摇杆驱动服务端意图。多人版没有尺寸轮询（REQ-000011 已排除尺寸切换），因此 ABXY 四键全部为禁用占位，只保留视觉与布局，不绑定任何功能。布局沿用单机版规则：固定元素用 env(safe-area-inset-*)、竖屏预留 236px 操作带（收起后归零）、横屏叠加并在矮屏（max-height 560px）缩放到 0.78/0.84、收起开关竖屏右上 / 横屏左上。现有 4 键 D-pad 与 156px 方键方案废弃。",
+          "excluded": [
+            "大/中/小尺寸切换（多人版不做，ABXY 的 A 键不承担该功能）",
+            "为 ABXY 临时编造新功能",
+            "多人版的真实摇杆（物理手柄）适配"
+          ],
+          "included": [
+            "左下 132px 半透明摇杆（死区 10px、最大位移 44px、主导轴四向）",
+            "右下 ABXY 菱形（四键均禁用占位，仅保留视觉）",
+            "右上收起/显示开关，收起只藏摇杆与 ABXY",
+            "竖屏 236px 操作带、横屏叠加与矮屏缩放 0.78/0.84",
+            "固定元素使用 env(safe-area-inset-*)",
+            "桌面不显示控件，键盘 WASD/方向键保持可用"
+          ],
+          "module": "多人前端",
+          "necessity": "现状是 4 个 52px 方键 D-pad：无死区、无主导轴判定、无安全区、无法收起，手机上误触多且遮挡场景；单机版已经验证过一套手感更好的摇杆方案，多人版没有理由另造一套。",
+          "normal_behavior": {
+            "behavior": "摇杆按主导轴产生方向意图，经 WebSocket 发往服务端",
+            "expected": "动物按方向移动且朝向正确；松手立即停；控件不遮挡场景主体",
+            "scenario": "用户在手机上打开 /play 并操作摇杆"
+          },
+          "placement": {
+            "kind": "页面",
+            "other": [],
+            "primary": {
+              "page_id": "PAGE-000002",
+              "page_revision": 1,
+              "region_id": "REG-000002-0001-0001"
+            }
+          },
+          "priority": "P1",
+          "purpose": "让手机用户用与单机版完全一致的手感操作自己的动物，并避免控件压住场景或被刘海/手势条遮挡。",
+          "questions": [],
+          "sources": [
+            {
+              "source_id": "SRC-000004",
+              "source_revision": 1
+            },
+            {
+              "source_id": "SRC-000005",
+              "source_revision": 1
+            }
+          ],
+          "tags": [],
+          "technical": "新增 cloud/play/touch.js（从单机 touch-controls.js 泛化的 createTouchControls），由 play.js 注入 onIntent=__play.sendIntent 与 onCollapse=重新 fit；单机版 touch-controls.js 不改动。",
+          "title": "多人版手机端沿用单机版的摇杆与 ABXY，并保持页面布局一致",
+          "type": "功能"
+        },
+        "reason": "登记多人版手机控件与布局对齐单机版的需求"
+      },
+      "result": {
+        "command": "req add",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 340,
+        "document_revision": 340,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000340",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-29T15:31:06.748408+00:00"
+        },
+        "object": {
+          "acceptance": [
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的四向断言",
+              "exception": {
+                "expected": "判定意图映射或松手逻辑有误",
+                "handling": "检查主导轴判定与 pointerup 复位",
+                "scenario": "方向不符或松手仍移动"
+              },
+              "expected": "四次位移方向与推杆一致，每次累计位移 ≥30px；松手 300ms 内 moving=false；facing 与方向一致",
+              "id": "AC-000064",
+              "input": "摇杆分别推右/上/左/下各 400ms 后松手",
+              "method": "合成触摸事件驱动摇杆，每次后读 /api/v1/animals/:id/state",
+              "operation": "读取服务端 state 的坐标与 facing",
+              "preconditions": "触屏视口，动物在开阔沙地",
+              "role": "前端验收者",
+              "scenario": "四向摇杆各推一次都在正确方向产生位移"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的死区断言",
+              "exception": {
+                "expected": "判定死区未生效",
+                "handling": "检查 DEAD 常量与距离比较",
+                "scenario": "出现位移"
+              },
+              "expected": "坐标位移为 0，facing 不变",
+              "id": "AC-000065",
+              "input": "把摇杆推到 (4,3)（距离 5px，小于死区 10px）保持 400ms",
+              "method": "合成触摸事件，记录前后坐标",
+              "operation": "读取坐标",
+              "preconditions": "同上",
+              "role": "前端验收者",
+              "scenario": "死区内不产生移动"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的 ABXY 断言",
+              "exception": {
+                "expected": "判定占位键被误绑定功能",
+                "handling": "移除事件绑定，只保留视觉",
+                "scenario": "出现任何状态变化"
+              },
+              "expected": "四次均无坐标与 facing 变化；四键都带 disabled 类",
+              "id": "AC-000066",
+              "input": "依次按下 Y/X/B/A",
+              "method": "合成 pointerdown 并读 state",
+              "operation": "读取坐标与 facing，并检查元素类名",
+              "preconditions": "触屏视口",
+              "role": "前端验收者",
+              "scenario": "ABXY 四键为禁用占位"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的收起断言",
+              "exception": {
+                "expected": "判定折叠逻辑或重算缺失",
+                "handling": "只隐藏控件并触发一次 fit()",
+                "scenario": "开关随控件一起消失或画布出现空白带"
+              },
+              "expected": "收起后摇杆与 ABXY 的 display 为 none、开关仍可见、--touch-band 为 0px、画布重新居中；恢复后三者回到原值",
+              "id": "AC-000067",
+              "input": "点收起开关，再点一次恢复",
+              "method": "点击开关并逐项读取计算样式与矩形",
+              "operation": "读取摇杆/ABXY 的 display、开关可见性、--touch-band 与画布矩形",
+              "preconditions": "触屏视口，控件可见",
+              "role": "前端验收者",
+              "scenario": "收起/显示开关行为正确"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的竖屏布局断言",
+              "exception": {
+                "expected": "判定布局或操作带计算有误",
+                "handling": "核对 --touch-band 与 fit()",
+                "scenario": "控件越界或压住画布"
+              },
+              "expected": "所有控件矩形落在视口内且互不重叠；画布底边与操作带顶边间距 ≥8px；收起后画布垂直居中误差 ≤2px",
+              "id": "AC-000068",
+              "input": "打开页面并测量各元素矩形",
+              "method": "读取矩形并做相交/间距计算",
+              "operation": "读取摇杆/ABXY/开关/HUD/画布的 getBoundingClientRect",
+              "preconditions": "390x844 竖屏",
+              "role": "前端验收者",
+              "scenario": "竖屏布局不遮挡"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的横屏与桌面断言",
+              "exception": {
+                "expected": "判定矮屏媒体查询或触屏判定有误",
+                "handling": "核对 max-height 560 与 coarse 判定",
+                "scenario": "矮屏重叠或桌面显示控件"
+              },
+              "expected": "横屏开关在左半屏（left ≤24px 且 right \u003c 视口宽/2）且与四键零重叠；矮屏 ABXY 缩放 0.78 不越界；桌面不显示控件但键盘仍能移动动物",
+              "id": "AC-000069",
+              "input": "在三个视口下打开页面并测量",
+              "method": "逐视口读取矩形与显示状态；桌面按方向键后读坐标",
+              "operation": "读取开关与四键矩形、控件可见性；桌面上按方向键",
+              "preconditions": "844x390 与 844x260 横屏，以及桌面视口",
+              "role": "前端验收者",
+              "scenario": "横屏与桌面都不出问题"
+            }
+          ],
+          "boundaries": [
+            {
+              "expected": "不产生任何方向意图",
+              "handling": "死区内的移动被忽略",
+              "scenario": "推杆位移小于 10px"
+            },
+            {
+              "expected": "只取主导轴（|dx|\u003e=|dy| 取水平），不出现斜向移动",
+              "handling": "按绝对值比较取单轴",
+              "scenario": "斜向推杆"
+            },
+            {
+              "expected": "无任何状态变化",
+              "handling": "四键均为禁用占位，不绑定事件",
+              "scenario": "按下 ABXY 任意键"
+            },
+            {
+              "expected": "只隐藏摇杆与 ABXY，开关仍在，场景重新居中",
+              "handling": "折叠类 + 操作带归零 + 触发画布重算",
+              "scenario": "竖屏收起控件"
+            }
+          ],
+          "created_at": "2026-10-29T15:31:06.748408+00:00",
+          "created_by": "octie-agent",
+          "dependencies": [],
+          "description": "多人前端（/play）在手机上改为与单机版一致的控件与版式：左下 132px 半透明摇杆（死区 10px、最大位移 44px、按主导轴四向判定）、右下 ABXY 菱形（Y 74/0、X 12/74、B 136/74、A 68/142 74px）、右上收起/显示开关；摇杆驱动服务端意图。多人版没有尺寸轮询（REQ-000011 已排除尺寸切换），因此 ABXY 四键全部为禁用占位，只保留视觉与布局，不绑定任何功能。布局沿用单机版规则：固定元素用 env(safe-area-inset-*)、竖屏预留 236px 操作带（收起后归零）、横屏叠加并在矮屏（max-height 560px）缩放到 0.78/0.84、收起开关竖屏右上 / 横屏左上。现有 4 键 D-pad 与 156px 方键方案废弃。",
+          "digest": "e4f6ed13298736bba3a2784bf989b89e027065d4690d18c2b297b7b4d512f489",
+          "event_id": "EVT-000340",
+          "excluded": [
+            "大/中/小尺寸切换（多人版不做，ABXY 的 A 键不承担该功能）",
+            "为 ABXY 临时编造新功能",
+            "多人版的真实摇杆（物理手柄）适配"
+          ],
+          "id": "REQ-000017",
+          "included": [
+            "左下 132px 半透明摇杆（死区 10px、最大位移 44px、主导轴四向）",
+            "右下 ABXY 菱形（四键均禁用占位，仅保留视觉）",
+            "右上收起/显示开关，收起只藏摇杆与 ABXY",
+            "竖屏 236px 操作带、横屏叠加与矮屏缩放 0.78/0.84",
+            "固定元素使用 env(safe-area-inset-*)",
+            "桌面不显示控件，键盘 WASD/方向键保持可用"
+          ],
+          "module": "多人前端",
+          "necessity": "现状是 4 个 52px 方键 D-pad：无死区、无主导轴判定、无安全区、无法收起，手机上误触多且遮挡场景；单机版已经验证过一套手感更好的摇杆方案，多人版没有理由另造一套。",
+          "normal_behavior": {
+            "behavior": "摇杆按主导轴产生方向意图，经 WebSocket 发往服务端",
+            "expected": "动物按方向移动且朝向正确；松手立即停；控件不遮挡场景主体",
+            "scenario": "用户在手机上打开 /play 并操作摇杆"
+          },
+          "placement": {
+            "kind": "页面",
+            "other": [],
+            "primary": {
+              "page_id": "PAGE-000002",
+              "page_revision": 1,
+              "region_id": "REG-000002-0001-0001"
+            }
+          },
+          "priority": "P1",
+          "purpose": "让手机用户用与单机版完全一致的手感操作自己的动物，并避免控件压住场景或被刘海/手势条遮挡。",
+          "questions": [],
+          "revision": 1,
+          "sources": [
+            {
+              "source_id": "SRC-000004",
+              "source_revision": 1
+            },
+            {
+              "source_id": "SRC-000005",
+              "source_revision": 1
+            }
+          ],
+          "status": "完整草稿",
+          "tags": [],
+          "technical": "新增 cloud/play/touch.js（从单机 touch-controls.js 泛化的 createTouchControls），由 play.js 注入 onIntent=__play.sendIntent 与 onCollapse=重新 fit；单机版 touch-controls.js 不改动。",
+          "title": "多人版手机端沿用单机版的摇杆与 ABXY，并保持页面布局一致",
+          "type": "功能"
+        },
+        "previous_content_revision": null,
+        "target": "REQ-000017",
+        "type": "success"
+      },
+      "sequence": 340,
+      "time": "2026-10-29T15:31:06.748408+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "req submit",
+      "fingerprint": "3b48422290a593b012b2eacc3250e15042de50a09fca24ae2d7c89b363089bd3",
+      "id": "EVT-000341",
+      "operation_id": "ui-submit-17",
+      "reason": "转入待审核",
+      "request": {
+        "agent": "octie-agent",
+        "command": "req submit",
+        "data": {
+          "digest": "e4f6ed13298736bba3a2784bf989b89e027065d4690d18c2b297b7b4d512f489",
+          "id": "REQ-000017",
+          "revision": 1
+        },
+        "reason": "转入待审核"
+      },
+      "result": {
+        "command": "req submit",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 341,
+        "document_revision": 341,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000341",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-29T15:31:13.102037+00:00"
+        },
+        "object": {
+          "acceptance": [
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的四向断言",
+              "exception": {
+                "expected": "判定意图映射或松手逻辑有误",
+                "handling": "检查主导轴判定与 pointerup 复位",
+                "scenario": "方向不符或松手仍移动"
+              },
+              "expected": "四次位移方向与推杆一致，每次累计位移 ≥30px；松手 300ms 内 moving=false；facing 与方向一致",
+              "id": "AC-000064",
+              "input": "摇杆分别推右/上/左/下各 400ms 后松手",
+              "method": "合成触摸事件驱动摇杆，每次后读 /api/v1/animals/:id/state",
+              "operation": "读取服务端 state 的坐标与 facing",
+              "preconditions": "触屏视口，动物在开阔沙地",
+              "role": "前端验收者",
+              "scenario": "四向摇杆各推一次都在正确方向产生位移"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的死区断言",
+              "exception": {
+                "expected": "判定死区未生效",
+                "handling": "检查 DEAD 常量与距离比较",
+                "scenario": "出现位移"
+              },
+              "expected": "坐标位移为 0，facing 不变",
+              "id": "AC-000065",
+              "input": "把摇杆推到 (4,3)（距离 5px，小于死区 10px）保持 400ms",
+              "method": "合成触摸事件，记录前后坐标",
+              "operation": "读取坐标",
+              "preconditions": "同上",
+              "role": "前端验收者",
+              "scenario": "死区内不产生移动"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的 ABXY 断言",
+              "exception": {
+                "expected": "判定占位键被误绑定功能",
+                "handling": "移除事件绑定，只保留视觉",
+                "scenario": "出现任何状态变化"
+              },
+              "expected": "四次均无坐标与 facing 变化；四键都带 disabled 类",
+              "id": "AC-000066",
+              "input": "依次按下 Y/X/B/A",
+              "method": "合成 pointerdown 并读 state",
+              "operation": "读取坐标与 facing，并检查元素类名",
+              "preconditions": "触屏视口",
+              "role": "前端验收者",
+              "scenario": "ABXY 四键为禁用占位"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的收起断言",
+              "exception": {
+                "expected": "判定折叠逻辑或重算缺失",
+                "handling": "只隐藏控件并触发一次 fit()",
+                "scenario": "开关随控件一起消失或画布出现空白带"
+              },
+              "expected": "收起后摇杆与 ABXY 的 display 为 none、开关仍可见、--touch-band 为 0px、画布重新居中；恢复后三者回到原值",
+              "id": "AC-000067",
+              "input": "点收起开关，再点一次恢复",
+              "method": "点击开关并逐项读取计算样式与矩形",
+              "operation": "读取摇杆/ABXY 的 display、开关可见性、--touch-band 与画布矩形",
+              "preconditions": "触屏视口，控件可见",
+              "role": "前端验收者",
+              "scenario": "收起/显示开关行为正确"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的竖屏布局断言",
+              "exception": {
+                "expected": "判定布局或操作带计算有误",
+                "handling": "核对 --touch-band 与 fit()",
+                "scenario": "控件越界或压住画布"
+              },
+              "expected": "所有控件矩形落在视口内且互不重叠；画布底边与操作带顶边间距 ≥8px；收起后画布垂直居中误差 ≤2px",
+              "id": "AC-000068",
+              "input": "打开页面并测量各元素矩形",
+              "method": "读取矩形并做相交/间距计算",
+              "operation": "读取摇杆/ABXY/开关/HUD/画布的 getBoundingClientRect",
+              "preconditions": "390x844 竖屏",
+              "role": "前端验收者",
+              "scenario": "竖屏布局不遮挡"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的横屏与桌面断言",
+              "exception": {
+                "expected": "判定矮屏媒体查询或触屏判定有误",
+                "handling": "核对 max-height 560 与 coarse 判定",
+                "scenario": "矮屏重叠或桌面显示控件"
+              },
+              "expected": "横屏开关在左半屏（left ≤24px 且 right \u003c 视口宽/2）且与四键零重叠；矮屏 ABXY 缩放 0.78 不越界；桌面不显示控件但键盘仍能移动动物",
+              "id": "AC-000069",
+              "input": "在三个视口下打开页面并测量",
+              "method": "逐视口读取矩形与显示状态；桌面按方向键后读坐标",
+              "operation": "读取开关与四键矩形、控件可见性；桌面上按方向键",
+              "preconditions": "844x390 与 844x260 横屏，以及桌面视口",
+              "role": "前端验收者",
+              "scenario": "横屏与桌面都不出问题"
+            }
+          ],
+          "boundaries": [
+            {
+              "expected": "不产生任何方向意图",
+              "handling": "死区内的移动被忽略",
+              "scenario": "推杆位移小于 10px"
+            },
+            {
+              "expected": "只取主导轴（|dx|\u003e=|dy| 取水平），不出现斜向移动",
+              "handling": "按绝对值比较取单轴",
+              "scenario": "斜向推杆"
+            },
+            {
+              "expected": "无任何状态变化",
+              "handling": "四键均为禁用占位，不绑定事件",
+              "scenario": "按下 ABXY 任意键"
+            },
+            {
+              "expected": "只隐藏摇杆与 ABXY，开关仍在，场景重新居中",
+              "handling": "折叠类 + 操作带归零 + 触发画布重算",
+              "scenario": "竖屏收起控件"
+            }
+          ],
+          "created_at": "2026-10-29T15:31:06.748408+00:00",
+          "created_by": "octie-agent",
+          "dependencies": [],
+          "description": "多人前端（/play）在手机上改为与单机版一致的控件与版式：左下 132px 半透明摇杆（死区 10px、最大位移 44px、按主导轴四向判定）、右下 ABXY 菱形（Y 74/0、X 12/74、B 136/74、A 68/142 74px）、右上收起/显示开关；摇杆驱动服务端意图。多人版没有尺寸轮询（REQ-000011 已排除尺寸切换），因此 ABXY 四键全部为禁用占位，只保留视觉与布局，不绑定任何功能。布局沿用单机版规则：固定元素用 env(safe-area-inset-*)、竖屏预留 236px 操作带（收起后归零）、横屏叠加并在矮屏（max-height 560px）缩放到 0.78/0.84、收起开关竖屏右上 / 横屏左上。现有 4 键 D-pad 与 156px 方键方案废弃。",
+          "digest": "e4f6ed13298736bba3a2784bf989b89e027065d4690d18c2b297b7b4d512f489",
+          "event_id": "EVT-000340",
+          "excluded": [
+            "大/中/小尺寸切换（多人版不做，ABXY 的 A 键不承担该功能）",
+            "为 ABXY 临时编造新功能",
+            "多人版的真实摇杆（物理手柄）适配"
+          ],
+          "id": "REQ-000017",
+          "included": [
+            "左下 132px 半透明摇杆（死区 10px、最大位移 44px、主导轴四向）",
+            "右下 ABXY 菱形（四键均禁用占位，仅保留视觉）",
+            "右上收起/显示开关，收起只藏摇杆与 ABXY",
+            "竖屏 236px 操作带、横屏叠加与矮屏缩放 0.78/0.84",
+            "固定元素使用 env(safe-area-inset-*)",
+            "桌面不显示控件，键盘 WASD/方向键保持可用"
+          ],
+          "module": "多人前端",
+          "necessity": "现状是 4 个 52px 方键 D-pad：无死区、无主导轴判定、无安全区、无法收起，手机上误触多且遮挡场景；单机版已经验证过一套手感更好的摇杆方案，多人版没有理由另造一套。",
+          "normal_behavior": {
+            "behavior": "摇杆按主导轴产生方向意图，经 WebSocket 发往服务端",
+            "expected": "动物按方向移动且朝向正确；松手立即停；控件不遮挡场景主体",
+            "scenario": "用户在手机上打开 /play 并操作摇杆"
+          },
+          "placement": {
+            "kind": "页面",
+            "other": [],
+            "primary": {
+              "page_id": "PAGE-000002",
+              "page_revision": 1,
+              "region_id": "REG-000002-0001-0001"
+            }
+          },
+          "priority": "P1",
+          "purpose": "让手机用户用与单机版完全一致的手感操作自己的动物，并避免控件压住场景或被刘海/手势条遮挡。",
+          "questions": [],
+          "revision": 1,
+          "sources": [
+            {
+              "source_id": "SRC-000004",
+              "source_revision": 1
+            },
+            {
+              "source_id": "SRC-000005",
+              "source_revision": 1
+            }
+          ],
+          "status": "待审核",
+          "tags": [],
+          "technical": "新增 cloud/play/touch.js（从单机 touch-controls.js 泛化的 createTouchControls），由 play.js 注入 onIntent=__play.sendIntent 与 onCollapse=重新 fit；单机版 touch-controls.js 不改动。",
+          "title": "多人版手机端沿用单机版的摇杆与 ABXY，并保持页面布局一致",
+          "type": "功能"
+        },
+        "previous_content_revision": null,
+        "target": "REQ-000017",
+        "type": "success"
+      },
+      "sequence": 341,
+      "time": "2026-10-29T15:31:13.102037+00:00"
+    },
+    {
+      "agent": "review-agent",
+      "command": "review add",
+      "fingerprint": "fa823b40a2ec233f3a4f78c57e61644e729b6fb674f8baf3a03932486e27ba0f",
+      "id": "EVT-000342",
+      "operation_id": "ui-add-17",
+      "reason": "语义审核",
+      "request": {
+        "agent": "review-agent",
+        "command": "review add",
+        "data": {
+          "acceptance_review": "验收：6 条条件分别对应四向、死区、ABXY 禁用、收起、竖屏布局、横屏与桌面，均为可自动断言的矩形/坐标/样式检查，并与 Octie 任务 e0ca26b0 的 6 条判据一一对应。",
+          "basis": "依据 REQ-000017 第 1 修订摘要 e4f6ed132987… 与源码事实（touch-controls.js 的 DEAD=10/R_MAX=44/236px/0.78|0.84；play 的 #dpad 52px）审阅。声明式审核。",
+          "completeness_review": "完整性：15 类字段齐全；纳入 6 条、排除 3 条（明确不做尺寸切换、不为 ABXY 编造功能）、边界 4 条；页面归属 PAGE-000002 世界画布区；来源 SRC-000004/000005；开放问题为空。",
+          "conclusion": "通过",
+          "necessity_review": "必要性：现有多人版是 4 键方 D-pad，无死区/主导轴/安全区/收起，手机上误触并遮挡场景；单机版已有验证过的摇杆方案，复用即可。",
+          "target_digest": "e4f6ed13298736bba3a2784bf989b89e027065d4690d18c2b297b7b4d512f489",
+          "target_id": "REQ-000017",
+          "target_revision": 1,
+          "target_type": "requirement"
+        },
+        "reason": "语义审核"
+      },
+      "result": {
+        "command": "review add",
+        "commit_status": "committed",
+        "content_revision": null,
+        "current_document_revision": 342,
+        "document_revision": 342,
+        "issues": [],
+        "meta": {
+          "agent": "review-agent",
+          "event_id": "EVT-000342",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-29T15:31:19.336401+00:00"
+        },
+        "object": {
+          "acceptance_review": "验收：6 条条件分别对应四向、死区、ABXY 禁用、收起、竖屏布局、横屏与桌面，均为可自动断言的矩形/坐标/样式检查，并与 Octie 任务 e0ca26b0 的 6 条判据一一对应。",
+          "basis": "依据 REQ-000017 第 1 修订摘要 e4f6ed132987… 与源码事实（touch-controls.js 的 DEAD=10/R_MAX=44/236px/0.78|0.84；play 的 #dpad 52px）审阅。声明式审核。",
+          "completeness_review": "完整性：15 类字段齐全；纳入 6 条、排除 3 条（明确不做尺寸切换、不为 ABXY 编造功能）、边界 4 条；页面归属 PAGE-000002 世界画布区；来源 SRC-000004/000005；开放问题为空。",
+          "conclusion": "通过",
+          "created_at": "2026-10-29T15:31:19.336401+00:00",
+          "created_by": "review-agent",
+          "event_id": "EVT-000342",
+          "event_sequence": 342,
+          "id": "REV-000050",
+          "necessity_review": "必要性：现有多人版是 4 键方 D-pad，无死区/主导轴/安全区/收起，手机上误触并遮挡场景；单机版已有验证过的摇杆方案，复用即可。",
+          "target_digest": "e4f6ed13298736bba3a2784bf989b89e027065d4690d18c2b297b7b4d512f489",
+          "target_id": "REQ-000017",
+          "target_revision": 1,
+          "target_type": "requirement"
+        },
+        "previous_content_revision": null,
+        "target": "REV-000050",
+        "type": "success"
+      },
+      "sequence": 342,
+      "time": "2026-10-29T15:31:19.336401+00:00"
+    },
+    {
+      "agent": "octie-agent",
+      "command": "req confirm",
+      "fingerprint": "8038d69745390bc648b6d44ce68ddbf566e43ec659a599b4849c6615a34da9e7",
+      "id": "EVT-000343",
+      "operation_id": "ui-confirm-17",
+      "reason": "确认纳入",
+      "request": {
+        "agent": "octie-agent",
+        "command": "req confirm",
+        "data": {
+          "digest": "e4f6ed13298736bba3a2784bf989b89e027065d4690d18c2b297b7b4d512f489",
+          "id": "REQ-000017",
+          "revision": 1,
+          "scope": {
+            "decision": "纳入",
+            "reason": null
+          }
+        },
+        "reason": "确认纳入"
+      },
+      "result": {
+        "command": "req confirm",
+        "commit_status": "committed",
+        "content_revision": 1,
+        "current_document_revision": 343,
+        "document_revision": 343,
+        "issues": [],
+        "meta": {
+          "agent": "octie-agent",
+          "event_id": "EVT-000343",
+          "path": "c:\\users\\lenovo\\documents\\chatgpt\\ai-ghs\\crab-coast\\requirements.md",
+          "time": "2026-10-29T15:31:25.759740+00:00"
+        },
+        "object": {
+          "acceptance": [
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的四向断言",
+              "exception": {
+                "expected": "判定意图映射或松手逻辑有误",
+                "handling": "检查主导轴判定与 pointerup 复位",
+                "scenario": "方向不符或松手仍移动"
+              },
+              "expected": "四次位移方向与推杆一致，每次累计位移 ≥30px；松手 300ms 内 moving=false；facing 与方向一致",
+              "id": "AC-000064",
+              "input": "摇杆分别推右/上/左/下各 400ms 后松手",
+              "method": "合成触摸事件驱动摇杆，每次后读 /api/v1/animals/:id/state",
+              "operation": "读取服务端 state 的坐标与 facing",
+              "preconditions": "触屏视口，动物在开阔沙地",
+              "role": "前端验收者",
+              "scenario": "四向摇杆各推一次都在正确方向产生位移"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的死区断言",
+              "exception": {
+                "expected": "判定死区未生效",
+                "handling": "检查 DEAD 常量与距离比较",
+                "scenario": "出现位移"
+              },
+              "expected": "坐标位移为 0，facing 不变",
+              "id": "AC-000065",
+              "input": "把摇杆推到 (4,3)（距离 5px，小于死区 10px）保持 400ms",
+              "method": "合成触摸事件，记录前后坐标",
+              "operation": "读取坐标",
+              "preconditions": "同上",
+              "role": "前端验收者",
+              "scenario": "死区内不产生移动"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的 ABXY 断言",
+              "exception": {
+                "expected": "判定占位键被误绑定功能",
+                "handling": "移除事件绑定，只保留视觉",
+                "scenario": "出现任何状态变化"
+              },
+              "expected": "四次均无坐标与 facing 变化；四键都带 disabled 类",
+              "id": "AC-000066",
+              "input": "依次按下 Y/X/B/A",
+              "method": "合成 pointerdown 并读 state",
+              "operation": "读取坐标与 facing，并检查元素类名",
+              "preconditions": "触屏视口",
+              "role": "前端验收者",
+              "scenario": "ABXY 四键为禁用占位"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的收起断言",
+              "exception": {
+                "expected": "判定折叠逻辑或重算缺失",
+                "handling": "只隐藏控件并触发一次 fit()",
+                "scenario": "开关随控件一起消失或画布出现空白带"
+              },
+              "expected": "收起后摇杆与 ABXY 的 display 为 none、开关仍可见、--touch-band 为 0px、画布重新居中；恢复后三者回到原值",
+              "id": "AC-000067",
+              "input": "点收起开关，再点一次恢复",
+              "method": "点击开关并逐项读取计算样式与矩形",
+              "operation": "读取摇杆/ABXY 的 display、开关可见性、--touch-band 与画布矩形",
+              "preconditions": "触屏视口，控件可见",
+              "role": "前端验收者",
+              "scenario": "收起/显示开关行为正确"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的竖屏布局断言",
+              "exception": {
+                "expected": "判定布局或操作带计算有误",
+                "handling": "核对 --touch-band 与 fit()",
+                "scenario": "控件越界或压住画布"
+              },
+              "expected": "所有控件矩形落在视口内且互不重叠；画布底边与操作带顶边间距 ≥8px；收起后画布垂直居中误差 ≤2px",
+              "id": "AC-000068",
+              "input": "打开页面并测量各元素矩形",
+              "method": "读取矩形并做相交/间距计算",
+              "operation": "读取摇杆/ABXY/开关/HUD/画布的 getBoundingClientRect",
+              "preconditions": "390x844 竖屏",
+              "role": "前端验收者",
+              "scenario": "竖屏布局不遮挡"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的横屏与桌面断言",
+              "exception": {
+                "expected": "判定矮屏媒体查询或触屏判定有误",
+                "handling": "核对 max-height 560 与 coarse 判定",
+                "scenario": "矮屏重叠或桌面显示控件"
+              },
+              "expected": "横屏开关在左半屏（left ≤24px 且 right \u003c 视口宽/2）且与四键零重叠；矮屏 ABXY 缩放 0.78 不越界；桌面不显示控件但键盘仍能移动动物",
+              "id": "AC-000069",
+              "input": "在三个视口下打开页面并测量",
+              "method": "逐视口读取矩形与显示状态；桌面按方向键后读坐标",
+              "operation": "读取开关与四键矩形、控件可见性；桌面上按方向键",
+              "preconditions": "844x390 与 844x260 横屏，以及桌面视口",
+              "role": "前端验收者",
+              "scenario": "横屏与桌面都不出问题"
+            }
+          ],
+          "boundaries": [
+            {
+              "expected": "不产生任何方向意图",
+              "handling": "死区内的移动被忽略",
+              "scenario": "推杆位移小于 10px"
+            },
+            {
+              "expected": "只取主导轴（|dx|\u003e=|dy| 取水平），不出现斜向移动",
+              "handling": "按绝对值比较取单轴",
+              "scenario": "斜向推杆"
+            },
+            {
+              "expected": "无任何状态变化",
+              "handling": "四键均为禁用占位，不绑定事件",
+              "scenario": "按下 ABXY 任意键"
+            },
+            {
+              "expected": "只隐藏摇杆与 ABXY，开关仍在，场景重新居中",
+              "handling": "折叠类 + 操作带归零 + 触发画布重算",
+              "scenario": "竖屏收起控件"
+            }
+          ],
+          "confirmation": {
+            "agent": "octie-agent",
+            "event_id": "EVT-000343",
+            "review_id": "REV-000050",
+            "time": "2026-10-29T15:31:25.759740+00:00"
+          },
+          "created_at": "2026-10-29T15:31:06.748408+00:00",
+          "created_by": "octie-agent",
+          "dependencies": [],
+          "description": "多人前端（/play）在手机上改为与单机版一致的控件与版式：左下 132px 半透明摇杆（死区 10px、最大位移 44px、按主导轴四向判定）、右下 ABXY 菱形（Y 74/0、X 12/74、B 136/74、A 68/142 74px）、右上收起/显示开关；摇杆驱动服务端意图。多人版没有尺寸轮询（REQ-000011 已排除尺寸切换），因此 ABXY 四键全部为禁用占位，只保留视觉与布局，不绑定任何功能。布局沿用单机版规则：固定元素用 env(safe-area-inset-*)、竖屏预留 236px 操作带（收起后归零）、横屏叠加并在矮屏（max-height 560px）缩放到 0.78/0.84、收起开关竖屏右上 / 横屏左上。现有 4 键 D-pad 与 156px 方键方案废弃。",
+          "digest": "e4f6ed13298736bba3a2784bf989b89e027065d4690d18c2b297b7b4d512f489",
+          "event_id": "EVT-000340",
+          "excluded": [
+            "大/中/小尺寸切换（多人版不做，ABXY 的 A 键不承担该功能）",
+            "为 ABXY 临时编造新功能",
+            "多人版的真实摇杆（物理手柄）适配"
+          ],
+          "id": "REQ-000017",
+          "included": [
+            "左下 132px 半透明摇杆（死区 10px、最大位移 44px、主导轴四向）",
+            "右下 ABXY 菱形（四键均禁用占位，仅保留视觉）",
+            "右上收起/显示开关，收起只藏摇杆与 ABXY",
+            "竖屏 236px 操作带、横屏叠加与矮屏缩放 0.78/0.84",
+            "固定元素使用 env(safe-area-inset-*)",
+            "桌面不显示控件，键盘 WASD/方向键保持可用"
+          ],
+          "latest_review": {
+            "acceptance_review": "验收：6 条条件分别对应四向、死区、ABXY 禁用、收起、竖屏布局、横屏与桌面，均为可自动断言的矩形/坐标/样式检查，并与 Octie 任务 e0ca26b0 的 6 条判据一一对应。",
+            "basis": "依据 REQ-000017 第 1 修订摘要 e4f6ed132987… 与源码事实（touch-controls.js 的 DEAD=10/R_MAX=44/236px/0.78|0.84；play 的 #dpad 52px）审阅。声明式审核。",
+            "completeness_review": "完整性：15 类字段齐全；纳入 6 条、排除 3 条（明确不做尺寸切换、不为 ABXY 编造功能）、边界 4 条；页面归属 PAGE-000002 世界画布区；来源 SRC-000004/000005；开放问题为空。",
+            "conclusion": "通过",
+            "created_at": "2026-10-29T15:31:19.336401+00:00",
+            "created_by": "review-agent",
+            "event_id": "EVT-000342",
+            "event_sequence": 342,
+            "id": "REV-000050",
+            "necessity_review": "必要性：现有多人版是 4 键方 D-pad，无死区/主导轴/安全区/收起，手机上误触并遮挡场景；单机版已有验证过的摇杆方案，复用即可。",
+            "target_digest": "e4f6ed13298736bba3a2784bf989b89e027065d4690d18c2b297b7b4d512f489",
+            "target_id": "REQ-000017",
+            "target_revision": 1,
+            "target_type": "requirement"
+          },
+          "module": "多人前端",
+          "necessity": "现状是 4 个 52px 方键 D-pad：无死区、无主导轴判定、无安全区、无法收起，手机上误触多且遮挡场景；单机版已经验证过一套手感更好的摇杆方案，多人版没有理由另造一套。",
+          "normal_behavior": {
+            "behavior": "摇杆按主导轴产生方向意图，经 WebSocket 发往服务端",
+            "expected": "动物按方向移动且朝向正确；松手立即停；控件不遮挡场景主体",
+            "scenario": "用户在手机上打开 /play 并操作摇杆"
+          },
+          "placement": {
+            "kind": "页面",
+            "other": [],
+            "primary": {
+              "page_id": "PAGE-000002",
+              "page_revision": 1,
+              "region_id": "REG-000002-0001-0001"
+            }
+          },
+          "priority": "P1",
+          "purpose": "让手机用户用与单机版完全一致的手感操作自己的动物，并避免控件压住场景或被刘海/手势条遮挡。",
+          "questions": [],
+          "revision": 1,
+          "scope": {
+            "decision": "纳入",
+            "reason": null
+          },
+          "sources": [
+            {
+              "source_id": "SRC-000004",
+              "source_revision": 1
+            },
+            {
+              "source_id": "SRC-000005",
+              "source_revision": 1
+            }
+          ],
+          "status": "已确认",
+          "tags": [],
+          "technical": "新增 cloud/play/touch.js（从单机 touch-controls.js 泛化的 createTouchControls），由 play.js 注入 onIntent=__play.sendIntent 与 onCollapse=重新 fit；单机版 touch-controls.js 不改动。",
+          "title": "多人版手机端沿用单机版的摇杆与 ABXY，并保持页面布局一致",
+          "type": "功能"
+        },
+        "previous_content_revision": null,
+        "target": "REQ-000017",
+        "type": "success"
+      },
+      "sequence": 343,
+      "time": "2026-10-29T15:31:25.759740+00:00"
     }
   ],
   "executions": [
@@ -198907,6 +199873,194 @@ ws\.js 按 animalId 维护一个按建立时间有序的会话队列：握手成
           "type": "功能"
         }
       ]
+    },
+    {
+      "id": "REQ-000017",
+      "revisions": [
+        {
+          "acceptance": [
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的四向断言",
+              "exception": {
+                "expected": "判定意图映射或松手逻辑有误",
+                "handling": "检查主导轴判定与 pointerup 复位",
+                "scenario": "方向不符或松手仍移动"
+              },
+              "expected": "四次位移方向与推杆一致，每次累计位移 ≥30px；松手 300ms 内 moving=false；facing 与方向一致",
+              "id": "AC-000064",
+              "input": "摇杆分别推右/上/左/下各 400ms 后松手",
+              "method": "合成触摸事件驱动摇杆，每次后读 /api/v1/animals/:id/state",
+              "operation": "读取服务端 state 的坐标与 facing",
+              "preconditions": "触屏视口，动物在开阔沙地",
+              "role": "前端验收者",
+              "scenario": "四向摇杆各推一次都在正确方向产生位移"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的死区断言",
+              "exception": {
+                "expected": "判定死区未生效",
+                "handling": "检查 DEAD 常量与距离比较",
+                "scenario": "出现位移"
+              },
+              "expected": "坐标位移为 0，facing 不变",
+              "id": "AC-000065",
+              "input": "把摇杆推到 (4,3)（距离 5px，小于死区 10px）保持 400ms",
+              "method": "合成触摸事件，记录前后坐标",
+              "operation": "读取坐标",
+              "preconditions": "同上",
+              "role": "前端验收者",
+              "scenario": "死区内不产生移动"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的 ABXY 断言",
+              "exception": {
+                "expected": "判定占位键被误绑定功能",
+                "handling": "移除事件绑定，只保留视觉",
+                "scenario": "出现任何状态变化"
+              },
+              "expected": "四次均无坐标与 facing 变化；四键都带 disabled 类",
+              "id": "AC-000066",
+              "input": "依次按下 Y/X/B/A",
+              "method": "合成 pointerdown 并读 state",
+              "operation": "读取坐标与 facing，并检查元素类名",
+              "preconditions": "触屏视口",
+              "role": "前端验收者",
+              "scenario": "ABXY 四键为禁用占位"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的收起断言",
+              "exception": {
+                "expected": "判定折叠逻辑或重算缺失",
+                "handling": "只隐藏控件并触发一次 fit()",
+                "scenario": "开关随控件一起消失或画布出现空白带"
+              },
+              "expected": "收起后摇杆与 ABXY 的 display 为 none、开关仍可见、--touch-band 为 0px、画布重新居中；恢复后三者回到原值",
+              "id": "AC-000067",
+              "input": "点收起开关，再点一次恢复",
+              "method": "点击开关并逐项读取计算样式与矩形",
+              "operation": "读取摇杆/ABXY 的 display、开关可见性、--touch-band 与画布矩形",
+              "preconditions": "触屏视口，控件可见",
+              "role": "前端验收者",
+              "scenario": "收起/显示开关行为正确"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的竖屏布局断言",
+              "exception": {
+                "expected": "判定布局或操作带计算有误",
+                "handling": "核对 --touch-band 与 fit()",
+                "scenario": "控件越界或压住画布"
+              },
+              "expected": "所有控件矩形落在视口内且互不重叠；画布底边与操作带顶边间距 ≥8px；收起后画布垂直居中误差 ≤2px",
+              "id": "AC-000068",
+              "input": "打开页面并测量各元素矩形",
+              "method": "读取矩形并做相交/间距计算",
+              "operation": "读取摇杆/ABXY/开关/HUD/画布的 getBoundingClientRect",
+              "preconditions": "390x844 竖屏",
+              "role": "前端验收者",
+              "scenario": "竖屏布局不遮挡"
+            },
+            {
+              "allow_na": false,
+              "evidence": "evidence/touch_ui.json 的横屏与桌面断言",
+              "exception": {
+                "expected": "判定矮屏媒体查询或触屏判定有误",
+                "handling": "核对 max-height 560 与 coarse 判定",
+                "scenario": "矮屏重叠或桌面显示控件"
+              },
+              "expected": "横屏开关在左半屏（left ≤24px 且 right \u003c 视口宽/2）且与四键零重叠；矮屏 ABXY 缩放 0.78 不越界；桌面不显示控件但键盘仍能移动动物",
+              "id": "AC-000069",
+              "input": "在三个视口下打开页面并测量",
+              "method": "逐视口读取矩形与显示状态；桌面按方向键后读坐标",
+              "operation": "读取开关与四键矩形、控件可见性；桌面上按方向键",
+              "preconditions": "844x390 与 844x260 横屏，以及桌面视口",
+              "role": "前端验收者",
+              "scenario": "横屏与桌面都不出问题"
+            }
+          ],
+          "boundaries": [
+            {
+              "expected": "不产生任何方向意图",
+              "handling": "死区内的移动被忽略",
+              "scenario": "推杆位移小于 10px"
+            },
+            {
+              "expected": "只取主导轴（|dx|\u003e=|dy| 取水平），不出现斜向移动",
+              "handling": "按绝对值比较取单轴",
+              "scenario": "斜向推杆"
+            },
+            {
+              "expected": "无任何状态变化",
+              "handling": "四键均为禁用占位，不绑定事件",
+              "scenario": "按下 ABXY 任意键"
+            },
+            {
+              "expected": "只隐藏摇杆与 ABXY，开关仍在，场景重新居中",
+              "handling": "折叠类 + 操作带归零 + 触发画布重算",
+              "scenario": "竖屏收起控件"
+            }
+          ],
+          "created_at": "2026-10-29T15:31:06.748408+00:00",
+          "created_by": "octie-agent",
+          "dependencies": [],
+          "description": "多人前端（/play）在手机上改为与单机版一致的控件与版式：左下 132px 半透明摇杆（死区 10px、最大位移 44px、按主导轴四向判定）、右下 ABXY 菱形（Y 74/0、X 12/74、B 136/74、A 68/142 74px）、右上收起/显示开关；摇杆驱动服务端意图。多人版没有尺寸轮询（REQ-000011 已排除尺寸切换），因此 ABXY 四键全部为禁用占位，只保留视觉与布局，不绑定任何功能。布局沿用单机版规则：固定元素用 env(safe-area-inset-*)、竖屏预留 236px 操作带（收起后归零）、横屏叠加并在矮屏（max-height 560px）缩放到 0.78/0.84、收起开关竖屏右上 / 横屏左上。现有 4 键 D-pad 与 156px 方键方案废弃。",
+          "digest": "e4f6ed13298736bba3a2784bf989b89e027065d4690d18c2b297b7b4d512f489",
+          "event_id": "EVT-000340",
+          "excluded": [
+            "大/中/小尺寸切换（多人版不做，ABXY 的 A 键不承担该功能）",
+            "为 ABXY 临时编造新功能",
+            "多人版的真实摇杆（物理手柄）适配"
+          ],
+          "id": "REQ-000017",
+          "included": [
+            "左下 132px 半透明摇杆（死区 10px、最大位移 44px、主导轴四向）",
+            "右下 ABXY 菱形（四键均禁用占位，仅保留视觉）",
+            "右上收起/显示开关，收起只藏摇杆与 ABXY",
+            "竖屏 236px 操作带、横屏叠加与矮屏缩放 0.78/0.84",
+            "固定元素使用 env(safe-area-inset-*)",
+            "桌面不显示控件，键盘 WASD/方向键保持可用"
+          ],
+          "module": "多人前端",
+          "necessity": "现状是 4 个 52px 方键 D-pad：无死区、无主导轴判定、无安全区、无法收起，手机上误触多且遮挡场景；单机版已经验证过一套手感更好的摇杆方案，多人版没有理由另造一套。",
+          "normal_behavior": {
+            "behavior": "摇杆按主导轴产生方向意图，经 WebSocket 发往服务端",
+            "expected": "动物按方向移动且朝向正确；松手立即停；控件不遮挡场景主体",
+            "scenario": "用户在手机上打开 /play 并操作摇杆"
+          },
+          "placement": {
+            "kind": "页面",
+            "other": [],
+            "primary": {
+              "page_id": "PAGE-000002",
+              "page_revision": 1,
+              "region_id": "REG-000002-0001-0001"
+            }
+          },
+          "priority": "P1",
+          "purpose": "让手机用户用与单机版完全一致的手感操作自己的动物，并避免控件压住场景或被刘海/手势条遮挡。",
+          "questions": [],
+          "revision": 1,
+          "sources": [
+            {
+              "source_id": "SRC-000004",
+              "source_revision": 1
+            },
+            {
+              "source_id": "SRC-000005",
+              "source_revision": 1
+            }
+          ],
+          "status": "完整草稿",
+          "tags": [],
+          "technical": "新增 cloud/play/touch.js（从单机 touch-controls.js 泛化的 createTouchControls），由 play.js 注入 onIntent=__play.sendIntent 与 onCollapse=重新 fit；单机版 touch-controls.js 不改动。",
+          "title": "多人版手机端沿用单机版的摇杆与 ABXY，并保持页面布局一致",
+          "type": "功能"
+        }
+      ]
     }
   ],
   "retirements": [],
@@ -199694,6 +200848,22 @@ ws\.js 按 animalId 维护一个按建立时间有序的会话队列：握手成
       "target_id": "BASE-000008",
       "target_revision": 1,
       "target_type": "baseline"
+    },
+    {
+      "acceptance_review": "验收：6 条条件分别对应四向、死区、ABXY 禁用、收起、竖屏布局、横屏与桌面，均为可自动断言的矩形/坐标/样式检查，并与 Octie 任务 e0ca26b0 的 6 条判据一一对应。",
+      "basis": "依据 REQ-000017 第 1 修订摘要 e4f6ed132987… 与源码事实（touch-controls.js 的 DEAD=10/R_MAX=44/236px/0.78|0.84；play 的 #dpad 52px）审阅。声明式审核。",
+      "completeness_review": "完整性：15 类字段齐全；纳入 6 条、排除 3 条（明确不做尺寸切换、不为 ABXY 编造功能）、边界 4 条；页面归属 PAGE-000002 世界画布区；来源 SRC-000004/000005；开放问题为空。",
+      "conclusion": "通过",
+      "created_at": "2026-10-29T15:31:19.336401+00:00",
+      "created_by": "review-agent",
+      "event_id": "EVT-000342",
+      "event_sequence": 342,
+      "id": "REV-000050",
+      "necessity_review": "必要性：现有多人版是 4 键方 D-pad，无死区/主导轴/安全区/收起，手机上误触并遮挡场景；单机版已有验证过的摇杆方案，复用即可。",
+      "target_digest": "e4f6ed13298736bba3a2784bf989b89e027065d4690d18c2b297b7b4d512f489",
+      "target_id": "REQ-000017",
+      "target_revision": 1,
+      "target_type": "requirement"
     }
   ],
   "sources": [
