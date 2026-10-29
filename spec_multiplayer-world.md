@@ -262,6 +262,7 @@ PORT=8080 REGISTER_CODE=<口令> DATA_DIR=/srv/crab/data npm start
 | REQ-000010 | AC-000038 | 合法卡片 200，状态里能读到 192×192 与摘要 |
 | REQ-000010 | AC-000039 | 3 行卡片被拒，errors 指出行数不符 |
 | REQ-000010 | AC-000040 | 四角不透明被拒，errors 指出角坐标 |
+| REQ-000010 | AC-000063 | manifest 取值错误（fps=7 / footLine=40）被拒，errors 指出字段且不落库 |
 | REQ-000011 | AC-000041 | 进场 3 秒内收到 ≥20 条快照且 self.id 正确 |
 | REQ-000011 | AC-000042 | 按右方向 0.5 秒后 x 增大，松手 0.3 秒内停 |
 | REQ-000011 | AC-000043 | nearby 含对方 id 与坐标，不含任何凭据 |
