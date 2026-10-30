@@ -1,5 +1,5 @@
 {
-  "when": "2026-10-29T16:10:58.432Z",
+  "when": "2026-10-30T03:50:20.040Z",
   "cdpPort": 9222,
   "total": 6,
   "failed": 0,
@@ -8,7 +8,7 @@
       "condition": "AC-000064",
       "name": "摇杆四向各 400ms：方向正确、位移≥30px、facing 一致、松手即停",
       "pass": true,
-      "detail": "{\"right\":{\"dx\":144,\"dy\":0,\"facing\":\"right\",\"moved\":144,\"stopped\":true},\"left\":{\"dx\":-106,\"dy\":0,\"facing\":\"left\",\"moved\":106,\"stopped\":true},\"up\":{\"dx\":0,\"dy\":-89,\"facing\":\"up\",\"moved\":89,\"stopped\":true},\"down\":{\"dx\":0,\"dy\":96,\"facing\":\"down\",\"moved\":96,\"stopped\":true}}"
+      "detail": "{\"right\":{\"dx\":75,\"dy\":0,\"facing\":\"right\",\"moved\":75,\"stopped\":true},\"left\":{\"dx\":-75,\"dy\":0,\"facing\":\"left\",\"moved\":75,\"stopped\":true},\"up\":{\"dx\":0,\"dy\":-68,\"facing\":\"up\",\"moved\":68,\"stopped\":true},\"down\":{\"dx\":0,\"dy\":67,\"facing\":\"down\",\"moved\":67,\"stopped\":true}}"
     },
     {
       "condition": "AC-000065",
@@ -36,16 +36,16 @@
     },
     {
       "condition": "AC-000069",
-      "name": "横屏开关在左半屏且不压键；矮屏不越界不重叠；桌面不显示控件但键盘可用",
+      "name": "横屏开关在顶部一行且水平居中、不压 HUD/四键；矮屏不越界不重叠；桌面不显示控件但键盘可用",
       "pass": true,
-      "detail": "{\"landToggle\":{\"l\":378,\"t\":16,\"r\":466,\"b\":44,\"w\":88,\"h\":28,\"display\":\"flex\"},\"landToggleOk\":true,\"landNoOverlap\":true,\"shortOk\":true,\"desk\":{\"touch\":false,\"kb\":{\"x0\":625,\"x1\":659,\"moved\":true}}}"
+      "detail": "{\"landToggle\":{\"l\":378,\"t\":16,\"r\":466,\"b\":44,\"w\":88,\"h\":28,\"display\":\"flex\"},\"landToggleOk\":true,\"landNoOverlap\":true,\"shortOk\":true,\"desk\":{\"touch\":false,\"kb\":{\"x0\":615,\"x1\":684,\"moved\":true}}}"
     }
   ],
   "mapping": [
     {
       "condition_id": "AC-000064",
       "assertion": "摇杆四向各 400ms：方向正确、位移≥30px、facing 一致、松手即停",
-      "detail": "{\"right\":{\"dx\":144,\"dy\":0,\"facing\":\"right\",\"moved\":144,\"stopped\":true},\"left\":{\"dx\":-106,\"dy\":0,\"facing\":\"left\",\"moved\":106,\"stopped\":true},\"up\":{\"dx\":0,\"dy\":-89,\"facing\":\"up\",\"moved\":89,\"stopped\":true},\"down\":{\"dx\":0,\"dy\":96,\"facing\":\"down\",\"moved\":96,\"stopped\":true}}"
+      "detail": "{\"right\":{\"dx\":75,\"dy\":0,\"facing\":\"right\",\"moved\":75,\"stopped\":true},\"left\":{\"dx\":-75,\"dy\":0,\"facing\":\"left\",\"moved\":75,\"stopped\":true},\"up\":{\"dx\":0,\"dy\":-68,\"facing\":\"up\",\"moved\":68,\"stopped\":true},\"down\":{\"dx\":0,\"dy\":67,\"facing\":\"down\",\"moved\":67,\"stopped\":true}}"
     },
     {
       "condition_id": "AC-000065",
@@ -69,8 +69,8 @@
     },
     {
       "condition_id": "AC-000069",
-      "assertion": "横屏开关在左半屏且不压键；矮屏不越界不重叠；桌面不显示控件但键盘可用",
-      "detail": "{\"landToggle\":{\"l\":378,\"t\":16,\"r\":466,\"b\":44,\"w\":88,\"h\":28,\"display\":\"flex\"},\"landToggleOk\":true,\"landNoOverlap\":true,\"shortOk\":true,\"desk\":{\"touch\":false,\"kb\":{\"x0\":625,\"x1\":659,\"moved\":true}}}"
+      "assertion": "横屏开关在顶部一行且水平居中、不压 HUD/四键；矮屏不越界不重叠；桌面不显示控件但键盘可用",
+      "detail": "{\"landToggle\":{\"l\":378,\"t\":16,\"r\":466,\"b\":44,\"w\":88,\"h\":28,\"display\":\"flex\"},\"landToggleOk\":true,\"landNoOverlap\":true,\"shortOk\":true,\"desk\":{\"touch\":false,\"kb\":{\"x0\":615,\"x1\":684,\"moved\":true}}}"
     }
   ]
 }

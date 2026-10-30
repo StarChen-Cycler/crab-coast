@@ -207,8 +207,11 @@ class World {
     return Math.min(r, this.radiusMax);
   }
 
-  /** REST 与 WS 共用的状态构造（REQ-000014）。 */
-  buildState(id, radiusInput) {
+  /** REST 与 WS 共用的状态构造（REQ-000014 / REQ-000021）。
+   *  scope='radius'（默认，Agent 的 /state）：只给半径内的其他动物，radius 参与过滤；
+   *  scope='all'（浏览器 WS）：给世界内全部动物，不做距离裁切，radius 回 null（此时它不是过滤条件）。 */
+  buildState(id, radiusInput, opts = {}) {
+    const scope = opts.scope === 'all' ? 'all' : 'radius';
     const a = this.animals.get(id);
     if (!a) return null;
     const radius = this.clampRadius(radiusInput);
@@ -216,7 +219,7 @@ class World {
     for (const o of this.animals.values()) {
       if (o.id === id) continue;
       const d = Math.hypot(o.x - a.x, o.y - a.y);
-      if (d <= radius) nearby.push({ o, d });
+      if (scope === 'all' || d <= radius) nearby.push({ o, d });
     }
     nearby.sort((p, q) => p.d - q.d);
     return {
@@ -239,7 +242,8 @@ class World {
       world: {
         w: C.WORLD.w, h: C.WORLD.h,
         online: this.onlineCount(),
-        radius,
+        radius: scope === 'all' ? null : radius,
+        scope,
       },
     };
   }

@@ -117,15 +117,18 @@ const PAGE_CAMERA = async function (cfg) {
   const snap = () => {
     const c = p.camera;
     const s = p.snapshot.self;
+    const rp = c.renderSelf || { x: s.x, y: s.y };   // 屏幕上真正画的位置（插值后，REQ-000020）
     const rect = cv.getBoundingClientRect();
     return {
       cam: { x: +c.x.toFixed(2), y: +c.y.toFixed(2), w: c.w, h: c.h,
              vw: c.vw, vh: c.vh, ox: c.ox, oy: c.oy,
-             worldW: c.worldW, worldH: c.worldH, radius: c.radius, desiredRadius: c.desiredRadius },
+             worldW: c.worldW, worldH: c.worldH },
       self: { id: s.id, x: s.x, y: s.y, facing: s.facing, moving: s.moving },
-      screen: p.worldToScreen(s.x, s.y),
+      render: { x: +rp.x.toFixed(2), y: +rp.y.toFixed(2) },
+      screen: p.worldToScreen(rp.x, rp.y),
       nearby: p.snapshot.nearby.map((n) => ({ id: n.id, x: n.x, y: n.y, d: n.distance })),
-      serverRadius: p.snapshot.world.radius,
+      worldScope: p.snapshot.world.scope,
+      worldRadius: p.snapshot.world.radius,
       drawn: c.drawnIds,
       canvas: { w: Math.round(rect.width), h: Math.round(rect.height),
                 l: Math.round(rect.left), t: Math.round(rect.top),
@@ -139,8 +142,13 @@ const PAGE_CAMERA = async function (cfg) {
   out.initial = snap();
   for (const step of cfg.steps) {
     p.sendIntent(step.dir);
-    await sleep(step.ms);
-    out.samples.push(Object.assign({ label: step.label }, snap()));
+    const marks = step.marks || [step.ms];
+    let last = 0;
+    for (const m of marks) {
+      if (m > last) await sleep(m - last);
+      last = m;
+      out.samples.push(Object.assign({ label: `${step.label}@${m}ms` }, snap()));
+    }
     p.sendIntent(null);
     await sleep(160);
   }
@@ -249,7 +257,12 @@ async function main() {
     // ================= P1 竖屏 390x844：1:1 画布 + 水平居中 + 平移一致 + 可见⊆已收到 =================
     const p1 = await runPhase(browserRpc, {
       name: 'P1-390x844', w: 390, h: 844, touch: true, url: url(A1),
-      steps: [{ label: 'right-1.2s', dir: 'right', ms: 1200 }],
+      steps: [
+        { label: 'right-1.2s', dir: 'right', ms: 1200 },
+        // 平移一致要在「稳态」两端取点：插值渲染有约一个快照间隔的滞后，起点若刚进场，
+        // 滞后还没建立，两个端点就不可比（这是插值方案的固有性质，不是 bug）。
+        { label: 'left-2.4s', dir: 'left', marks: [1200, 2400] },
+      ],
       pureCases: [{ name: '左上角', x: 0, y: 0, w: 390, h: 608 }],
     });
     phases.push(p1);
@@ -270,12 +283,20 @@ async function main() {
       { screen: mid.screen, want: mid.cam.w / 2, diff: +dxMid.toFixed(2), camX: mid.cam.x,
         camMaxX: mid.cam.worldW - mid.cam.vw });
 
-    const dWorld = mid.self.x - s0.self.x;
-    const dCam = mid.cam.x - s0.cam.x;
-    check('AC-000070', '持续向右 1.2 秒：相机位移 = 动物世界位移（±2px），屏幕坐标不变（±2px）',
-      Math.abs(dWorld) >= MIN_PAN_PX && Math.abs(dCam - dWorld) <= PAN_TOL
-      && Math.abs(mid.screen.x - s0.screen.x) <= CENTER_TOL,
-      { dWorld: +dWorld.toFixed(1), dCam: +dCam.toFixed(1), dScreen: dScreen(s0, mid) });
+    // 平移：屏幕坐标必须纹丝不动（用户可见的性质），且相机与自己的渲染位置严格同步；
+    // 世界位移与相机位移的差异来自 10Hz 整数快照 + 插值相位（固有误差），按 ≤5% 校核
+    const panA = p1.samples[1];
+    const panB = p1.samples[2];
+    const dWorld = panB.self.x - panA.self.x;
+    const dCam = panB.cam.x - panA.cam.x;
+    const dRender = panB.render.x - panA.render.x;
+    check('AC-000070', '稳态平移：屏幕坐标不变（≤2px）、相机与渲染位置同步（≤0.5px）、世界位移与相机位移差 ≤5%',
+      Math.abs(dWorld) >= MIN_PAN_PX
+      && Math.abs(panB.screen.x - panA.screen.x) <= CENTER_TOL
+      && Math.abs(dCam - dRender) <= 0.5
+      && Math.abs(dCam - dWorld) <= Math.abs(dWorld) * 0.05,
+      { window: 'left-1.2s→2.4s', dWorld: +dWorld.toFixed(1), dCam: +dCam.toFixed(1),
+        dRender: +dRender.toFixed(1), dScreen: dScreen(panA, panB) });
 
     const bState = await rest('GET', `/api/v1/animals/${B.animalId}/state`, { token: B.token });
     const bPos = bState.json.self;
@@ -286,25 +307,23 @@ async function main() {
     const bInNearby = vis.nearby.some((n) => n.id === B.animalId);
     const bDrawn = vis.drawn.includes(B.animalId);
     const missing = vis.drawn.filter((id) => !vis.nearby.some((n) => n.id === id));
-    check('AC-000073', '视野内的另一只动物必在快照 nearby 内并被绘制；绘制集合 ⊆ nearby（缺失 0）',
-      bInView && bInNearby && bDrawn && missing.length === 0,
+    check('AC-000073', '快照是全量（world.scope=all、radius=null）；视野内的另一只必在 nearby 内并被绘制；绘制 ⊄ 集合缺失 0',
+      vis.worldScope === 'all' && vis.worldRadius === null && bInView && bInNearby && bDrawn && missing.length === 0,
       { bPos: [bPos.x, bPos.y], bScreen, bInView, bInNearby, bDrawn, missing,
+        worldScope: vis.worldScope, worldRadius: vis.worldRadius,
         nearby: vis.nearby.map((n) => n.id), drawn: vis.drawn });
 
-    const halfDiag = Math.ceil(Math.hypot(s0.cam.w, s0.cam.h) / 2);
-    check('AC-000073', 'WS 握手半径 = ceil(视野半对角)+24，且服务端回显一致（未被 RADIUS_MAX 钳制）',
-      s0.cam.desiredRadius === halfDiag + 24 && s0.serverRadius === s0.cam.desiredRadius,
-      { halfDiag, desired: s0.cam.desiredRadius, server: s0.serverRadius });
-
-    // ================= P2 宽矮 900x300：双轴居中 + 左/右/下钳制 =================
+    // ================= P2 宽矮 900x300：双轴居中 + 下/右/左钳制 =================
+    // 路线都贴着「已知可走的通道」：竖直只在出生列（上 94 / 下 115），水平只在出生行（左 305 / 右 184）。
+    // 上一版把竖直与水平混着走，插值/网络抖动让动物停进了只有斜向能出的凹槽，两次运动都为 0。
     const p2 = await runPhase(browserRpc, {
       name: 'P2-900x300', w: 900, h: 300, touch: true, url: url(A2),
       steps: [
-        // 只在出生点正上方挪 0.5s：此时 x/y 双轴都未钳制（y≤390），可断言双轴居中
-        { label: 'up-0.5s', dir: 'up', ms: 500 },
-        { label: 'left-2.5s', dir: 'left', ms: 2500 },
-        { label: 'right-4.0s', dir: 'right', ms: 4000 },
-        { label: 'down-2.0s', dir: 'down', ms: 2000 },
+        { label: 'down-1.2s', dir: 'down', ms: 1200 },              // s0 下边界：相机 y 顶到 240
+        { label: 'up-1.6s', dir: 'up', marks: [1200, 1600] },        // s1,s2（s2 双轴未钳制 → 居中）
+        { label: 'down-1.0s', dir: 'down', ms: 1000 },               // s3 回到宽通道那一行
+        { label: 'right-1.5s', dir: 'right', marks: [600, 1500] },   // s4,s5 右边界：相机 x 顶到 60
+        { label: 'left-3.0s', dir: 'left', marks: [3000] },          // s6 左边界：相机 x 回到 0
       ],
       pureCases: [
         { name: '左上角', x: 0, y: 0, w: 900, h: 300 },
@@ -313,30 +332,34 @@ async function main() {
       ],
     });
     phases.push(p2);
-    const [up, lft, rgt, dwn] = p2.samples;
+    const [sDown, sUp1, sUp2, sBack, sRight1, sRight2, sLeft] = p2.samples;
 
     check('AC-000070', '900x300：相机双轴都未钳制时，自己屏幕坐标双轴居中，偏差 ≤2px',
-      unclampedX(up) && unclampedY(up)
-      && Math.abs(up.screen.x - up.cam.w / 2) <= CENTER_TOL
-      && Math.abs(up.screen.y - up.cam.h / 2) <= CENTER_TOL,
-      { screen: up.screen, want: [up.cam.w / 2, up.cam.h / 2],
-        diff: [+(up.screen.x - up.cam.w / 2).toFixed(2), +(up.screen.y - up.cam.h / 2).toFixed(2)],
-        cam: [up.cam.x, up.cam.y], camRange: [[0, up.cam.worldW - up.cam.vw], [0, up.cam.worldH - up.cam.vh]] });
+      unclampedX(sUp2) && unclampedY(sUp2)
+      && Math.abs(sUp2.screen.x - sUp2.cam.w / 2) <= CENTER_TOL
+      && Math.abs(sUp2.screen.y - sUp2.cam.h / 2) <= CENTER_TOL,
+      { screen: sUp2.screen, want: [sUp2.cam.w / 2, sUp2.cam.h / 2],
+        diff: [+(sUp2.screen.x - sUp2.cam.w / 2).toFixed(2), +(sUp2.screen.y - sUp2.cam.h / 2).toFixed(2)],
+        cam: [sUp2.cam.x, sUp2.cam.y],
+        camRange: [[0, sUp2.cam.worldW - sUp2.cam.vw], [0, sUp2.cam.worldH - sUp2.cam.vh]] });
+
+    const wantY = sDown.cam.worldH - sDown.cam.vh;
+    check('AC-000072', '持续向下：相机停在 y = worldH-h，动物屏幕 y 继续增大（≥30px）',
+      sDown.cam.y === wantY && (sDown.screen.y - p2.initial.screen.y) >= MIN_PAN_PX,
+      { cam: sDown.cam.y, want: wantY, screen: [p2.initial.screen.y, sDown.screen.y],
+        dScreen: dScreen(p2.initial, sDown) });
+
+    const wantX = sRight2.cam.worldW - sRight2.cam.vw;
+    check('AC-000072', '持续向右：相机停在 x = worldW-w，动物屏幕 x 继续增大（≥30px）',
+      sRight2.cam.x === wantX && sRight1.cam.x === wantX
+      && (sRight2.screen.x - sRight1.screen.x) >= MIN_PAN_PX,
+      { cam: [sRight1.cam.x, sRight2.cam.x], want: wantX,
+        screen: [sRight1.screen.x, sRight2.screen.x], dScreen: dScreen(sRight1, sRight2) });
 
     check('AC-000071', '持续向左：相机停在 x=0，动物屏幕 x 继续减小（≥30px），且相机不再移动',
-      lft.cam.x === 0 && lft.cam.y >= 0 && (up.screen.x - lft.screen.x) >= MIN_PAN_PX,
-      { camBefore: up.cam.x, camAfter: lft.cam.x,
-        screen: [up.screen.x, lft.screen.x], dScreen: dScreen(up, lft) });
-
-    const wantX = rgt.cam.worldW - rgt.cam.vw;
-    check('AC-000072', '持续向右：相机停在 x = worldW-w，动物屏幕 x 继续增大（≥30px）',
-      rgt.cam.x === wantX && (rgt.screen.x - lft.screen.x) >= MIN_PAN_PX,
-      { cam: rgt.cam.x, want: wantX, screen: [lft.screen.x, rgt.screen.x], dScreen: dScreen(lft, rgt) });
-
-    const wantY = dwn.cam.worldH - dwn.cam.vh;
-    check('AC-000072', '持续向下：相机停在 y = worldH-h，动物屏幕 y 继续增大（≥30px）',
-      dwn.cam.y === wantY && (dwn.screen.y - rgt.screen.y) >= MIN_PAN_PX,
-      { cam: dwn.cam.y, want: wantY, screen: [rgt.screen.y, dwn.screen.y], dScreen: dScreen(rgt, dwn) });
+      sLeft.cam.x === 0 && (sRight2.screen.x - sLeft.screen.x) >= MIN_PAN_PX,
+      { camBefore: sRight2.cam.x, camAfter: sLeft.cam.x,
+        screen: [sRight2.screen.x, sLeft.screen.x], dScreen: dScreen(sRight2, sLeft) });
 
     const pureLT = p2.pure[0].got;
     const pureRT = p2.pure[1].got;
@@ -365,7 +388,7 @@ async function main() {
       q.cam.x === 0 && q.cam.y === 0 && q.cam.vw === 960 && q.cam.vh === 540
       && q.cam.ox === wantOx && q.cam.oy === wantOy
       && p3.initial.cam.x === 0 && p3.initial.cam.y === 0
-      && Math.abs(q.screen.x - (q.self.x + wantOx)) <= CENTER_TOL
+      && Math.abs(q.screen.x - (q.render.x + wantOx)) <= CENTER_TOL
       && Math.abs((q.self.x - p3.initial.self.x)) >= MIN_PAN_PX,
       { cam: [q.cam.x, q.cam.y], view: [q.cam.vw, q.cam.vh], oxy: [q.cam.ox, q.cam.oy],
         want: [wantOx, wantOy], screen: q.screen, selfX: q.self.x,

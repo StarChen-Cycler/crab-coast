@@ -6,7 +6,7 @@
     "project_name": "crab-coast-cloud",
     "version": "1.0.0",
     "created_at": "2026-10-29T15:29:41.113Z",
-    "updated_at": "2026-10-29T15:43:28.734Z"
+    "updated_at": "2026-10-30T03:30:40.788Z"
   },
   "tasks": {
     "9542948d-664d-4498-9622-625a3571036b": {
@@ -166,7 +166,7 @@
       "id": "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
       "title": "多人版页面布局对齐单机版（安全区 / 操作带 / 矮屏缩放 / 收起开关）",
       "description": "让多人版页面在手机上的整体布局向单机版看齐。\n\n现状：`play/index.html` 的三个 HUD 是裸定位（left/top 14px），没有 safe-area，也没有竖屏操作带概念；画布按 0.98/0.96 自适应，摇杆/ABXY 会压在场景上。\n\n目标：\n- HUD 统一成单机版的胶囊样式（半透明深底、1px 描边、圆角 10px、backdrop-blur），自身状态 / 附近数量 / 连接状态三块不重叠；\n- 所有固定元素位置改用 `env(safe-area-inset-*)`（左/右/上/下），刘海与手势条不遮挡；\n- 竖屏（orientation: portrait）预留 236px 操作带：`--touch-band: 236px`，画布在操作带上方居中，收起控件时归零并重新居中；横屏 `--touch-band: 0`，控件叠加在场景上；\n- 横屏矮屏（max-height 560px）时 ABXY 缩 0.78、摇杆缩 0.84，避免遮挡；\n- 收起开关位置随方向切换：竖屏右上、横屏左上（与单机版一致，避免被 ABXY 顶住）；\n- 收起/显示后必须触发一次画布重算（dispatch resize 或直接调 fit），否则会出现空白带。",
-      "status": "in_review",
+      "status": "completed",
       "priority": "second",
       "success_criteria": [
         {
@@ -244,7 +244,7 @@
       "notes": "",
       "c7_verified": [],
       "created_at": "2026-10-29T15:30:07.579Z",
-      "updated_at": "2026-10-29T15:43:09.823Z",
+      "updated_at": "2026-10-29T15:43:29.630Z",
       "completed_at": "2026-10-29T15:43:09.823Z",
       "edges": [
         "e0ca26b0-bf17-4955-87e6-f996023bd914"
@@ -254,7 +254,7 @@
       "id": "e0ca26b0-bf17-4955-87e6-f996023bd914",
       "title": "为多人版触屏控件补端到端验收并登记 REQ-000017",
       "description": "为「多人版触屏控件与页面布局对齐单机版」补端到端验收，并把结果写进需求台账。\n\n内容：\n1. 新增 `cloud/tools/e2e_touch_ui.js`：自己拉起服务（临时 DATA_DIR + 端口），注册动物并上传卡片，然后用三个视口（390x844 / 844x390 / 844x260）断言：\n   - 摇杆推右/上/左/下各 400ms：位移方向正确、松手停下（服务端 state 校验）；\n   - 死区（推 4,3px）不产生位移；\n   - ABXY 四键按下不改变坐标与 facing；\n   - 收起开关：收起后摇杆/ABXY 的 display 为 none、开关仍在、--touch-band 归零；再点恢复；\n   - 元素矩形都在视口内且互不重叠（与 T3 的成功判据同口径，这里是自动化版本）。\n2. 台账：新增 REQ-000017「多人版手机端使用与单机版一致的摇杆与 ABXY，并保持页面布局一致」，验收条件对应上述断言（每条形如「推右 40px → 坐标 x 增大 ≥ 30px 且 facing=right」），走 add→submit→review→confirm；实体实现完成后再走 change/基线/dev/验收/发布。\n3. 结果写入 evidence/touch_ui.json，并作为台账验收条件的证据引用。",
-      "status": "blocked",
+      "status": "completed",
       "priority": "second",
       "success_criteria": [
         {
@@ -335,65 +335,466 @@
       "notes": "",
       "c7_verified": [],
       "created_at": "2026-10-29T15:30:22.915Z",
-      "updated_at": "2026-10-29T15:43:10.711Z",
+      "updated_at": "2026-10-29T15:43:30.482Z",
       "completed_at": "2026-10-29T15:43:10.711Z",
+      "edges": []
+    },
+    "6567f110-8d78-4702-8090-7073c52da894": {
+      "id": "6567f110-8d78-4702-8090-7073c52da894",
+      "title": "让 WebSocket 快照半径可按连接指定并钳制",
+      "description": "当前 ws.js 的快照半径写死为 cfg.radiusDefault（200）。相机裁切后视野半对角约 224，200 会漏发屏幕四角的动物，出现「屏幕上有、服务器没发」的鬼影。\n\n目标：握手 URL 支持 `&r=<radius>`，服务端用 world.clampRadius 钳制（默认 200 / 上限 RADIUS_MAX=400），并按该连接的半径组快照；非法值回落默认。同时保持 /state 的半径语义完全不变（Agent 侧仍是 200/400）。",
+      "status": "completed",
+      "priority": "top",
+      "success_criteria": [
+        {
+          "id": "e456a2bc-4394-4917-904a-c28be3a18b7b",
+          "text": "ws 握手带 r=224 时，该连接收到的快照 world.radius=224；不带 r 时=200（默认不变）",
+          "completed": true,
+          "completed_at": "2026-10-29T16:13:50.601Z",
+          "evidence": "cloud/tools/probe_ws_radius.js 6/6 PASS（evidence/ws_radius.json）：ws 不带 r→200、r=224→224、r=10000→400、r=abc→200；/state 默认 200、?radius=10000→400"
+        },
+        {
+          "id": "9143b325-ad81-4203-a432-eee52e40bda6",
+          "text": "r=10000 时回显 400（RADIUS_MAX 钳制）；r=abc 时回落 200 且不报错",
+          "completed": true,
+          "completed_at": "2026-10-29T16:13:50.601Z",
+          "evidence": "cloud/tools/probe_ws_radius.js 6/6 PASS（evidence/ws_radius.json）：ws 不带 r→200、r=224→224、r=10000→400、r=abc→200；/state 默认 200、?radius=10000→400"
+        },
+        {
+          "id": "5579da12-8313-44e5-be14-0e4f17f4694e",
+          "text": "/state 接口默认仍为 200、传 10000 仍回显 400（不被 ws 改动影响）",
+          "completed": true,
+          "completed_at": "2026-10-29T16:13:56.297Z",
+          "evidence": "probe_ws_radius C1-5/C1-6 PASS：/state 默认 radius=200，?radius=10000 回显 400；e2e_camera AC-000074 复验同结论"
+        },
+        {
+          "id": "555bfb88-b734-4cc4-bb72-4ef79d5c9418",
+          "text": "node --check cloud/server/ws.js 通过；cloud/tools/e2e_control.js 与 e2e_multiplayer.js 回归仍全 PASS",
+          "completed": true,
+          "completed_at": "2026-10-29T16:13:59.543Z",
+          "evidence": "node --check cloud/server/ws.js OK；e2e_multiplayer 21/21 PASS、e2e_control 6/6 PASS（evidence/e2e_multiplayer.json、evidence/e2e_control.json 已刷新）"
+        }
+      ],
+      "deliverables": [
+        {
+          "id": "266ffc29-b1ae-41cf-b824-207731716dde",
+          "text": "cloud/server/ws.js（握手支持 r= 参数并按 RADIUS_MAX 钳制）",
+          "completed": true
+        },
+        {
+          "id": "e20eb0ac-dec1-498b-a88f-2da7bf78e785",
+          "text": "cloud/tools/probe_ws_radius.js（默认 200 / 传 10000 → 400 的断言）",
+          "completed": true
+        }
+      ],
+      "need_fix": [],
+      "assignee": null,
+      "blockers": [],
+      "dependencies": "",
+      "sub_items": [],
+      "related_files": [
+        "cloud/server/ws.js",
+        "cloud/server/world.js",
+        "cloud/shared/const.js"
+      ],
+      "notes": "",
+      "c7_verified": [],
+      "created_at": "2026-10-29T16:00:37.403Z",
+      "updated_at": "2026-10-29T16:14:05.799Z",
+      "completed_at": "2026-10-29T16:13:59.543Z",
+      "edges": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ]
+    },
+    "0632fb40-4596-4697-ae3c-1685ddab8e10": {
+      "id": "0632fb40-4596-4697-ae3c-1685ddab8e10",
+      "title": "多人页改为相机裁切：自己居中跟随、边界钳制",
+      "description": "现在多人页把 960×540 整个画进画布再整体缩放到屏幕：手机上角色只有约 20px。改为相机裁切：\n\n- 画布 width/height = 视口 CSS 像素（1 逻辑像素 = 1 CSS 像素），不再缩放整图；\n- camera.w/h = 画布尺寸（受视口与操作带影响，复用现有 fit() 的可用高度计算）；\n- 相机目标 = 自己的动物居中，camera.x = clamp(self.x - w/2, 0, worldW - w)，y 同理；若 w/h 超过世界尺寸则取世界尺寸并居中；\n- 背景用 drawImage(bg, cam.x, cam.y, w, h, 0, 0, w, h) 子矩形绘制；\n- 其它动物与自己的屏幕坐标 = worldToScreen(x,y)，绘制前剔除完全在视野外的（这是纯绘制优化，不是可见性规则）；\n- 键盘/摇杆输入不变。",
+      "status": "completed",
+      "priority": "top",
+      "success_criteria": [
+        {
+          "id": "d1faddf8-ffd6-4167-8048-4541fb090bb9",
+          "text": "390x844 竖屏：自己的动物屏幕坐标 = (w/2, h*可用比例中心)，偏差 ≤2px",
+          "completed": true,
+          "completed_at": "2026-10-29T16:14:06.754Z",
+          "evidence": "e2e_camera P1 390x844：screen.x=195 = 画布中心 195，偏差 0.00px（camera.x=427 未钳制）；900x300 双轴 screen=(450,150)=中心，偏差 (0,0)"
+        },
+        {
+          "id": "b4b48144-e5ee-481c-a997-406c878ad4ef",
+          "text": "持续向右移动 1 秒：相机 x 增加量与动物世界位移一致（误差 ≤2px），动物屏幕坐标偏差 ≤2px",
+          "completed": true,
+          "completed_at": "2026-10-29T16:14:11.162Z",
+          "evidence": "e2e_camera：向右 1.2s 世界位移 122px、相机位移 122px（差 0px ≤2），屏幕坐标变化 (0,0)px"
+        },
+        {
+          "id": "e3e85c91-f1be-411d-bd1f-cf683b498999",
+          "text": "动物被置于世界左上角并持续左上移动：相机停在 (0,0)，动物屏幕坐标继续减小到 ≥0，背景不动",
+          "completed": true,
+          "completed_at": "2026-10-29T16:14:12.001Z",
+          "evidence": "e2e_camera AC-000071：900x300 向左 2.5s，camera.x 50→0 停住，屏幕 x 450→232（-218px 继续减小）；上边界用同一份纯函数 cameraTarget(0,0)→(0,0)"
+        },
+        {
+          "id": "b0a00c85-4576-4f75-b796-e0c9a2e06bc8",
+          "text": "动物被置于世界右下角并持续右下移动：相机停在 (worldW-w, worldH-h)（受限轴），动物屏幕坐标继续增大到贴边",
+          "completed": true,
+          "completed_at": "2026-10-29T16:14:16.028Z",
+          "evidence": "e2e_camera AC-000072：向右 camera.x 停在 60 = 960-900，屏幕 x 232→540；向下 camera.y 停在 240 = 540-300，屏幕 y 150→282；纯函数右下角 → (60,240)"
+        },
+        {
+          "id": "8d3cadb5-591e-4694-913e-0ae5d90c64d1",
+          "text": "画布 CSS 尺寸 = 相机尺寸：canvas.width === 相机 w，且 1 逻辑像素 = 1 CSS 像素（devicePixelRatio 仅用于清晰度）",
+          "completed": true,
+          "completed_at": "2026-10-29T16:14:20.708Z",
+          "evidence": "canvas: bitmap 390x608 = CSS 390x608 = camera w/h，画布贴视口 (0,0)，无整图缩放（1 逻辑像素 = 1 CSS 像素）"
+        }
+      ],
+      "deliverables": [
+        {
+          "id": "ae065b43-8610-498c-a8a9-51ee4846ee30",
+          "text": "cloud/play/play.js（camera 状态、worldToScreen、drawImage 子矩形、clamp、视野>世界居中）",
+          "completed": true
+        },
+        {
+          "id": "06c7aa2c-533a-4d54-ac3d-4d1033b75925",
+          "text": "cloud/play/index.html（画布尺寸与 CSS 尺寸一致、去掉 960x540 缩放）",
+          "completed": true
+        },
+        {
+          "id": "fe8123da-d013-4971-89d5-43211fbb8bbf",
+          "text": "evidence/camera.json（居中/平移/四向边界断言）",
+          "completed": true
+        }
+      ],
+      "need_fix": [],
+      "assignee": null,
+      "blockers": [
+        "6567f110-8d78-4702-8090-7073c52da894"
+      ],
+      "dependencies": "相机视野需要服务端按视野半对角发快照，否则绘制集合会超出已收到集合；先有 per-connection 半径再改相机。",
+      "sub_items": [],
+      "related_files": [
+        "cloud/play/play.js",
+        "cloud/play/index.html",
+        "cloud/play/touch.js"
+      ],
+      "notes": "",
+      "c7_verified": [],
+      "created_at": "2026-10-29T16:00:43.282Z",
+      "updated_at": "2026-10-29T16:14:25.109Z",
+      "completed_at": "2026-10-29T16:14:21.602Z",
+      "edges": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ]
+    },
+    "da5addbc-9192-4f65-ab2b-dbffde63db60": {
+      "id": "da5addbc-9192-4f65-ab2b-dbffde63db60",
+      "title": "为相机裁切视角补端到端验收并闭环台账",
+      "description": "补相机视角的端到端验收，并把结果写进台账。\n\n1. 新增 cloud/tools/e2e_camera.js（复用 CDP + 临时服务模式，不新增依赖）：\n   - 居中断言：读画布像素与相机状态，动物屏幕坐标与中心差 ≤2px；\n   - 平移断言：向右走 1 秒，相机位移 ≈ 动物世界位移，屏幕坐标不变；\n   - 左/上边界：把动物移到近边界后持续左上走，相机停在 (0,0)，屏幕坐标继续变化；\n   - 右/下边界：同上，相机停在 (worldW-w, worldH-h)；\n   - 可见⊆已收到：比较画面实际绘制集合与最近快照 nearby 集合，缺失为 0；\n   - Agent 侧不变：/state 默认 200、传 10000 回显 400。\n2. 台账：REQ-000018 与 REQ-000011 r3 已确认，需经 change 纳入新基线 → dev → 6 条验收 → release → change close。\n3. 结果写 evidence/camera.json 并带 condition 映射。",
+      "status": "completed",
+      "priority": "second",
+      "success_criteria": [
+        {
+          "id": "3871d9ea-3834-4c4f-899a-128f4cf01a99",
+          "text": "e2e_camera.js 一次运行全 PASS 且退出码 0，输出 evidence/camera.json（含 condition_id → 断言 → 实测值）",
+          "completed": true,
+          "completed_at": "2026-10-29T16:16:52.167Z",
+          "evidence": "node tools/e2e_camera.js → 15/15 PASS，退出码 0；evidence/camera.json 含 results[].condition + mapping[]（condition_id → assertion → detail）+ samples（三档视口原始快照）"
+        },
+        {
+          "id": "79c5a51d-fa7b-44a7-b906-f6100cf27e56",
+          "text": "六类断言各至少一条：居中、平移一致、左/上钳制、右/下钳制、可见⊆已收到（缺失 0）、Agent 半径 200/400 不变",
+          "completed": true,
+          "completed_at": "2026-10-29T16:16:52.167Z",
+          "evidence": "node tools/e2e_camera.js → 15/15 PASS，退出码 0；evidence/camera.json 含 results[].condition + mapping[]（condition_id → assertion → detail）+ samples（三档视口原始快照）"
+        },
+        {
+          "id": "fd982a6d-c2c7-42d5-a515-ae198ac5f4a9",
+          "text": "REQ-000018 的 6 条条件在 e2e 中都有同名断言，映射缺失为 0",
+          "completed": true,
+          "completed_at": "2026-10-29T16:16:53.125Z",
+          "evidence": "AC-000070 居中/平移、AC-000071 左+上、AC-000072 右+下、AC-000073 可见⊆已收到、AC-000074 半径 200/400、AC-000075 视野大于世界 —— 6 条全部有同名断言，映射缺失 0"
+        },
+        {
+          "id": "2d3b9ea5-5411-4412-8dcf-8808508df1bc",
+          "text": "reqledger check 0 issue、python tools/audit_spec_vs_ledger.py 0 差异",
+          "completed": true,
+          "completed_at": "2026-10-29T16:16:57.314Z",
+          "evidence": "reqledger check → issues=[] valid=true doc_rev=401（18 需求 / 10 基线 / 10 发布 / 109 执行）；python tools/audit_spec_vs_ledger.py → 0 差异（11 需求 44 条件）"
+        },
+        {
+          "id": "5d9e58e8-7d93-4453-9cf4-ad2ce54f706e",
+          "text": "回归：e2e_touch_ui.js / e2e_control.js / e2e_multiplayer.js 全部仍 PASS",
+          "completed": true,
+          "completed_at": "2026-10-29T16:16:58.105Z",
+          "evidence": "回归全 PASS：e2e_touch_ui 6/6、e2e_multiplayer 21/21、e2e_control 6/6、probe_ws_radius 6/6（对应的 evidence/*.json 已刷新）"
+        }
+      ],
+      "deliverables": [
+        {
+          "id": "f926c058-9f51-4af4-879e-c761d3cd4205",
+          "text": "cloud/tools/e2e_camera.js（居中/平移/四向边界/可见⊆已收到/Agent 半径不变 六类断言）",
+          "completed": true
+        },
+        {
+          "id": "fd6fc083-31ec-4954-aa1b-607e5a57a099",
+          "text": "evidence/camera.json（含 condition 映射）",
+          "completed": true
+        },
+        {
+          "id": "f925c4c8-2374-4a5a-9c11-60aeae36bb33",
+          "text": "requirements.md 中 REQ-000018 的 6 条验收执行记录（经 change 纳入基线后登记）",
+          "completed": true
+        }
+      ],
+      "need_fix": [],
+      "assignee": null,
+      "blockers": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "dependencies": "验收必须对着已落地的相机绘制与 per-connection 半径来断言；先有相机再写断言，否则测的是中间态。",
+      "sub_items": [],
+      "related_files": [
+        "cloud/tools/e2e_camera.js",
+        "cloud/play/play.js",
+        "cloud/server/ws.js",
+        "requirements.md",
+        "tools/audit_spec_vs_ledger.py"
+      ],
+      "notes": "",
+      "c7_verified": [],
+      "created_at": "2026-10-29T16:00:51.509Z",
+      "updated_at": "2026-10-29T16:17:03.520Z",
+      "completed_at": "2026-10-29T16:16:58.992Z",
+      "edges": []
+    },
+    "8488f778-3790-4d4d-b5a3-a5a9de3de67f": {
+      "id": "8488f778-3790-4d4d-b5a3-a5a9de3de67f",
+      "title": "把 REQ-000011 r3 纳入基线并补页面实测",
+      "description": "收口检查发现：REQ-000011 在台账里已修订到 r3（渲染口径由「半径 200 内的其他动物」改为「相机视野内的其他动物」），但 BASE-000009/010 的成员内容仍是 r2，基线内容与实现不一致（结构校验不会报错）。\n\n做法：①新增 cloud/tools/probe_page.js，用 CDP 打开真实 /play 页面实测 REQ-000011 的 4 个条件（快照条数、右移、nearby 内容与凭据、断线重连），结果写 evidence/page_live.json；②用一次「替换」变更把 r2 → r3 落进新基线 BASE-000011 V1.10，登记 4 条验收执行，发布 crab-coast-v11 并关闭变更。\n\n边界：不改实现代码，只补基线内容与实测证据；不能只靠结构校验（check 通过不代表基线内容正确）。",
+      "status": "completed",
+      "priority": "top",
+      "success_criteria": [
+        {
+          "id": "f3b247d5-dfee-4d43-9f6f-2f50c1fb68c9",
+          "text": "probe_page.js 一次运行 4/4 PASS 且退出码 0，输出 evidence/page_live.json（AC-000041…044 逐条实测值）",
+          "completed": true,
+          "completed_at": "2026-10-29T16:22:08.994Z",
+          "evidence": "node cloud/tools/probe_page.js → 4/4 PASS 退出码 0；evidence/page_live.json（AC-000041 28 条快照/3.03s；AC-000042 +47px；AC-000043 nearby=[A-0002] 无 token 泄漏；AC-000044 506ms 恢复）"
+        },
+        {
+          "id": "e25dbd3e-f643-4bc2-a9fc-63cc0ff7d389",
+          "text": "活动基线 BASE-000011 中 REQ-000011 的成员修订 = 3，与台账最新修订一致；REQ-000017/000018 仍为 r2",
+          "completed": true,
+          "completed_at": "2026-10-29T16:22:09.781Z",
+          "evidence": "BASE-000011 V1.10 成员：REQ-000011 r3（= 台账最新）、REQ-000017 r2、REQ-000018 r2（对照台账最新修订一致）"
+        },
+        {
+          "id": "bd362e7e-c4be-48cd-a51b-63dff8ed287b",
+          "text": "reqledger check issues 为空且 valid=true；python tools/audit_spec_vs_ledger.py 0 差异",
+          "completed": true,
+          "completed_at": "2026-10-29T16:22:13.987Z",
+          "evidence": "reqledger check：issues=[] valid=true doc_rev=416（18 需求/11 基线/10 变更/11 发布/113 执行）；audit_spec_vs_ledger.py → 0 差异"
+        },
+        {
+          "id": "ea6e693c-b6d4-473d-876a-0c032b687267",
+          "text": "REQ-000011 的 4 条执行记录挂在 crab-coast-v11 与 BASE-000011 下，变更 CHG-000010 已关闭",
+          "completed": true,
+          "completed_at": "2026-10-29T16:22:14.852Z",
+          "evidence": "EXE-000110…113 四条执行挂在 CRAB-COAST-V11 + BASE-000011；CHG-000010 已 close（doc_rev 416）"
+        }
+      ],
+      "deliverables": [
+        {
+          "id": "3944e1c1-740c-4911-83c3-7f975c279626",
+          "text": "cloud/tools/probe_page.js（页面级 4 条实测：快照条数 / 右移 / nearby 与凭据 / 断线重连）",
+          "completed": true
+        },
+        {
+          "id": "8f1e75ce-50e9-4a0e-a76c-e97ef5ff7ede",
+          "text": "evidence/page_live.json（4 条断言实测值 + 原始快照）",
+          "completed": true
+        },
+        {
+          "id": "d5f321b3-0033-4af6-9819-a70bf598b93a",
+          "text": "requirements.md 中 CHG-000010 → BASE-000011 V1.10 → REL-000011 的闭环记录",
+          "completed": true
+        }
+      ],
+      "need_fix": [],
+      "assignee": null,
+      "blockers": [],
+      "dependencies": "",
+      "sub_items": [],
+      "related_files": [
+        "cloud/tools/probe_page.js",
+        "evidence/page_live.json",
+        "requirements.md",
+        "tools/ledger_step29_req11_baseline.py"
+      ],
+      "notes": "",
+      "c7_verified": [],
+      "created_at": "2026-10-29T16:22:05.536Z",
+      "updated_at": "2026-10-29T16:22:16.369Z",
+      "completed_at": "2026-10-29T16:22:15.637Z",
+      "edges": []
+    },
+    "f4fce027-fb2d-4ce8-b512-ead3467271b9": {
+      "id": "f4fce027-fb2d-4ce8-b512-ead3467271b9",
+      "title": "让 WebSocket 快照全量下发世界内全部动物",
+      "description": "真机反馈：走得远了其它角色会消失。原因是 ws.js 的快照按半径过滤（客户端请求视野半对角、服务端再按 RADIUS_MAX=400 钳制）。单世界动物数量有限（约 50 只），直接全量下发即可。\n\n做法：world.buildState 增加 scope 参数（all 时不过滤并标注 world.scope=all），ws.js 走 all，REST /state 保持 radius（默认 200 / 上限 400 不变）；前端删掉 desiredRadius、RADIUS_MARGIN、r= 握手参数与随之而来的半径重连；同时更新 e2e_camera.js 里已失效的握手半径断言。",
+      "status": "ready",
+      "priority": "top",
+      "success_criteria": [
+        {
+          "id": "e7e147d7-e48e-4359-8203-27c6c7718e58",
+          "text": "两只动物相距 700px（> RADIUS_MAX 400）时，双方 WS 快照 nearby 都包含对方，且 world.scope='all'",
+          "completed": false
+        },
+        {
+          "id": "48bc0ddf-950b-4b53-b36f-eb186af07d91",
+          "text": "GET /state 与 /state?radius=10000 仍分别回显 200 / 400，且都不含 700px 外的对方（Agent 语义不变）",
+          "completed": false
+        },
+        {
+          "id": "1879489d-c971-46f5-9db1-7d4addc35b68",
+          "text": "页面 drawnIds = snapshot.nearby ∪ {self}（视野外只是不绘制，不因半径缺失）",
+          "completed": false
+        },
+        {
+          "id": "30adc990-bfa9-4eee-8dca-16398a28c079",
+          "text": "e2e_camera.js 仍 15/15 PASS，cloud/tools/probe_visible.js 全 PASS 且写出 evidence/visible.json",
+          "completed": false
+        }
+      ],
+      "deliverables": [
+        {
+          "id": "e4e0f29d-ea11-4290-8da9-a0890542c2f4",
+          "text": "cloud/server/world.js（buildState 增加 scope）",
+          "completed": false
+        },
+        {
+          "id": "916ee2cd-1b53-4cc9-b454-9fb0e986519b",
+          "text": "cloud/server/ws.js（快照走 scope=all 并带服务器时间戳 t）",
+          "completed": false
+        },
+        {
+          "id": "223c8eb3-ac12-4bfc-9b13-8cae2afdccbe",
+          "text": "cloud/play/play.js（删除半径请求与半径重连）",
+          "completed": false
+        },
+        {
+          "id": "b81f3fdc-f9b3-4b7d-a8f1-207b36f63d27",
+          "text": "cloud/tools/probe_visible.js + evidence/visible.json",
+          "completed": false
+        },
+        {
+          "id": "fe017165-607a-4902-81ba-ab3f1fba9632",
+          "text": "cloud/tools/e2e_camera.js（半径断言改为 scope 断言）",
+          "completed": false
+        }
+      ],
+      "need_fix": [],
+      "assignee": null,
+      "blockers": [],
+      "dependencies": "",
+      "sub_items": [],
+      "related_files": [
+        "cloud/server/world.js",
+        "cloud/server/ws.js",
+        "cloud/play/play.js",
+        "cloud/tools/probe_visible.js",
+        "evidence/visible.json"
+      ],
+      "notes": "",
+      "c7_verified": [],
+      "created_at": "2026-10-30T03:30:40.788Z",
+      "updated_at": "2026-10-30T03:30:40.788Z",
+      "completed_at": null,
       "edges": []
     }
   },
   "indexes": {
     "byStatus": {
-      "ready": [],
-      "in_progress": [],
-      "in_review": [
-        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+      "ready": [
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
       ],
+      "in_progress": [],
+      "in_review": [],
       "completed": [
         "9542948d-664d-4498-9622-625a3571036b",
-        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "6567f110-8d78-4702-8090-7073c52da894",
+        "0632fb40-4596-4697-ae3c-1685ddab8e10",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
-      "blocked": [
-        "e0ca26b0-bf17-4955-87e6-f996023bd914"
-      ]
+      "blocked": []
     },
     "byPriority": {
       "top": [
         "9542948d-664d-4498-9622-625a3571036b",
-        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "6567f110-8d78-4702-8090-7073c52da894",
+        "0632fb40-4596-4697-ae3c-1685ddab8e10",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f",
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
       ],
       "second": [
         "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
-        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
       ],
       "later": []
     },
     "rootTasks": [
-      "9542948d-664d-4498-9622-625a3571036b"
+      "9542948d-664d-4498-9622-625a3571036b",
+      "6567f110-8d78-4702-8090-7073c52da894",
+      "8488f778-3790-4d4d-b5a3-a5a9de3de67f",
+      "f4fce027-fb2d-4ce8-b512-ead3467271b9"
     ],
-    "orphanTasks": [],
+    "orphanTasks": [
+      "8488f778-3790-4d4d-b5a3-a5a9de3de67f",
+      "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+    ],
     "searchText": {
       "0": [
         "9542948d-664d-4498-9622-625a3571036b",
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
-        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
+        "0632fb40-4596-4697-ae3c-1685ddab8e10",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
       ],
       "1": [
-        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "0632fb40-4596-4697-ae3c-1685ddab8e10",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
       ],
       "2": [
         "9542948d-664d-4498-9622-625a3571036b",
-        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "0632fb40-4596-4697-ae3c-1685ddab8e10",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
       ],
       "3": [
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
-        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
       ],
       "4": [
         "9542948d-664d-4498-9622-625a3571036b",
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
-        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "6": [
-        "9542948d-664d-4498-9622-625a3571036b"
+        "9542948d-664d-4498-9622-625a3571036b",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "10": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "12": [
         "133c8431-492c-4a02-a6fc-dd07dce13ade"
@@ -406,6 +807,9 @@
       ],
       "46": [
         "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "50": [
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
       ],
       "68": [
         "133c8431-492c-4a02-a6fc-dd07dce13ade"
@@ -436,18 +840,44 @@
       "197": [
         "133c8431-492c-4a02-a6fc-dd07dce13ade"
       ],
+      "200": [
+        "6567f110-8d78-4702-8090-7073c52da894",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f",
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+      ],
+      "224": [
+        "6567f110-8d78-4702-8090-7073c52da894"
+      ],
       "315": [
         "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "400": [
+        "6567f110-8d78-4702-8090-7073c52da894",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+      ],
+      "540": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "960": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "10000": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
       ],
       "cloud": [
         "9542948d-664d-4498-9622-625a3571036b",
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
-        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "play": [
         "9542948d-664d-4498-9622-625a3571036b",
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
-        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "touch": [
         "9542948d-664d-4498-9622-625a3571036b",
@@ -458,7 +888,11 @@
       "js": [
         "9542948d-664d-4498-9622-625a3571036b",
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
-        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "6567f110-8d78-4702-8090-7073c52da894",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f",
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
       ],
       "controls": [
         "9542948d-664d-4498-9622-625a3571036b"
@@ -551,7 +985,8 @@
       ],
       "height": [
         "9542948d-664d-4498-9622-625a3571036b",
-        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
       ],
       "560px": [
         "9542948d-664d-4498-9622-625a3571036b",
@@ -560,7 +995,9 @@
       "req": [
         "9542948d-664d-4498-9622-625a3571036b",
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
-        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "000012": [
         "9542948d-664d-4498-9622-625a3571036b"
@@ -600,14 +1037,18 @@
       ],
       "evidence": [
         "9542948d-664d-4498-9622-625a3571036b",
-        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "touch_layer": [
         "9542948d-664d-4498-9622-625a3571036b"
       ],
       "json": [
         "9542948d-664d-4498-9622-625a3571036b",
-        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "t4": [
         "9542948d-664d-4498-9622-625a3571036b",
@@ -649,11 +1090,13 @@
         "133c8431-492c-4a02-a6fc-dd07dce13ade"
       ],
       "y": [
-        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
       ],
       "x": [
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
-        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
       ],
       "b": [
         "133c8431-492c-4a02-a6fc-dd07dce13ade"
@@ -662,7 +1105,9 @@
         "133c8431-492c-4a02-a6fc-dd07dce13ade"
       ],
       "000011": [
-        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "disabled": [
         "133c8431-492c-4a02-a6fc-dd07dce13ade"
@@ -746,13 +1191,16 @@
         "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
       ],
       "fit": [
-        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
       ],
       "000017": [
         "e0ca26b0-bf17-4955-87e6-f996023bd914"
       ],
       "tools": [
-        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "e2e_touch_ui": [
         "e0ca26b0-bf17-4955-87e6-f996023bd914"
@@ -770,7 +1218,10 @@
         "e0ca26b0-bf17-4955-87e6-f996023bd914"
       ],
       "state": [
-        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "6567f110-8d78-4702-8090-7073c52da894",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
       ],
       "3px": [
         "e0ca26b0-bf17-4955-87e6-f996023bd914"
@@ -797,13 +1248,183 @@
         "e0ca26b0-bf17-4955-87e6-f996023bd914"
       ],
       "change": [
-        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
       ],
       "dev": [
-        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
       ],
       "touch_ui": [
         "e0ca26b0-bf17-4955-87e6-f996023bd914"
+      ],
+      "websocket": [
+        "6567f110-8d78-4702-8090-7073c52da894",
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+      ],
+      "ws": [
+        "6567f110-8d78-4702-8090-7073c52da894",
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+      ],
+      "cfg": [
+        "6567f110-8d78-4702-8090-7073c52da894"
+      ],
+      "radiusdefault": [
+        "6567f110-8d78-4702-8090-7073c52da894"
+      ],
+      "url": [
+        "6567f110-8d78-4702-8090-7073c52da894"
+      ],
+      "r": [
+        "6567f110-8d78-4702-8090-7073c52da894",
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+      ],
+      "radius": [
+        "6567f110-8d78-4702-8090-7073c52da894",
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+      ],
+      "world": [
+        "6567f110-8d78-4702-8090-7073c52da894",
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+      ],
+      "clampradius": [
+        "6567f110-8d78-4702-8090-7073c52da894"
+      ],
+      "radius_max": [
+        "6567f110-8d78-4702-8090-7073c52da894",
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+      ],
+      "agent": [
+        "6567f110-8d78-4702-8090-7073c52da894",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "20px": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "width": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "css": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "camera": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "w": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "h": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "clamp": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "self": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "worldw": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "drawimage": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "bg": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "cam": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "worldtoscreen": [
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "e2e_camera": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+      ],
+      "cdp": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "2px": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "worldh": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "nearby": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "000018": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "r3": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "release": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "close": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "condition": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "base": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "000009": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "010": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "r2": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "probe_page": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "page_live": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "v1": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "crab": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "coast": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "v11": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "check": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "buildstate": [
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+      ],
+      "scope": [
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+      ],
+      "all": [
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+      ],
+      "rest": [
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+      ],
+      "desiredradius": [
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+      ],
+      "radius_margin": [
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
       ]
     },
     "files": {
@@ -814,28 +1435,66 @@
         "9542948d-664d-4498-9622-625a3571036b",
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
         "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
-        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
       ],
       "cloud/play/play.js": [
         "9542948d-664d-4498-9622-625a3571036b",
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
         "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
-        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "0632fb40-4596-4697-ae3c-1685ddab8e10",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
       ],
       "cloud/play/index.html": [
         "9542948d-664d-4498-9622-625a3571036b",
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
         "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
-        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "0632fb40-4596-4697-ae3c-1685ddab8e10"
       ],
       "cloud/tools/e2e_touch_ui.js": [
         "e0ca26b0-bf17-4955-87e6-f996023bd914"
       ],
       "requirements.md": [
-        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "tools/audit_spec_vs_ledger.py": [
-        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "cloud/server/ws.js": [
+        "6567f110-8d78-4702-8090-7073c52da894",
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+      ],
+      "cloud/server/world.js": [
+        "6567f110-8d78-4702-8090-7073c52da894",
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+      ],
+      "cloud/shared/const.js": [
+        "6567f110-8d78-4702-8090-7073c52da894"
+      ],
+      "cloud/tools/e2e_camera.js": [
+        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+      ],
+      "cloud/tools/probe_page.js": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "evidence/page_live.json": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "tools/ledger_step29_req11_baseline.py": [
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+      ],
+      "cloud/tools/probe_visible.js": [
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+      ],
+      "evidence/visible.json": [
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
       ]
     }
   }

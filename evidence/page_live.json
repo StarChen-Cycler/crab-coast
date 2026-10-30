@@ -1,7 +1,7 @@
 {
-  "when": "2026-10-29T16:18:30.238Z",
+  "when": "2026-10-30T03:50:29.363Z",
   "cdpPort": 9222,
-  "port": 8727,
+  "port": 8729,
   "animals": {
     "page": "A-0001",
     "ref": "A-0002"
@@ -30,10 +30,10 @@
           412
         ],
         "to": [
-          547,
+          555,
           412
         ],
-        "dx": 47,
+        "dx": 55,
         "dy": 0,
         "facing": "right",
         "stopped": true,
@@ -55,11 +55,11 @@
             "x": 500,
             "y": 412,
             "facing": "down",
-            "distance": 54
+            "distance": 55
           }
         ],
         "leak": false,
-        "radius": 386
+        "radius": null
       }
     },
     {
@@ -68,9 +68,8 @@
       "pass": true,
       "detail": {
         "droppedConnected": false,
-        "recoveredMs": 506,
+        "recoveredMs": 424,
         "snapshotsResumed": true,
-        "connectedAt": 424,
         "finalConnected": true
       }
     }
@@ -88,10 +87,10 @@
         412
       ],
       "to": [
-        547,
+        555,
         412
       ],
-      "dx": 47,
+      "dx": 55,
       "dy": 0,
       "facing": "right",
       "stopped": true,
@@ -108,17 +107,16 @@
           "x": 500,
           "y": 412,
           "facing": "down",
-          "distance": 54
+          "distance": 55
         }
       ],
-      "radius": 386,
-      "jsonBytes": 353
+      "radius": null,
+      "jsonBytes": 386
     },
     "reconnect": {
       "droppedConnected": false,
-      "recoveredMs": 506,
+      "recoveredMs": 424,
       "snapshotsResumed": true,
-      "connectedAt": 424,
       "finalConnected": true
     }
   }

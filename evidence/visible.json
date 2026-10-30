@@ -1,0 +1,331 @@
+{
+  "when": "2026-10-30T03:34:22.798Z",
+  "cdpPort": 9222,
+  "port": 8837,
+  "animals": {
+    "a": {
+      "id": "A-0001",
+      "pos": {
+        "id": "A-0001",
+        "name": "VisA",
+        "x": 199,
+        "y": 412,
+        "facing": "left",
+        "moving": false,
+        "card": {
+          "width": 192,
+          "height": 192,
+          "digest": "48ddd3988c794a6f1c59fe28641cdc5f8b02a81895b7783761afe5e72b3f6e38"
+        }
+      }
+    },
+    "b": {
+      "id": "A-0002",
+      "pos": {
+        "id": "A-0002",
+        "name": "VisB",
+        "x": 679,
+        "y": 412,
+        "facing": "right",
+        "moving": false,
+        "card": {
+          "width": 192,
+          "height": 192,
+          "digest": "f5583158dfae63d7d1aa2bd5fee1abd4b4e596bccae9f2c211a6e59b99540bd8"
+        }
+      }
+    },
+    "c": {
+      "id": "A-0003",
+      "pos": {
+        "id": "A-0003",
+        "name": "VisC",
+        "x": 303,
+        "y": 412,
+        "facing": "left",
+        "moving": false,
+        "card": {
+          "width": 192,
+          "height": 192,
+          "digest": "4caa8d2e4c8c5e48fdc8aa3ef4bbe8ead9dd48065297b7eb8300d197dd458d50"
+        }
+      }
+    },
+    "distance": 480,
+    "distanceC": 104
+  },
+  "total": 4,
+  "failed": 0,
+  "results": [
+    {
+      "condition": "AC-000084",
+      "name": "相距 > RADIUS_MAX 时双方 WS 快照都包含对方，world.scope=all",
+      "pass": true,
+      "detail": {
+        "distance": 480,
+        "radiusMax": 400,
+        "aSeesB": true,
+        "bSeesA": true,
+        "scopeA": "all",
+        "scopeB": "all",
+        "nearbyA": [
+          "A-0003",
+          "A-0002"
+        ]
+      }
+    },
+    {
+      "condition": "AC-000085",
+      "name": "页面绘制集合 ⊆ 快照集合；视野内的动物全部绘制（缺失 0）；远方那只仍在快照里",
+      "pass": true,
+      "detail": {
+        "drawn": [
+          "A-0003"
+        ],
+        "nearby": [
+          "A-0003",
+          "A-0002"
+        ],
+        "ghost": [],
+        "missingDrawn": [],
+        "inView": [
+          "A-0003"
+        ],
+        "farIdInNearby": true,
+        "nearIdDrawn": true,
+        "scope": "all"
+      }
+    },
+    {
+      "condition": "AC-000073",
+      "name": "复验：绘制集合 ⊆ nearby，缺失为 0（快照全量后依然成立）",
+      "pass": true,
+      "detail": {
+        "drawn": [
+          "A-0003"
+        ],
+        "nearby": [
+          "A-0003",
+          "A-0002"
+        ],
+        "missing": 0
+      }
+    },
+    {
+      "condition": "AC-000086",
+      "name": "/state 仍按半径过滤：默认 200、传 10000 回显 400；近的（106px）在内、远的（487px）在外",
+      "pass": true,
+      "detail": {
+        "defRadius": 200,
+        "defScope": "radius",
+        "defNearby": [
+          "A-0003"
+        ],
+        "bigRadius": 400,
+        "bigScope": "radius",
+        "bigNearby": [
+          "A-0003"
+        ],
+        "distanceFar": 480,
+        "distanceNear": 104
+      }
+    }
+  ],
+  "mapping": [
+    {
+      "condition_id": "AC-000084",
+      "assertion": "相距 > RADIUS_MAX 时双方 WS 快照都包含对方，world.scope=all",
+      "detail": {
+        "distance": 480,
+        "radiusMax": 400,
+        "aSeesB": true,
+        "bSeesA": true,
+        "scopeA": "all",
+        "scopeB": "all",
+        "nearbyA": [
+          "A-0003",
+          "A-0002"
+        ]
+      }
+    },
+    {
+      "condition_id": "AC-000085",
+      "assertion": "页面绘制集合 ⊆ 快照集合；视野内的动物全部绘制（缺失 0）；远方那只仍在快照里",
+      "detail": {
+        "drawn": [
+          "A-0003"
+        ],
+        "nearby": [
+          "A-0003",
+          "A-0002"
+        ],
+        "ghost": [],
+        "missingDrawn": [],
+        "inView": [
+          "A-0003"
+        ],
+        "farIdInNearby": true,
+        "nearIdDrawn": true,
+        "scope": "all"
+      }
+    },
+    {
+      "condition_id": "AC-000073",
+      "assertion": "复验：绘制集合 ⊆ nearby，缺失为 0（快照全量后依然成立）",
+      "detail": {
+        "drawn": [
+          "A-0003"
+        ],
+        "nearby": [
+          "A-0003",
+          "A-0002"
+        ],
+        "missing": 0
+      }
+    },
+    {
+      "condition_id": "AC-000086",
+      "assertion": "/state 仍按半径过滤：默认 200、传 10000 回显 400；近的（106px）在内、远的（487px）在外",
+      "detail": {
+        "defRadius": 200,
+        "defScope": "radius",
+        "defNearby": [
+          "A-0003"
+        ],
+        "bigRadius": 400,
+        "bigScope": "radius",
+        "bigNearby": [
+          "A-0003"
+        ],
+        "distanceFar": 480,
+        "distanceNear": 104
+      }
+    }
+  ],
+  "page": {
+    "viewport": [
+      390,
+      844
+    ],
+    "self": {
+      "id": "A-0001",
+      "x": 199,
+      "y": 412
+    },
+    "cam": {
+      "x": 4,
+      "y": 0,
+      "w": 390,
+      "h": 608,
+      "vw": 390,
+      "vh": 540,
+      "ox": 0,
+      "oy": 34
+    },
+    "nearby": [
+      {
+        "id": "A-0003",
+        "x": 303,
+        "y": 412,
+        "d": 104
+      },
+      {
+        "id": "A-0002",
+        "x": 679,
+        "y": 412,
+        "d": 480
+      }
+    ],
+    "drawn": [
+      "A-0003"
+    ],
+    "worldScope": "all",
+    "worldRadius": null
+  },
+  "snapshots": {
+    "a": {
+      "type": "snapshot",
+      "t": 1793331262270,
+      "self": {
+        "id": "A-0001",
+        "name": "VisA",
+        "x": 199,
+        "y": 412,
+        "facing": "left",
+        "moving": false,
+        "card": {
+          "width": 192,
+          "height": 192,
+          "digest": "48ddd3988c794a6f1c59fe28641cdc5f8b02a81895b7783761afe5e72b3f6e38"
+        }
+      },
+      "nearby": [
+        {
+          "id": "A-0003",
+          "name": "VisC",
+          "x": 303,
+          "y": 412,
+          "facing": "left",
+          "distance": 104
+        },
+        {
+          "id": "A-0002",
+          "name": "VisB",
+          "x": 679,
+          "y": 412,
+          "facing": "right",
+          "distance": 480
+        }
+      ],
+      "world": {
+        "w": 960,
+        "h": 540,
+        "online": 3,
+        "radius": null,
+        "scope": "all"
+      }
+    },
+    "b": {
+      "type": "snapshot",
+      "t": 1793331262379,
+      "self": {
+        "id": "A-0002",
+        "name": "VisB",
+        "x": 679,
+        "y": 412,
+        "facing": "right",
+        "moving": false,
+        "card": {
+          "width": 192,
+          "height": 192,
+          "digest": "f5583158dfae63d7d1aa2bd5fee1abd4b4e596bccae9f2c211a6e59b99540bd8"
+        }
+      },
+      "nearby": [
+        {
+          "id": "A-0003",
+          "name": "VisC",
+          "x": 303,
+          "y": 412,
+          "facing": "left",
+          "distance": 376
+        },
+        {
+          "id": "A-0001",
+          "name": "VisA",
+          "x": 199,
+          "y": 412,
+          "facing": "left",
+          "distance": 480
+        }
+      ],
+      "world": {
+        "w": 960,
+        "h": 540,
+        "online": 3,
+        "radius": null,
+        "scope": "all"
+      }
+    }
+  }
+}

@@ -1,0 +1,425 @@
+{
+  "when": "2026-10-30T03:49:14.631Z",
+  "cdpPort": 9222,
+  "port": 8954,
+  "animal": "A-0001",
+  "total": 8,
+  "failed": 0,
+  "results": [
+    {
+      "condition": "AC-000076",
+      "name": "挂起 5 秒后恢复可见：2 秒内快照恢复、HUD 回到「已连接」",
+      "pass": true,
+      "detail": {
+        "suspend": {
+          "ok": true,
+          "reconnectBefore": 0,
+          "lastAge": 3000
+        },
+        "visibleState": "visible",
+        "healthyAfterResumeMs": 0,
+        "reconnectDelta": 1,
+        "hud": "已连接",
+        "lastAge": 79
+      }
+    },
+    {
+      "condition": "AC-000080",
+      "name": "逐帧采样：相邻帧渲染位移最大值 ≤3px；稳态累计位移与 110px/s 误差 ≤5%",
+      "pass": true,
+      "detail": {
+        "frames": 442,
+        "maxStep": 2.03,
+        "speedErr": "2.5%",
+        "travelled": 268.3,
+        "expected": 275.3,
+        "winSec": 2.5
+      }
+    },
+    {
+      "condition": "AC-000081",
+      "name": "相机相邻帧位移最大值 ≤3px，非零位移帧占比 ≥90%",
+      "pass": true,
+      "detail": {
+        "maxCamStep": 2.03,
+        "camZeroRatio": "6.6%",
+        "movingFrames": 412,
+        "totalFrames": 441
+      }
+    },
+    {
+      "condition": "AC-000082",
+      "name": "松手 300ms 后渲染位置与快照真值差 ≤1px，且此后不再变化",
+      "pass": true,
+      "detail": {
+        "render": {
+          "x": 225,
+          "y": 412
+        },
+        "truth": {
+          "x": 225,
+          "y": 412
+        },
+        "dx": 0,
+        "dy": 0,
+        "laterDrift": 0
+      }
+    },
+    {
+      "condition": "AC-000083",
+      "name": "静止时连续 5 帧画布像素完全一致（像素对齐、不闪烁）",
+      "pass": true,
+      "detail": {
+        "framesIdentical": true,
+        "frameBytes": 377694
+      }
+    },
+    {
+      "condition": "AC-000077",
+      "name": "旋屏（390x844 → 844x390）后 2 秒内快照继续到达，不出现「快照中断」",
+      "pass": true,
+      "detail": {
+        "viewportBefore": [
+          844,
+          390
+        ],
+        "viewportAfter": [
+          844,
+          390
+        ],
+        "healthyAfterRotateMs": 0,
+        "reconnectDelta": 0,
+        "hud": "已连接",
+        "lastAge": 61
+      }
+    },
+    {
+      "condition": "AC-000078",
+      "name": "半开连接（不派发 close、数据停止）：4 秒内重连成功，且只重建 1 次",
+      "pass": true,
+      "detail": {
+        "halfOpen": {
+          "ok": true,
+          "reconnectBefore": 1
+        },
+        "healthyAfterHalfOpenMs": 704,
+        "reconnectDelta": 1
+      }
+    },
+    {
+      "condition": "AC-000079",
+      "name": "被第三个会话顶掉后 10 秒内不重连，HUD 保持「已在别处被接管」",
+      "pass": true,
+      "detail": {
+        "afterEvict": {
+          "stopped": true,
+          "hud": "已在别处被接管"
+        },
+        "after10s": {
+          "connected": false,
+          "reconnectCount": 2,
+          "reconnectDelta": 0,
+          "hud": "已在别处被接管",
+          "stopped": true
+        }
+      }
+    }
+  ],
+  "mapping": [
+    {
+      "condition_id": "AC-000076",
+      "assertion": "挂起 5 秒后恢复可见：2 秒内快照恢复、HUD 回到「已连接」",
+      "detail": {
+        "suspend": {
+          "ok": true,
+          "reconnectBefore": 0,
+          "lastAge": 3000
+        },
+        "visibleState": "visible",
+        "healthyAfterResumeMs": 0,
+        "reconnectDelta": 1,
+        "hud": "已连接",
+        "lastAge": 79
+      }
+    },
+    {
+      "condition_id": "AC-000080",
+      "assertion": "逐帧采样：相邻帧渲染位移最大值 ≤3px；稳态累计位移与 110px/s 误差 ≤5%",
+      "detail": {
+        "frames": 442,
+        "maxStep": 2.03,
+        "speedErr": "2.5%",
+        "travelled": 268.3,
+        "expected": 275.3,
+        "winSec": 2.5
+      }
+    },
+    {
+      "condition_id": "AC-000081",
+      "assertion": "相机相邻帧位移最大值 ≤3px，非零位移帧占比 ≥90%",
+      "detail": {
+        "maxCamStep": 2.03,
+        "camZeroRatio": "6.6%",
+        "movingFrames": 412,
+        "totalFrames": 441
+      }
+    },
+    {
+      "condition_id": "AC-000082",
+      "assertion": "松手 300ms 后渲染位置与快照真值差 ≤1px，且此后不再变化",
+      "detail": {
+        "render": {
+          "x": 225,
+          "y": 412
+        },
+        "truth": {
+          "x": 225,
+          "y": 412
+        },
+        "dx": 0,
+        "dy": 0,
+        "laterDrift": 0
+      }
+    },
+    {
+      "condition_id": "AC-000083",
+      "assertion": "静止时连续 5 帧画布像素完全一致（像素对齐、不闪烁）",
+      "detail": {
+        "framesIdentical": true,
+        "frameBytes": 377694
+      }
+    },
+    {
+      "condition_id": "AC-000077",
+      "assertion": "旋屏（390x844 → 844x390）后 2 秒内快照继续到达，不出现「快照中断」",
+      "detail": {
+        "viewportBefore": [
+          844,
+          390
+        ],
+        "viewportAfter": [
+          844,
+          390
+        ],
+        "healthyAfterRotateMs": 0,
+        "reconnectDelta": 0,
+        "hud": "已连接",
+        "lastAge": 61
+      }
+    },
+    {
+      "condition_id": "AC-000078",
+      "assertion": "半开连接（不派发 close、数据停止）：4 秒内重连成功，且只重建 1 次",
+      "detail": {
+        "halfOpen": {
+          "ok": true,
+          "reconnectBefore": 1
+        },
+        "healthyAfterHalfOpenMs": 704,
+        "reconnectDelta": 1
+      }
+    },
+    {
+      "condition_id": "AC-000079",
+      "assertion": "被第三个会话顶掉后 10 秒内不重连，HUD 保持「已在别处被接管」",
+      "detail": {
+        "afterEvict": {
+          "stopped": true,
+          "hud": "已在别处被接管"
+        },
+        "after10s": {
+          "connected": false,
+          "reconnectCount": 2,
+          "reconnectDelta": 0,
+          "hud": "已在别处被接管",
+          "stopped": true
+        }
+      }
+    }
+  ],
+  "raw": {
+    "suspend": {
+      "ok": true,
+      "reconnectBefore": 0,
+      "lastAge": 3000
+    },
+    "health76": {
+      "healthyAt": 0,
+      "connected": true,
+      "lastAge": 79,
+      "hud": "已连接",
+      "hudBad": false,
+      "reconnectDelta": 1,
+      "stopped": false
+    },
+    "health77": {
+      "healthyAt": 0,
+      "connected": true,
+      "lastAge": 4,
+      "hud": "已连接",
+      "hudBad": false,
+      "reconnectDelta": 0,
+      "stopped": false
+    },
+    "health78": {
+      "healthyAt": 704,
+      "connected": true,
+      "lastAge": 11,
+      "hud": "已连接",
+      "hudBad": false,
+      "reconnectDelta": 1,
+      "stopped": false
+    },
+    "settle": {
+      "renderAfter300": {
+        "x": 225,
+        "y": 412
+      },
+      "truth": {
+        "x": 225,
+        "y": 412
+      },
+      "later": {
+        "x": 225,
+        "y": 412
+      },
+      "framesIdentical": true,
+      "frameBytes": 377694
+    },
+    "frames": [
+      {
+        "t": 8242.29999999702,
+        "rx": 500,
+        "ry": 412,
+        "cx": 305,
+        "cy": 0,
+        "sx": 500,
+        "sy": 412,
+        "moving": false
+      },
+      {
+        "t": 8248.29999999702,
+        "rx": 500,
+        "ry": 412,
+        "cx": 305,
+        "cy": 0,
+        "sx": 500,
+        "sy": 412,
+        "moving": false
+      },
+      {
+        "t": 8254.29999999702,
+        "rx": 500,
+        "ry": 412,
+        "cx": 305,
+        "cy": 0,
+        "sx": 500,
+        "sy": 412,
+        "moving": false
+      },
+      {
+        "t": 8260.39999999106,
+        "rx": 500,
+        "ry": 412,
+        "cx": 305,
+        "cy": 0,
+        "sx": 500,
+        "sy": 412,
+        "moving": false
+      },
+      {
+        "t": 8266.39999999106,
+        "rx": 500,
+        "ry": 412,
+        "cx": 305,
+        "cy": 0,
+        "sx": 500,
+        "sy": 412,
+        "moving": false
+      },
+      {
+        "t": 8272.39999999106,
+        "rx": 500,
+        "ry": 412,
+        "cx": 305,
+        "cy": 0,
+        "sx": 500,
+        "sy": 412,
+        "moving": false
+      },
+      {
+        "t": 8278.59999999404,
+        "rx": 500,
+        "ry": 412,
+        "cx": 305,
+        "cy": 0,
+        "sx": 500,
+        "sy": 412,
+        "moving": false
+      },
+      {
+        "t": 8284.59999999404,
+        "rx": 500,
+        "ry": 412,
+        "cx": 305,
+        "cy": 0,
+        "sx": 500,
+        "sy": 412,
+        "moving": false
+      }
+    ],
+    "frameCount": 442,
+    "rotState0": {
+      "connected": true,
+      "lastSnapAgeMs": 3,
+      "hud": "已连接",
+      "hudBad": false,
+      "reconnectCount": 1,
+      "stopped": false,
+      "viewport": [
+        844,
+        390
+      ],
+      "snapInterval": 110
+    },
+    "rotState1": {
+      "connected": true,
+      "lastSnapAgeMs": 61,
+      "hud": "已连接",
+      "hudBad": false,
+      "reconnectCount": 1,
+      "stopped": false,
+      "viewport": [
+        844,
+        390
+      ],
+      "snapInterval": 108
+    },
+    "st079a": {
+      "connected": false,
+      "lastSnapAgeMs": 1224,
+      "hud": "已在别处被接管",
+      "hudBad": true,
+      "reconnectCount": 2,
+      "stopped": true,
+      "viewport": [
+        844,
+        390
+      ],
+      "snapInterval": 137
+    },
+    "st079b": {
+      "connected": false,
+      "lastSnapAgeMs": 10233,
+      "hud": "已在别处被接管",
+      "hudBad": true,
+      "reconnectCount": 2,
+      "stopped": true,
+      "viewport": [
+        844,
+        390
+      ],
+      "snapInterval": 137
+    }
+  }
+}

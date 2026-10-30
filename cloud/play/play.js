@@ -19,22 +19,27 @@
   const CARD_ORDER = ['down', 'left', 'right', 'up'];
   const FRAME = 48;
   const FOOT_OFFSET = 43;        // 卡片里脚底线在第 43 行（与 shared/const.js CARD.footLine 一致）
-  // 相机视野半对角之外的余量（逻辑像素）：快照 10Hz、速度 110px/s ⇒ 两帧间最多挪 11px，
-  // 再留出整数取整与往返抖动的空间，24px 足以覆盖（REQ-000018 边界「视野内出现其它动物」）。
-  const RADIUS_MARGIN = 24;
   const VIEW_MIN_PX = 120;       // 视口异常（隐藏标签页等）时的兜底尺寸
   const REFIT_POLL_MS = 400;     // 浏览器工具栏收放不派发 resize，靠轮询补一次重算
+  // 连接自愈（REQ-000019）：10Hz 快照，正常间隔 100ms；2.5 秒没有快照就当半开连接处理
+  const STALE_MS = 2500;
+  const WATCHDOG_MS = 1000;
+  const RECONNECT_MIN_GAP_MS = 1000;   // 重建节流：反复旋屏/抖动不产生连接风暴
+  // 插值渲染（REQ-000020）：按实测到达间隔 EMA 推进，钳到 [60,300]ms，不做外推
+  const INTERP_MIN_MS = 60;
+  const INTERP_MAX_MS = 300;
+  const INTERP_EMA = 0.35;
+  const MAX_FRAME_STEP_PX = 12;  // 单帧位移上限（防丢包后一次跳很远）
 
-  // 世界尺寸与半径上限：启动时从 /api/v1/world 拿，取不到就用默认值（与 shared/const.js 一致）
+  // 世界尺寸：启动时从 /api/v1/world 拿，取不到就用默认值（与 shared/const.js 一致）
   let worldW = 960;
   let worldH = 540;
-  let radiusMax = 400;
   // 相机窗口：w/h = 画布 CSS 尺寸（1 逻辑像素 = 1 CSS 像素）；
   // vw/vh = 实际可见的世界范围（超过世界时取世界尺寸）；ox/oy = 世界在画布内的居中留白
   const camera = { x: 0, y: 0, w: 960, h: 540, vw: 960, vh: 540, ox: 0, oy: 0 };
-  let drawnIds = [];             // 本帧真正绘制出来的 id（AC-000073 用）
-  let serverRadius = 0;          // 当前这条 WS 握手时请求的快照半径
-  let swapping = false;          // 主动换连接（半径变化）时不要走重连退避
+  let drawnIds = [];             // 本帧真正绘制出来的 id（AC-000073 / AC-000085 用）
+  let renderSelf = { x: 500, y: 412 };   // 插值后的自己（绘制与相机都用它）
+  let started = false;           // startGame() 之后才启用连接自愈
   let animalId = null;
   let bg = null;
   let cardImg = null;
@@ -86,6 +91,7 @@
     bg = await loadImage('/assets/bg_base.png');
     fit();
     mountTouchControls();
+    started = true;
     connect();
     requestAnimationFrame(loop);
   }
@@ -97,7 +103,6 @@
       if (!r.ok) return;
       const j = await r.json();
       if (j && j.w > 0 && j.h > 0) { worldW = j.w; worldH = j.h; }
-      if (j && j.radiusMax > 0) radiusMax = j.radiusMax;
     } catch { /* 拿不到就用默认值，不阻塞进游戏 */ }
   }
 
@@ -110,15 +115,16 @@
     });
   }
 
-  // ---------------- WebSocket ----------------
+  // ---------------- WebSocket（REQ-000011 / 000019 / 000021） ----------------
+  // 浏览器拿的是全量快照，没有半径参数可调；重连也不再只靠 onclose——
+  // 手机切后台/旋屏会留下「半开连接」：没有 close 事件、也没有数据。
   function connect() {
     if (!token) return;
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-    // 半径跟着相机视野走：屏幕四角上的动物必须也在快照里（AC-000073）
-    serverRadius = desiredRadius();
-    ws = new WebSocket(`${proto}://${location.host}/ws?t=${encodeURIComponent(token)}&r=${serverRadius}`);
+    ws = new WebSocket(`${proto}://${location.host}/ws?t=${encodeURIComponent(token)}`);
     ws.onopen = () => {
       retry = 0;
+      lastSnapAt = performance.now();
       linkHud.textContent = '已连接';
       linkHud.classList.remove('bad');
       if (intent) sendIntent(intent);
@@ -126,7 +132,7 @@
     ws.onmessage = (m) => {
       let msg;
       try { msg = JSON.parse(m.data); } catch { return; }
-      if (msg.type === 'snapshot') { snapshot = msg; lastSnapAt = performance.now(); }
+      if (msg.type === 'snapshot') { absorbSnapshot(msg); }
     };
     ws.onclose = (ev) => {
       // 被更新的会话取代：不自作主张重连，否则两个标签页会互相顶掉
@@ -138,8 +144,8 @@
         return;
       }
       if (stopped) return;
-      // 视野尺寸变了（旋屏/收起控件）→ 主动换一条半径正确的连接，不算断线
-      if (swapping) { swapping = false; connect(); return; }
+      // 主动重建（forceReconnect）已经排好了新连接，这里不要再排一次
+      if (reconnectPending) return;
       linkHud.textContent = '重连中…';
       linkHud.classList.add('bad');
       retry = Math.min(retry + 1, 6);
@@ -147,6 +153,111 @@
     };
     ws.onerror = () => { try { ws.close(); } catch { /* ignore */ } };
   }
+
+  /** 显式重建连接：幂等 + 1s 节流，不依赖 onclose（半开连接往往没有 close 事件）。 */
+  let reconnectPending = false;
+  let lastReconnectAt = -Infinity;
+  let reconnectCount = 0;
+  function forceReconnect(reason) {
+    if (stopped) return false;
+    const now = performance.now();
+    if (reconnectPending) return false;                       // 已经在重建
+    if (now - lastReconnectAt < RECONNECT_MIN_GAP_MS) return false;  // 节流
+    if (!ws && !token) return false;
+    lastReconnectAt = now;
+    reconnectPending = true;
+    reconnectCount++;
+    console.info('[play] reconnect:', reason);
+    try { if (ws) ws.close(); } catch { /* ignore */ }
+    ws = null;
+    linkHud.textContent = '重连中…';
+    linkHud.classList.add('bad');
+    setTimeout(() => { reconnectPending = false; connect(); }, 0);
+    return true;
+  }
+
+  /** 连接体检：可见性恢复、pageshow、online、切回前台时都调一次。 */
+  function checkLiveness(reason) {
+    if (stopped) return;
+    const dead = !ws || ws.readyState === 2 || ws.readyState === 3;
+    const stale = performance.now() - lastSnapAt > STALE_MS;
+    if (dead) { lastReconnectAt = -Infinity; forceReconnect(reason + ':dead'); }
+    else if (stale) forceReconnect(reason + ':stale');
+  }
+
+  // 看门狗：半开连接没有 close 事件，只能靠「有没有数据」判断
+  setInterval(() => {
+    if (!started || stopped || !token) return;
+    if (performance.now() - lastSnapAt > STALE_MS) checkLiveness('watchdog');
+  }, WATCHDOG_MS);
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') checkLiveness('visible');
+  });
+  window.addEventListener('pageshow', (e) => { if (e.persisted) { lastReconnectAt = -Infinity; checkLiveness('pageshow'); } });
+  window.addEventListener('online', () => { lastReconnectAt = -Infinity; checkLiveness('online'); });
+  window.addEventListener('focus', () => checkLiveness('focus'));
+
+  // ---------------- 插值（REQ-000020） ----------------
+  // 服务端 10Hz 快照 + 位置取整：直接画会每 100ms 跳 11px。这里在两次快照之间线性插值，
+  // 渲染始终落在「上一帧渲染位置 → 新快照位置」之间的 alpha 上（不做外推、不做预测）。
+  const interp = new Map();      // id -> { fromX, fromY, toX, toY, startAt }
+  let snapInterval = 100;        // 快照到达间隔的 EMA（ms）
+  let prevSnapArrival = 0;
+
+  function lerpTarget(id, tx, ty, now) {
+    const cur = interp.get(id);
+    if (!cur) {                                  // 首见：直接置位，不做「从 (0,0) 飞过来」
+      interp.set(id, { fromX: tx, fromY: ty, toX: tx, toY: ty, startAt: now });
+      return;
+    }
+    // from 用「当前渲染值」，保证不跳变
+    const p = sampleInterp(cur, now);
+    let dx = tx - p.x;
+    let dy = ty - p.y;
+    const d = Math.hypot(dx, dy);
+    if (d > MAX_FRAME_STEP_PX) {                 // 丢包/瞬移：限幅，避免一帧跨很远
+      dx = (dx / d) * MAX_FRAME_STEP_PX;
+      dy = (dy / d) * MAX_FRAME_STEP_PX;
+    }
+    cur.fromX = p.x; cur.fromY = p.y;
+    cur.toX = p.x + dx; cur.toY = p.y + dy;
+    cur.startAt = now;
+  }
+
+  function sampleInterp(it, now) {
+    const span = Math.max(1, snapInterval);
+    const a = clamp((now - it.startAt) / span, 0, 1);
+    return { x: it.fromX + (it.toX - it.fromX) * a, y: it.fromY + (it.toY - it.fromY) * a };
+  }
+
+  function renderPos(id, now) {
+    const it = interp.get(id);
+    return it ? sampleInterp(it, now) : null;
+  }
+
+  /** 收到快照：更新插值目标 + 记录到达间隔（供 alpha 计时）。 */
+  function absorbSnapshot(msg) {
+    const now = performance.now();
+    if (prevSnapArrival) {
+      const dt = now - prevSnapArrival;
+      snapInterval = Math.round(
+        clamp(snapInterval * (1 - INTERP_EMA) + clamp(dt, INTERP_MIN_MS, INTERP_MAX_MS) * INTERP_EMA,
+          INTERP_MIN_MS, INTERP_MAX_MS));
+    }
+    prevSnapArrival = now;
+    lastSnapAt = now;
+    snapshot = msg;
+    const seen = new Set();
+    lerpTarget(msg.self.id, msg.self.x, msg.self.y, now);
+    seen.add(msg.self.id);
+    for (const n of msg.nearby) { lerpTarget(n.id, n.x, n.y, now); seen.add(n.id); }
+    for (const id of interp.keys()) if (!seen.has(id)) interp.delete(id);   // 离开世界的移除
+    if (stopped) return;
+    linkHud.textContent = '已连接';
+    linkHud.classList.remove('bad');
+  }
+
 
   // 按住期间每 1 秒续期一次，使服务端的 3 秒 TTL 只作用于真正失联的来源
   function startKeepalive() {
@@ -225,12 +336,6 @@
     };
   }
 
-  /** 请求的快照半径 = 视野半对角 + 余量，并被服务端上限钳制（服务端还会再钳一次）。 */
-  function desiredRadius() {
-    const half = Math.ceil(Math.hypot(camera.w, camera.h) / 2);
-    return Math.min(half + RADIUS_MARGIN, radiusMax);
-  }
-
   function bandPx() {
     return parseFloat(
       getComputedStyle(document.documentElement).getPropertyValue('--touch-band')
@@ -248,18 +353,15 @@
     if (cv.height !== h) cv.height = h;
     cv.style.width = w + 'px';
     cv.style.height = h + 'px';
-    const s = snapshot && snapshot.self;
-    applyCamera(s ? s.x : worldW / 2, s ? s.y : worldH / 2);
+    applyCamera(renderSelf.x, renderSelf.y);
   }
 
-  // 旋屏、收起/展开控件、工具栏收放都可能改变可用视口：尺寸变了就重算相机，
-  // 半径也跟着变（否则屏幕四角会丢动物），需要换一条握手半径正确的连接。
+  // 旋屏、收起/展开控件、工具栏收放都可能改变可用视口：尺寸变了重算相机。
+  // 快照已改成全量（REQ-000021），换尺寸不再需要重新握手，也就不会因此断流。
   function refit() {
-    const before = { w: camera.w, h: camera.h, r: serverRadius };
+    const before = { w: camera.w, h: camera.h };
     fit();
     if (camera.w === before.w && camera.h === before.h) return;
-    const want = desiredRadius();
-    if (ws && want !== before.r) { swapping = true; try { ws.close(); } catch { /* ignore */ } }
   }
 
   window.addEventListener('resize', refit);
@@ -277,16 +379,17 @@
     return cardOf[id];
   }
 
-  /** 画一只动物；返回是否真的画上去了（卡片没加载完就是 false）。 */
+  /** 画一只动物；返回是否真的画上去了（卡片没加载完 / 完全在画面外都是 false）。 */
   function drawAnimal(a, now) {
     const img = cardOf[a.id];
     if (!img) { animalImage(a.id); return false; }
     const row = Math.max(0, CARD_ORDER.indexOf(a.facing));
     const frame = a.moving ? Math.floor(now / (1000 / 8)) % 4 : 0;
-    const p = worldToScreen(a.x, a.y);
+    const rp = renderPos(a.id, now) || { x: a.x, y: a.y };   // 插值位置（REQ-000020）
+    const p = worldToScreen(rp.x, rp.y);
     const dx = Math.round(p.x - FRAME / 2);
     const dy = Math.round(p.y - FOOT_OFFSET);
-    // 完全在画布外的直接跳过（纯绘制优化，可见性由快照决定）
+    // 完全在画布外的直接跳过（纯绘制优化；可见性由快照决定，快照是全量的）
     if (dx + FRAME < 0 || dx > camera.w || dy + FRAME < 0 || dy > camera.h) return false;
     ctx.drawImage(img, frame * FRAME, row * FRAME, FRAME, FRAME, dx, dy, FRAME, FRAME);
     return true;
@@ -297,17 +400,20 @@
     ctx.clearRect(0, 0, camera.w, camera.h);
     if (snapshot) {
       const s = snapshot.self;
-      applyCamera(s.x, s.y);                 // 相机跟人走，边界处自己停住
+      renderSelf = renderPos(s.id, now) || { x: s.x, y: s.y };
+      applyCamera(renderSelf.x, renderSelf.y);   // 相机跟插值后的自己走，边界处自己停住
       if (bg) ctx.drawImage(bg, Math.round(camera.x), Math.round(camera.y),
         camera.vw, camera.vh, camera.ox, camera.oy, camera.vw, camera.vh);
       drawnIds = [];
       for (const n of snapshot.nearby) if (drawAnimal(n, now)) drawnIds.push(n.id);
       drawAnimal(s, now);
-      selfHud.textContent = `${s.id} ${s.name} · (${s.x}, ${s.y}) · ${s.facing}`;
+      const rx = Math.round(renderSelf.x);
+      const ry = Math.round(renderSelf.y);
+      selfHud.textContent = `${s.id} ${s.name} · (${rx}, ${ry}) · ${s.facing}`;
       const n = snapshot.nearby.length;
-      nearHud.textContent = n ? `附近 ${n} 只：${snapshot.nearby[0].name} ${snapshot.nearby[0].distance}px` : '附近：无';
-      // 被淘汰（stopped）时保留「已在别处被接管」的提示，不要被"快照中断"覆盖
-      if (!stopped && now - lastSnapAt > 3000) { linkHud.textContent = '快照中断'; linkHud.classList.add('bad'); }
+      nearHud.textContent = n ? `世界里 ${n} 只：${snapshot.nearby[0].name} ${snapshot.nearby[0].distance}px` : '世界里只有你';
+      // 被淘汰（stopped）时保留「已在别处被接管」的提示，不要被"重连中"覆盖
+      if (!stopped && now - lastSnapAt > STALE_MS) { linkHud.textContent = '重连中…'; linkHud.classList.add('bad'); }
     } else if (bg) {
       ctx.drawImage(bg, Math.round(camera.x), Math.round(camera.y),
         camera.vw, camera.vh, camera.ox, camera.oy, camera.vw, camera.vh);
@@ -368,19 +474,41 @@
     get connected() { return !!ws && ws.readyState === 1; },
     get dropzoneVisible() { return dz.classList.contains('show'); },
     sendIntent,
-    // 相机探针（AC-000070…073）：绘制用的同一个 camera 对象 + 纯函数
+    // 相机探针（AC-000070…073 / 000085）：绘制用的同一个 camera 对象 + 纯函数
     get camera() {
       return {
         x: camera.x, y: camera.y, w: camera.w, h: camera.h,
         vw: camera.vw, vh: camera.vh, ox: camera.ox, oy: camera.oy,
-        worldW, worldH, radius: serverRadius, desiredRadius: desiredRadius(),
+        worldW, worldH,
         drawnIds: drawnIds.slice(),
+        // 插值诊断（AC-000080…083）
+        renderSelf: { x: renderSelf.x, y: renderSelf.y },
+        snapInterval,
+        interpSize: interp.size,
+        // 连接诊断（AC-000076…079）
+        lastSnapAgeMs: Math.round(performance.now() - lastSnapAt),
+        reconnectCount,
+        stopped,
       };
     },
     worldToScreen,
     cameraTarget,               // 纯函数：四向边界与「视野大于世界」的单元断言
+    renderPos,                  // 当前帧的插值位置（逐帧采样用）
     // 测试钩子：主动断开 WebSocket，用来验证自动重连（AC-000044）
     _drop() { if (ws) ws.close(); },
+    // 测试钩子：模拟半开连接——不派发 close，也不再有任何数据（AC-000078）
+    _halfOpen() {
+      if (!ws) return false;
+      try { ws.onmessage = null; ws.onclose = null; ws.onerror = null; } catch { /* ignore */ }
+      return true;
+    },
+    // 测试钩子：把连接标记成死状态但不触发 close（模拟 iOS 挂起）
+    _killSilently() {
+      if (!ws) return false;
+      try { ws.onmessage = null; ws.onclose = null; } catch { /* ignore */ }
+      lastSnapAt = performance.now() - STALE_MS - 500;
+      return true;
+    },
     get touch() { return touchCtl; },
     _uploadForTest: (b64) => upload([new File([Uint8Array.from(atob(b64.split(',')[1] || b64), (c) => c.charCodeAt(0))], 'card.png', { type: 'image/png' })]),
   };
