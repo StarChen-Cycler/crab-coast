@@ -6,7 +6,7 @@
     "project_name": "crab-coast-cloud",
     "version": "1.0.0",
     "created_at": "2026-10-29T15:29:41.113Z",
-    "updated_at": "2026-10-30T03:57:03.293Z"
+    "updated_at": "2026-10-30T03:57:35.434Z"
   },
   "tasks": {
     "9542948d-664d-4498-9622-625a3571036b": {
@@ -875,50 +875,58 @@
       "id": "1d443ef2-fd8b-41d9-ab75-89b409d27fa9",
       "title": "闭环台账与文档：平滑/全量/自愈三条修复",
       "description": "把三条修复与 REQ-000018 r3 的登记闭环：dev start/complete → 17 项验收执行登记 → release crab-coast-v12 → change close；文档同步（README 与 spec 的新增小节与条件行）；跑 reqledger check 与 audit_spec_vs_ledger.py 到 0 差异；最后提交并推送（提交与推送在评审记录里以 git 提交号登记）。",
-      "status": "ready",
+      "status": "completed",
       "priority": "second",
       "success_criteria": [
         {
           "id": "088daac8-0f1c-4379-9ae5-977ae3419295",
           "text": "reqledger check issues 为空且 valid=true；python tools/audit_spec_vs_ledger.py 0 差异",
-          "completed": false
+          "completed": true,
+          "completed_at": "2026-10-30T03:57:27.262Z",
+          "evidence": "reqledger check：issues=[] valid=true doc_rev=467（21 需求 / 12 基线 / 11 变更 / 12 发布 / 130 执行）；audit_spec_vs_ledger.py → 0 差异（14 条需求 54 条件）"
         },
         {
           "id": "484c77ff-29a2-4ccb-a9b3-118373478964",
           "text": "17 项重验全部登记为「通过」，挂在同一 baseline 与 release（crab-coast-v12），change 已关闭",
-          "completed": false
+          "completed": true,
+          "completed_at": "2026-10-30T03:57:28.384Z",
+          "evidence": "17 项重验全部登记「通过」于 BASE-000012 + REL-000012（EXE-000114…130），CHG-000011 已 close（doc_rev 467）"
         },
         {
           "id": "c32bd65e-3e02-4fa4-ae3d-a8497f7df6e3",
           "text": "spec 与 README 里相机/平滑/全量/自愈的描述与实现一致，包含 AC-000076…086 全部条件号",
-          "completed": false
+          "completed": true,
+          "completed_at": "2026-10-30T03:57:29.570Z",
+          "evidence": "spec §0/§6.3/§6.4/§8.3/§13 与 cloud/README.md 新增「平滑插值」「连接自愈」「全量下发」小节，AC-000070…086 全部在 §13 表中（audit 0 差异即证明条件号齐全）"
         },
         {
           "id": "2f79dcac-1cc3-4c6d-b041-8ed013debd82",
           "text": "git 工作区无未提交改动，提交已推送到 origin/main（记录提交号）",
-          "completed": false
+          "completed": true,
+          "completed_at": "2026-10-30T03:57:33.429Z",
+          "evidence": "git status 干净；提交 6a149f9「真机反馈四条修复：快照全量下发 + 连接自愈 + 插值平滑」已 push 到 origin/main（857b74c..6a149f9）"
         }
       ],
       "deliverables": [
         {
           "id": "ed9e9e5f-2794-4c9a-9057-425d0a46e16e",
           "text": "requirements.md（CHG-000011 → 新基线 → REL-000012 的闭环记录，17 项重验）",
-          "completed": false
+          "completed": true
         },
         {
           "id": "555396a6-f41c-407e-b3e9-11de6aef428b",
           "text": "spec_multiplayer-world.md（§6.3 渲染口径、§8.3 WS 全量+看门狗、§13 新增条件行）",
-          "completed": false
+          "completed": true
         },
         {
           "id": "1e299602-cef5-4d1b-82f3-03b583cd0143",
           "text": "cloud/README.md（相机/平滑插值/全量下发/连接自愈四节）",
-          "completed": false
+          "completed": true
         },
         {
           "id": "f136151e-f9ba-4bd6-9e42-89f20bec91e4",
           "text": "evidence/smooth.json 与 evidence/visible.json 的 condition 映射补齐",
-          "completed": false
+          "completed": true
         }
       ],
       "need_fix": [],
@@ -938,16 +946,14 @@
       "notes": "",
       "c7_verified": [],
       "created_at": "2026-10-30T03:30:51.733Z",
-      "updated_at": "2026-10-30T03:30:58.415Z",
-      "completed_at": null,
+      "updated_at": "2026-10-30T03:57:35.435Z",
+      "completed_at": "2026-10-30T03:57:34.331Z",
       "edges": []
     }
   },
   "indexes": {
     "byStatus": {
-      "ready": [
-        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
-      ],
+      "ready": [],
       "in_progress": [],
       "in_review": [],
       "completed": [
@@ -961,7 +967,8 @@
         "8488f778-3790-4d4d-b5a3-a5a9de3de67f",
         "f4fce027-fb2d-4ce8-b512-ead3467271b9",
         "b1487afc-05f6-4833-b73b-4df601d03014",
-        "11407a17-4c10-4ec1-abf0-862f5679eb3a"
+        "11407a17-4c10-4ec1-abf0-862f5679eb3a",
+        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
       ],
       "blocked": []
     },

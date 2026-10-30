@@ -119,6 +119,21 @@ REGISTER_CODE=<口令> PORT=8090 npm start
 实测（`node tools/probe_smooth.js`）：挂起 5 秒后恢复可见立即健康、半开连接 **704ms** 内重连且只重建 1 次、
 被第三个会话顶掉后 10 秒内不再连。
 
+## 演示数据：把测试环境的生物都换成螃蟹
+
+单机版的螃蟹图（`assets/crab_sheet.png`，192×192、4 行 × 4 帧、`footLine` 43、8fps）本来就满足多人版卡片规格，
+可以直接当动作卡用。因为 token 只以哈希入库、拿不到别人的明文 token，所以这个工具**直接写卡片文件 + 更新
+`animals` 表**，写完要重启服务（页面按 id 拉 `/cards/<id>.png`，`no-cache`，刷新即生效；`state` 里的卡片摘要要等重启）：
+
+```bash
+# 先看会改哪些（dry-run）
+node tools/seed_crab_cards.js --data <DATA_DIR>
+# 真的写入，然后重启服务
+node tools/seed_crab_cards.js --apply --data <DATA_DIR>
+```
+
+它只动卡片文件与 `card_path/card_digest/card_w/card_h` 四列，不改名字、token、位置。
+
 ## Agent 接入（三步）
 
 ```bash
