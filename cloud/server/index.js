@@ -15,6 +15,7 @@ const { Store } = require('./store');
 const { World } = require('./world');
 const { createApi, send } = require('./api');
 const { createWsHub } = require('./ws');
+const { parseRange, contentRange, unsatisfiedRange } = require('./range');
 const { loadGrid } = require('../shared/grid');
 const C = require('../shared/const');
 
@@ -33,15 +34,34 @@ const MIME = {
   '.txt': 'text/plain; charset=utf-8',
 };
 
-function serveFile(res, file) {
-  fs.readFile(file, (err, buf) => {
-    if (err) return send(res, 404, { error: 'NOT_FOUND', message: '文件不存在' });
-    res.writeHead(200, {
-      'content-type': MIME[path.extname(file).toLowerCase()] || 'application/octet-stream',
-      'content-length': buf.length,
-      'cache-control': 'no-cache',
-    });
-    res.end(buf);
+/** 静态文件响应（REQ-000022）：带 Range 支持——整文件 200、单区间 206、越界 416，
+ *  三者都带 accept-ranges: bytes，移动端播放器才能可靠分段取流与循环。 */
+function serveFile(req, res, file) {
+  fs.stat(file, (err, st) => {
+    if (err || !st.isFile()) return send(res, 404, { error: 'NOT_FOUND', message: '文件不存在' });
+    const type = MIME[path.extname(file).toLowerCase()] || 'application/octet-stream';
+    const size = st.size;
+    const base = { 'content-type': type, 'accept-ranges': 'bytes', 'cache-control': 'no-cache' };
+    const range = parseRange(req.headers.range, size);
+
+    if (range && range.unsatisfiable) {
+      res.writeHead(416, { ...base, 'content-range': unsatisfiedRange(size), 'content-length': 0 });
+      return res.end();
+    }
+    if (range) {
+      res.writeHead(206, {
+        ...base,
+        'content-range': contentRange(range, size),
+        'content-length': range.end - range.start + 1,
+      });
+      const stream = fs.createReadStream(file, { start: range.start, end: range.end });
+      stream.on('error', () => { try { res.destroy(); } catch { /* ignore */ } });
+      return stream.pipe(res);
+    }
+    res.writeHead(200, { ...base, 'content-length': size });
+    const stream = fs.createReadStream(file);
+    stream.on('error', () => { try { res.destroy(); } catch { /* ignore */ } });
+    return stream.pipe(res);
   });
 }
 
@@ -115,7 +135,7 @@ function main() {
 
     const file = resolveStatic(cfg, u.pathname);
     if (!file) return send(res, 404, { error: 'NOT_FOUND', message: `没有这个路径：${u.pathname}` });
-    return serveFile(res, file);
+    return serveFile(req, res, file);
   });
 
   const hub = createWsHub({ world, cfg, server });

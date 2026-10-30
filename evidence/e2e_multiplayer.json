@@ -1,7 +1,7 @@
 {
-  "when": "2026-10-30T03:49:32.545Z",
-  "port": 8313,
-  "dataDir": "C:\\Users\\LENOVO\\AppData\\Local\\Temp\\crab-e2e-KaWOfz",
+  "when": "2026-10-30T07:13:22.659Z",
+  "port": 8374,
+  "dataDir": "C:\\Users\\LENOVO\\AppData\\Local\\Temp\\crab-e2e-61Rf1a",
   "total": 21,
   "failed": 0,
   "results": [
@@ -33,7 +33,7 @@
       "id": "AC-000036",
       "name": "库里只有 64 位哈希、无明文",
       "pass": true,
-      "detail": "7f72bee991a1"
+      "detail": "524c68ab4631"
     },
     {
       "id": "AC-000037",
@@ -75,13 +75,13 @@
       "id": "AC-000034",
       "name": "1 秒位移 99–121 px",
       "pass": true,
-      "detail": "dist=109.0"
+      "detail": "dist=111.0"
     },
     {
       "id": "AC-000033",
       "name": "意图 3 秒后自动停车",
       "pass": true,
-      "detail": "x 685→685 moving=false"
+      "detail": "x 679→679 moving=false"
     },
     {
       "id": "AC-000032",
@@ -93,7 +93,7 @@
       "id": "AC-000052",
       "name": "半径 50 不含对方、半径 400 含对方且距离正确",
       "pass": true,
-      "detail": "实际距离=205.3 nearby(400)={\"id\":\"A-0002\",\"name\":\"B\",\"x\":500,\"y\":323,\"facing\":\"up\",\"distance\":205}"
+      "detail": "实际距离=199.9 nearby(400)={\"id\":\"A-0002\",\"name\":\"B\",\"x\":500,\"y\":323,\"facing\":\"up\",\"distance\":200}"
     },
     {
       "id": "AC-000054",
@@ -110,13 +110,13 @@
       "id": "AC-000041",
       "name": "3 秒内收到 ≥20 条快照且 self.id 正确",
       "pass": true,
-      "detail": "snaps=28 id=A-0001"
+      "detail": "snaps=27 id=A-0001"
     },
     {
       "id": "AC-000042",
       "name": "WS 下发意图后 x 减少（四向固定朝向生效）",
       "pass": true,
-      "detail": "x 685→611 facing=left"
+      "detail": "x 679→605 facing=left"
     },
     {
       "id": "AC-000057",

@@ -30,6 +30,17 @@
               top: calc(14px + env(safe-area-inset-top, 0px)); }
   #link-hud.bad { color: #ffb4b4; }
 
+  /* 音乐开关（REQ-000022）：左列第三个，接在自身状态 / 附近动物之后，
+     避开右上连接角标与 touch.js 的收起开关（竖屏右上、横屏顶部居中） */
+  #bgm-btn { position: fixed; left: calc(14px + env(safe-area-inset-left, 0px));
+             top: calc(92px + env(safe-area-inset-top, 0px)); z-index: 11;
+             padding: 7px 11px; border-radius: 10px; cursor: pointer;
+             font: 13px/1 "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+             color: var(--ink); background: rgba(6,26,34,.62);
+             border: 1px solid rgba(240,226,199,.22); backdrop-filter: blur(4px);
+             -webkit-appearance: none; appearance: none; touch-action: manipulation; }
+  #bgm-btn.muted { color: rgba(243,231,207,.62); }
+
   /* 无卡片时的上传页（REQ-000013） */
   #dropzone { position: fixed; inset: 0; display: none; place-items: center; padding: 24px; }
   #dropzone.show { display: grid; }
@@ -65,6 +76,7 @@
   </div>
 
   <script src="/play/touch.js"></script>
+  <script src="/play/bgm.js"></script>
   <script src="/play/play.js"></script>
 </body>
 </html>

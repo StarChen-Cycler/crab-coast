@@ -1,0 +1,387 @@
+{
+  "when": "2026-10-30T07:13:01.915Z",
+  "cdpPort": 9222,
+  "port": 8959,
+  "wav": {
+    "path": "/music/seaside_lazy_loop_40s.wav",
+    "size": 5120044
+  },
+  "total": 10,
+  "failed": 0,
+  "results": [
+    {
+      "condition": "AC-000087",
+      "name": "音频可整文件取回：200 + audio/wav + accept-ranges + content-length 等于文件大小",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "type": "audio/wav",
+        "acceptRanges": "bytes",
+        "contentLength": 5120044,
+        "wavSize": 5120044,
+        "bytes": 5120044
+      }
+    },
+    {
+      "condition": "AC-000087",
+      "name": "Range bytes=0-1023 → 206 + content-range 正确 + 正文 1024 字节",
+      "pass": true,
+      "detail": {
+        "status": 206,
+        "contentRange": "bytes 0-1023/5120044",
+        "bytes": 1024
+      }
+    },
+    {
+      "condition": "AC-000087",
+      "name": "Range bytes=99999999- → 416 + content-range: bytes */大小",
+      "pass": true,
+      "detail": {
+        "status": 416,
+        "contentRange": "bytes */5120044"
+      }
+    },
+    {
+      "condition": "AC-000088",
+      "name": "手势后 900ms 内开始播放：started / paused=false / currentTime>0 / loop / 音量 0.42",
+      "pass": true,
+      "detail": {
+        "bgm": {
+          "muted": false,
+          "started": true,
+          "failed": false,
+          "playing": true,
+          "volume": 0.42,
+          "loop": true,
+          "currentTime": 0.826856,
+          "readyState": 4,
+          "src": "http://127.0.0.1:8959/music/seaside_lazy_loop_40s.wav"
+        },
+        "want": {
+          "volume": 0.42
+        }
+      }
+    },
+    {
+      "condition": "AC-000092",
+      "name": "hidden 时暂停；visible 后 1 秒内继续播放且 currentTime 增长",
+      "pass": true,
+      "detail": {
+        "hidden": {
+          "playing": false,
+          "t": 0.828138
+        },
+        "visible": {
+          "playing": true,
+          "t": 1.840428
+        },
+        "visibleState": "visible"
+      }
+    },
+    {
+      "condition": "AC-000089",
+      "name": "点按钮静音（paused + localStorage）；刷新后仍静音不出声；再点恢复播放",
+      "pass": true,
+      "detail": {
+        "afterClick": {
+          "muted": true,
+          "playing": false,
+          "stored": "1"
+        },
+        "afterReload": {
+          "muted": true,
+          "stored": "1"
+        },
+        "afterReloadTap": {
+          "muted": true,
+          "playing": false
+        },
+        "afterUnmute": {
+          "muted": false,
+          "playing": true
+        }
+      }
+    },
+    {
+      "condition": "AC-000090",
+      "name": "竖屏与横屏：音乐按钮都在视口内，且与三个 HUD / 摇杆 / ABXY / 收起开关零重叠",
+      "pass": true,
+      "detail": {
+        "portrait": {
+          "viewport": [
+            390,
+            844
+          ],
+          "btn": {
+            "l": 14,
+            "t": 92,
+            "r": 85,
+            "b": 120,
+            "w": 71,
+            "h": 28,
+            "display": "block"
+          },
+          "overlaps": [],
+          "inside": true
+        },
+        "landscape": {
+          "viewport": [
+            844,
+            390
+          ],
+          "btn": {
+            "l": 14,
+            "t": 92,
+            "r": 85,
+            "b": 120,
+            "w": 71,
+            "h": 28,
+            "display": "block"
+          },
+          "overlaps": [],
+          "inside": true
+        }
+      }
+    },
+    {
+      "condition": "AC-000091",
+      "name": "音频加载失败：按钮隐藏，connected 仍为 true、快照新鲜、连续 5 帧画面一致",
+      "pass": true,
+      "detail": {
+        "ok": true,
+        "btnDisplay": "none",
+        "failed": true,
+        "connected": true,
+        "snapAge": 58,
+        "framesIdentical": true
+      }
+    },
+    {
+      "condition": "AC-000045",
+      "name": "file:// 单机版：方向键使角色移动、T 键切换尺寸仍然正常",
+      "pass": true,
+      "detail": {
+        "start": {
+          "x": 500,
+          "size": "48"
+        },
+        "moved": {
+          "before": {
+            "x": 500,
+            "size": "48"
+          },
+          "afterMove": {
+            "x": 556.01,
+            "size": "48"
+          },
+          "afterSizes": {
+            "size": "96"
+          }
+        },
+        "end": {
+          "x": 556.01,
+          "y": 412,
+          "dir": "right",
+          "face": "front",
+          "row": 0,
+          "bodyDeg": 90,
+          "heading": 0,
+          "frame": 0,
+          "size": "96",
+          "moving": false
+        }
+      }
+    },
+    {
+      "condition": "AC-000046",
+      "name": "file:// 单机版页面没有任何 http(s) 资源请求",
+      "pass": true,
+      "detail": {
+        "httpResources": []
+      }
+    }
+  ],
+  "mapping": [
+    {
+      "condition_id": "AC-000087",
+      "assertion": "音频可整文件取回：200 + audio/wav + accept-ranges + content-length 等于文件大小",
+      "detail": {
+        "status": 200,
+        "type": "audio/wav",
+        "acceptRanges": "bytes",
+        "contentLength": 5120044,
+        "wavSize": 5120044,
+        "bytes": 5120044
+      }
+    },
+    {
+      "condition_id": "AC-000087",
+      "assertion": "Range bytes=0-1023 → 206 + content-range 正确 + 正文 1024 字节",
+      "detail": {
+        "status": 206,
+        "contentRange": "bytes 0-1023/5120044",
+        "bytes": 1024
+      }
+    },
+    {
+      "condition_id": "AC-000087",
+      "assertion": "Range bytes=99999999- → 416 + content-range: bytes */大小",
+      "detail": {
+        "status": 416,
+        "contentRange": "bytes */5120044"
+      }
+    },
+    {
+      "condition_id": "AC-000088",
+      "assertion": "手势后 900ms 内开始播放：started / paused=false / currentTime>0 / loop / 音量 0.42",
+      "detail": {
+        "bgm": {
+          "muted": false,
+          "started": true,
+          "failed": false,
+          "playing": true,
+          "volume": 0.42,
+          "loop": true,
+          "currentTime": 0.826856,
+          "readyState": 4,
+          "src": "http://127.0.0.1:8959/music/seaside_lazy_loop_40s.wav"
+        },
+        "want": {
+          "volume": 0.42
+        }
+      }
+    },
+    {
+      "condition_id": "AC-000092",
+      "assertion": "hidden 时暂停；visible 后 1 秒内继续播放且 currentTime 增长",
+      "detail": {
+        "hidden": {
+          "playing": false,
+          "t": 0.828138
+        },
+        "visible": {
+          "playing": true,
+          "t": 1.840428
+        },
+        "visibleState": "visible"
+      }
+    },
+    {
+      "condition_id": "AC-000089",
+      "assertion": "点按钮静音（paused + localStorage）；刷新后仍静音不出声；再点恢复播放",
+      "detail": {
+        "afterClick": {
+          "muted": true,
+          "playing": false,
+          "stored": "1"
+        },
+        "afterReload": {
+          "muted": true,
+          "stored": "1"
+        },
+        "afterReloadTap": {
+          "muted": true,
+          "playing": false
+        },
+        "afterUnmute": {
+          "muted": false,
+          "playing": true
+        }
+      }
+    },
+    {
+      "condition_id": "AC-000090",
+      "assertion": "竖屏与横屏：音乐按钮都在视口内，且与三个 HUD / 摇杆 / ABXY / 收起开关零重叠",
+      "detail": {
+        "portrait": {
+          "viewport": [
+            390,
+            844
+          ],
+          "btn": {
+            "l": 14,
+            "t": 92,
+            "r": 85,
+            "b": 120,
+            "w": 71,
+            "h": 28,
+            "display": "block"
+          },
+          "overlaps": [],
+          "inside": true
+        },
+        "landscape": {
+          "viewport": [
+            844,
+            390
+          ],
+          "btn": {
+            "l": 14,
+            "t": 92,
+            "r": 85,
+            "b": 120,
+            "w": 71,
+            "h": 28,
+            "display": "block"
+          },
+          "overlaps": [],
+          "inside": true
+        }
+      }
+    },
+    {
+      "condition_id": "AC-000091",
+      "assertion": "音频加载失败：按钮隐藏，connected 仍为 true、快照新鲜、连续 5 帧画面一致",
+      "detail": {
+        "ok": true,
+        "btnDisplay": "none",
+        "failed": true,
+        "connected": true,
+        "snapAge": 58,
+        "framesIdentical": true
+      }
+    },
+    {
+      "condition_id": "AC-000045",
+      "assertion": "file:// 单机版：方向键使角色移动、T 键切换尺寸仍然正常",
+      "detail": {
+        "start": {
+          "x": 500,
+          "size": "48"
+        },
+        "moved": {
+          "before": {
+            "x": 500,
+            "size": "48"
+          },
+          "afterMove": {
+            "x": 556.01,
+            "size": "48"
+          },
+          "afterSizes": {
+            "size": "96"
+          }
+        },
+        "end": {
+          "x": 556.01,
+          "y": 412,
+          "dir": "right",
+          "face": "front",
+          "row": 0,
+          "bodyDeg": 90,
+          "heading": 0,
+          "frame": 0,
+          "size": "96",
+          "moving": false
+        }
+      }
+    },
+    {
+      "condition_id": "AC-000046",
+      "assertion": "file:// 单机版页面没有任何 http(s) 资源请求",
+      "detail": {
+        "httpResources": []
+      }
+    }
+  ]
+}

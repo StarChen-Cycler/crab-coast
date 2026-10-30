@@ -134,6 +134,29 @@ node tools/seed_crab_cards.js --apply --data <DATA_DIR>
 
 它只动卡片文件与 `card_path/card_digest/card_w/card_h` 四列，不改名字、token、位置。
 
+## 背景音乐（与单机版同一份素材，由服务端供给）
+
+单机版的 40 秒无缝循环海岸 BGM 也接到了多人页：`music/seaside_lazy_loop_40s.wav`（4.88MB，
+接缝跳变 0.0019）由服务端直接提供，前端在 `play/bgm.js` 里播放。
+
+| 项 | 规则 |
+| --- | --- |
+| 加载 | 进入游戏后才建 `Audio`，上传页不拉音频；`loop=true`，音量常量 **0.42**（与单机版 TARGET 一致） |
+| 播放 | 浏览器自动播放策略要求手势：首次按键/触摸或点按钮时同步 `play()`，被拦只记状态不报错 |
+| 开关 | 按钮在左列第三个（自身 14/14 → 附近 14/56 → 音乐 14/92），`M` 键同效；静音即暂停，偏好存 `localStorage` |
+| 可见性 | 切后台暂停、回前台按意愿继续 |
+| 回落 | 音频加载失败只隐藏按钮，其它一切照常 |
+| 不用 mp3 | 编码器 padding 会破坏无缝循环（`music/README.md` 有实测），所以用 WAV |
+
+服务端为此加了 HTTP Range（移动端可靠取流/循环的前提）：纯函数 `server/range.js` 的 `parseRange()`，
+`server/index.js` 的 `serveFile()` 返回 200 / 206 / 416，三者都带 `accept-ranges: bytes`。
+
+```bash
+node --test test/range.test.js                    # Range 解析 9 个纯函数单测
+node tools/e2e_bgm.js                             # 端到端：Range + 播放/静音/布局/回落/可见性 + 单机版回归
+node tools/check_deploy.js http://<host>:8090     # 部署断言：健康检查 + 静态资源指纹 + 音频 Range
+```
+
 ## Agent 接入（三步）
 
 ```bash

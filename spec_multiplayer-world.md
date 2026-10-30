@@ -21,6 +21,7 @@
 | REQ-000019 | 后台/旋屏/网络抖动后自动恢复实时连接（快照看门狗 + 可见性体检） | §6.4、§8.3 |
 | REQ-000020 | 角色与相机按快照插值平滑渲染（消除 10Hz 整块跳步） | §6.3 |
 | REQ-000021 | WebSocket 快照下发世界内全部动物（取消半径裁切） | §6.3、§8.3 |
+| REQ-000022 | 多人在线版背景音乐：服务端供给音频（含 Range），页面播放与开关 | §8.5 |
 
 ## 1. 目标
 
@@ -243,6 +244,34 @@ Agent → 把 playUrl 交给用户；自己用 intent / state 接口控制与观
 
 上传成功 → 不刷新页面直接切到游戏；上传失败 → 留在上传页并逐条显示服务端返回的 errors。
 
+### 8.5 静态资源与音频（REQ-000022）
+
+多人页的背景音乐与单机版同一份素材，由**服务端供给**，所以静态文件服务必须支持 HTTP Range
+（移动端播放 4.88MB 的 WAV 时需要分段取流与可靠循环）：
+
+| 请求 | 响应 |
+| --- | --- |
+| `GET /music/seaside_lazy_loop_40s.wav`（无 Range） | 200，`content-type: audio/wav`，`accept-ranges: bytes`，`content-length` = 文件字节数 |
+| 同 URL + `Range: bytes=0-1023` | 206，`content-range: bytes 0-1023/5120044`，body 1024 字节 |
+| 同 URL + `Range: bytes=99999999-` | 416，`content-range: bytes */5120044` |
+| 多区间（`bytes=0-1,5-6`）或不可解析的 Range | 忽略，按整文件 200（RFC 允许） |
+
+解析逻辑在纯函数 `cloud/server/range.js` 的 `parseRange(header, size)` 里，单测
+`node --test cloud/test/range.test.js`（9 个用例，只导入纯函数、不写任何数据）。
+
+页面侧 `cloud/play/bgm.js`（`createBgm()`，暴露 `window.__play.bgm`）：
+
+| 项 | 规则 |
+| --- | --- |
+| 加载时机 | 进入游戏后才创建 `Audio`（上传页不拉 4.88MB）；`loop=true`、`volume` 常量 0.42 |
+| 播放 | 受自动播放策略限制，首次 `keydown` / `pointerdown` / `touchstart` 或点按钮时同步 `play()`；被拦截只记状态、不抛 |
+| 开关 | 按钮在左列第三个（自身 14/14 → 附近 14/56 → 音乐 14/92），`M` 键同效；静音即 `pause()`，偏好写 `localStorage["crab-coast:bgm-muted"]` |
+| 可见性 | `hidden` 时暂停并记住播放意愿，`visible` 时按意愿恢复 |
+| 失败回落 | 音频 error 只隐藏按钮，连接、渲染、操作完全不受影响 |
+
+验收：`node tools/e2e_bgm.js`（服务端 3 条 + 页面 5 条 + 单机版回归 2 条，写 `evidence/bgm.json`），
+部署后断言：`node tools/check_deploy.js http://<host>:8090`（健康检查 + 静态资源指纹 + 音频 Range）。
+
 ## 9. 数据模型（SQLite，`node:sqlite`）
 
 ```sql
@@ -391,6 +420,12 @@ PORT=8080 REGISTER_CODE=<口令> DATA_DIR=/srv/crab/data npm start
 | REQ-000021 | AC-000084 | 相距 >RADIUS_MAX 时双方 WS 快照互见，`world.scope="all"` |
 | REQ-000021 | AC-000085 | 绘制集合 ⊆ 快照集合（缺失 0）；视野内的都画，远方那只仍在快照里 |
 | REQ-000021 | AC-000086 | `/state` 仍按半径过滤：默认 200、传 10000 回显 400；近的在内、远的在外 |
+| REQ-000022 | AC-000087 | 服务端按 HTTP Range 供给音频：200 全量 / 206 单区间（content-range 正确、1024 字节）/ 416 越界 |
+| REQ-000022 | AC-000088 | 首次手势后 900ms 内开始播放：started、paused=false、currentTime>0、loop、音量 0.42 |
+| REQ-000022 | AC-000089 | 点按钮静音（paused + localStorage）→ 刷新后仍静音不出声 → 再点恢复播放 |
+| REQ-000022 | AC-000090 | 音乐按钮在竖屏/横屏都在视口内，且与三个 HUD、摇杆、ABXY、收起开关零重叠 |
+| REQ-000022 | AC-000091 | 音频加载失败只隐藏按钮：connected 仍 true、快照新鲜、连续 5 帧画面一致 |
+| REQ-000022 | AC-000092 | 切后台暂停、回前台按意愿继续（currentTime 继续增长） |
 | REQ-000014 | AC-000051…054 | （v2 起补记：nearby 只含其它动物、不含环境层，用户已确认） |
 
 > 自动核对：`python tools/audit_spec_vs_ledger.py`（要求 0 差异）。

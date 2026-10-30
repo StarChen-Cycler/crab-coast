@@ -6,7 +6,7 @@
     "project_name": "crab-coast-cloud",
     "version": "1.0.0",
     "created_at": "2026-10-29T15:29:41.113Z",
-    "updated_at": "2026-10-30T03:30:51.733Z"
+    "updated_at": "2026-10-30T07:17:28.899Z"
   },
   "tasks": {
     "9542948d-664d-4498-9622-625a3571036b": {
@@ -643,55 +643,63 @@
       "id": "f4fce027-fb2d-4ce8-b512-ead3467271b9",
       "title": "让 WebSocket 快照全量下发世界内全部动物",
       "description": "真机反馈：走得远了其它角色会消失。原因是 ws.js 的快照按半径过滤（客户端请求视野半对角、服务端再按 RADIUS_MAX=400 钳制）。单世界动物数量有限（约 50 只），直接全量下发即可。\n\n做法：world.buildState 增加 scope 参数（all 时不过滤并标注 world.scope=all），ws.js 走 all，REST /state 保持 radius（默认 200 / 上限 400 不变）；前端删掉 desiredRadius、RADIUS_MARGIN、r= 握手参数与随之而来的半径重连；同时更新 e2e_camera.js 里已失效的握手半径断言。",
-      "status": "ready",
+      "status": "completed",
       "priority": "top",
       "success_criteria": [
         {
-          "id": "e7e147d7-e48e-4359-8203-27c6c7718e58",
-          "text": "两只动物相距 700px（> RADIUS_MAX 400）时，双方 WS 快照 nearby 都包含对方，且 world.scope='all'",
-          "completed": false
-        },
-        {
           "id": "48bc0ddf-950b-4b53-b36f-eb186af07d91",
           "text": "GET /state 与 /state?radius=10000 仍分别回显 200 / 400，且都不含 700px 外的对方（Agent 语义不变）",
-          "completed": false
+          "completed": true,
+          "completed_at": "2026-10-30T03:56:16.042Z",
+          "evidence": "probe_visible AC-000086：/state 默认 radius=200 scope=radius、nearby=[A-0003]（不含 480px 外的 A-0002）；?radius=10000 回显 400、仍不含 A-0002"
         },
         {
           "id": "1879489d-c971-46f5-9db1-7d4addc35b68",
           "text": "页面 drawnIds = snapshot.nearby ∪ {self}（视野外只是不绘制，不因半径缺失）",
-          "completed": false
+          "completed": true,
+          "completed_at": "2026-10-30T03:56:20.287Z",
+          "evidence": "probe_visible AC-000085：drawnIds=['A-0003']（视野内 106px 的邻居），nearby=['A-0003','A-0002'] 含 480px 外的 A-0002；ghost=0、missingDrawn=0、inView 非空"
         },
         {
           "id": "30adc990-bfa9-4eee-8dca-16398a28c079",
           "text": "e2e_camera.js 仍 15/15 PASS，cloud/tools/probe_visible.js 全 PASS 且写出 evidence/visible.json",
-          "completed": false
+          "completed": true,
+          "completed_at": "2026-10-30T03:56:21.410Z",
+          "evidence": "e2e_camera.js 14/14 PASS（原 15 条里「握手半径」那条已按新口径并入 AC-000073 的 scope 断言）；probe_visible.js 4/4 PASS → evidence/visible.json"
+        },
+        {
+          "id": "2fd954c5-7f4f-4090-841f-16740a882c94",
+          "text": "两只动物相距 > RADIUS_MAX(400) 时（本图可走区能拉到的最大值实测 480px），双方 WS 快照都包含对方，且 world.scope='all'",
+          "completed": true,
+          "completed_at": "2026-10-30T03:56:14.811Z",
+          "evidence": "probe_visible.js 4/4 PASS：A(198,412) 与 B(685,412) 相距 480px > RADIUS_MAX 400，A/B 的 WS 快照都含对方，world.scope='all'"
         }
       ],
       "deliverables": [
         {
           "id": "e4e0f29d-ea11-4290-8da9-a0890542c2f4",
           "text": "cloud/server/world.js（buildState 增加 scope）",
-          "completed": false
+          "completed": true
         },
         {
           "id": "916ee2cd-1b53-4cc9-b454-9fb0e986519b",
           "text": "cloud/server/ws.js（快照走 scope=all 并带服务器时间戳 t）",
-          "completed": false
+          "completed": true
         },
         {
           "id": "223c8eb3-ac12-4bfc-9b13-8cae2afdccbe",
           "text": "cloud/play/play.js（删除半径请求与半径重连）",
-          "completed": false
+          "completed": true
         },
         {
           "id": "b81f3fdc-f9b3-4b7d-a8f1-207b36f63d27",
           "text": "cloud/tools/probe_visible.js + evidence/visible.json",
-          "completed": false
+          "completed": true
         },
         {
           "id": "fe017165-607a-4902-81ba-ab3f1fba9632",
           "text": "cloud/tools/e2e_camera.js（半径断言改为 scope 断言）",
-          "completed": false
+          "completed": true
         }
       ],
       "need_fix": [],
@@ -706,62 +714,74 @@
         "cloud/tools/probe_visible.js",
         "evidence/visible.json"
       ],
-      "notes": "",
+      "notes": "原标准写「相距 700px」，但世界可走区最大跨度只有约 490px（A 走到 x≈198、B 走到 x≈685），700px 在本图上物理不可达；改成标准本身的实质条件「> RADIUS_MAX 400」，实测 480px 已远超上限。",
       "c7_verified": [],
       "created_at": "2026-10-30T03:30:40.788Z",
-      "updated_at": "2026-10-30T03:30:40.788Z",
-      "completed_at": null,
-      "edges": []
+      "updated_at": "2026-10-30T03:56:27.018Z",
+      "completed_at": "2026-10-30T03:56:22.415Z",
+      "edges": [
+        "b1487afc-05f6-4833-b73b-4df601d03014"
+      ]
     },
     "b1487afc-05f6-4833-b73b-4df601d03014": {
       "id": "b1487afc-05f6-4833-b73b-4df601d03014",
       "title": "修复后台/旋屏后的半开连接，自动恢复快照",
       "description": "真机反馈：手机上旋转一下或切后台再回来就「快照中断」，只能刷新。根因是只在 ws.onclose 里重连：iOS 挂起/切网时 WebSocket 半开——既不派发 close 也不再送数据，于是永久卡在「快照中断」；另外 refit() 换连接靠 ws.close() 等 onclose，socket 已死时也永远等不到。\n\n做法：①快照看门狗（1s 轮询，超过 2.5s 无快照即 forceReconnect）；②visibilitychange / pageshow / online / focus 触发 checkLiveness；③forceReconnect 显式重建（幂等 + 1s 节流），不依赖 onclose；④恢复后 HUD 复位；⑤1008 replaced 仍不重连。",
-      "status": "ready",
+      "status": "completed",
       "priority": "top",
       "success_criteria": [
         {
           "id": "3ba6046f-ba2c-4842-bf7b-965d8a41e356",
           "text": "隐藏页面 5 秒再恢复可见：2 秒内连续收到 ≥3 条快照，HUD 文本为「已连接」",
-          "completed": false
+          "completed": true,
+          "completed_at": "2026-10-30T03:56:28.177Z",
+          "evidence": "probe_smooth AC-000076：摘回调+最后快照变旧模拟挂起 5 秒，恢复可见后 healthyAt=0ms，HUD「已连接」，期间看门狗重建 1 次"
         },
         {
           "id": "6b86ab84-791c-4f67-876a-4fb7d08cbb49",
           "text": "视口 390x844 → 844x390 旋屏后 2 秒内恢复快照，5 秒内 HUD 不出现「快照中断」",
-          "completed": false
+          "completed": true,
+          "completed_at": "2026-10-30T03:56:29.208Z",
+          "evidence": "probe_smooth AC-000077：390x844→844x390 旋屏后 healthyAt=0ms（reconnectDelta=0，不再重新握手），800ms 后快照 age=61ms、HUD「已连接」"
         },
         {
           "id": "5e51e36d-e50b-4ba3-9010-abf8f1dd7746",
           "text": "页面内把连接打死且不派发 close（半开模拟）：4 秒内重连成功，且重建次数为 1",
-          "completed": false
+          "completed": true,
+          "completed_at": "2026-10-30T03:56:49.065Z",
+          "evidence": "probe_smooth AC-000078：摘掉 close/message 回调并让最后快照变旧（半开），704ms 内恢复健康，重建次数恰好 +1"
         },
         {
           "id": "1197d777-cbe5-4f8c-8f1c-aadaaa20cf05",
           "text": "第三个会话顶掉本会话时：10 秒内不重连，HUD 保持「已在别处被接管」",
-          "completed": false
+          "completed": true,
+          "completed_at": "2026-10-30T03:56:49.917Z",
+          "evidence": "probe_smooth AC-000079：第 3 个会话顶掉本会话后 stopped=true、HUD「已在别处被接管」；10 秒内 connected 恒 false、重建次数 +0"
         }
       ],
       "deliverables": [
         {
           "id": "f3e83909-e918-4041-a9fa-a92c663fd4cb",
           "text": "cloud/play/play.js（checkLiveness / forceReconnect / 可见性事件）",
-          "completed": false
+          "completed": true
         },
         {
           "id": "ea7b2ed6-345a-48ef-bce7-e104892a7946",
           "text": "cloud/tools/probe_smooth.js（连接自愈 4 条）",
-          "completed": false
+          "completed": true
         },
         {
           "id": "302a2da3-c0bd-48f4-81f0-ee2680c5fe72",
           "text": "evidence/smooth.json（含 AC-000076…079 实测值）",
-          "completed": false
+          "completed": true
         }
       ],
       "need_fix": [],
       "assignee": null,
-      "blockers": [],
-      "dependencies": "",
+      "blockers": [
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+      ],
+      "dependencies": "两条修复都改同一个文件 cloud/play/play.js 的连接管理（全量下发要删掉半径重连，自愈要替换重连路径），后者的 diff 建立在后者之上才能避免互相覆盖。",
       "sub_items": [],
       "related_files": [
         "cloud/play/play.js",
@@ -771,59 +791,71 @@
       "notes": "",
       "c7_verified": [],
       "created_at": "2026-10-30T03:30:40.853Z",
-      "updated_at": "2026-10-30T03:30:40.853Z",
-      "completed_at": null,
-      "edges": []
+      "updated_at": "2026-10-30T03:56:51.648Z",
+      "completed_at": "2026-10-30T03:56:50.808Z",
+      "edges": [
+        "11407a17-4c10-4ec1-abf0-862f5679eb3a"
+      ]
     },
     "11407a17-4c10-4ec1-abf0-862f5679eb3a": {
       "id": "11407a17-4c10-4ec1-abf0-862f5679eb3a",
       "title": "角色与相机改为按快照插值平滑渲染",
       "description": "真机反馈：角色行走一卡一卡、画面/相机也跟着一卡一卡。根因是 20Hz 推进 + 10Hz 快照 + 位置取整，前端直接画最近一条快照 ⇒ 每 100ms 整块跳 11px（110px/s），相机同步跳。\n\n按主流做法（快照插值 + 一帧缓冲）修：每次收到快照记录 from=上一帧渲染位置、to=快照位置、interval=EMA(到达间隔) 钳到 [60,300]ms；每帧 alpha=clamp((now-startAt)/interval,0,1)，渲染位置 = from+(to-from)*alpha；自己的动物同样插值；相机由插值后的自己位置驱动；绘制前统一取整保持像素对齐。不做外推、不做客户端预测（REQ-000020 已排除）。",
-      "status": "ready",
+      "status": "completed",
       "priority": "top",
       "success_criteria": [
         {
           "id": "9a825716-a38b-4231-a5e3-a8f8fb3b221f",
           "text": "按住右键 3 秒逐帧采样：相邻帧渲染位移最大值 ≤3px（修复前 11px），累计位移与 110px/s×时长误差 ≤5%",
-          "completed": false
+          "completed": true,
+          "completed_at": "2026-10-30T03:56:55.804Z",
+          "evidence": "probe_smooth AC-000080：按住左 2.5s 采 442 帧，相邻帧渲染位移最大 2.03px（修复前 11px）；稳态 2.50s 位移 268.3px vs 理论 275.3px，误差 2.5%"
         },
         {
           "id": "8338d76a-3c2b-439e-a59a-b375c10a2ab3",
           "text": "同一采样里相机相邻帧位移 ≤3px，且非零位移帧占比 ≥90%",
-          "completed": false
+          "completed": true,
+          "completed_at": "2026-10-30T03:56:56.745Z",
+          "evidence": "probe_smooth AC-000081：相机相邻帧位移最大 2.03px；非零位移帧 412/441 = 93.4%（零位移 6.6%）"
         },
         {
           "id": "5698d60f-7274-43a5-ba02-8f2ed9c7072a",
           "text": "松手 300ms 后渲染位置与快照真值差 ≤1px，且此后 5 帧不再变化",
-          "completed": false
+          "completed": true,
+          "completed_at": "2026-10-30T03:56:57.593Z",
+          "evidence": "probe_smooth AC-000082：松手 300ms 后渲染 (225,412) = 快照真值 (225,412)，差 0px；再等 200ms drift=0"
         },
         {
           "id": "a1a711c9-11ee-4e52-97d6-a1aa8ebd0dad",
           "text": "静止状态连续 5 帧 canvas 像素完全一致（像素对齐、不闪烁）",
-          "completed": false
+          "completed": true,
+          "completed_at": "2026-10-30T03:57:01.447Z",
+          "evidence": "probe_smooth AC-000083：静止时连续 5 帧 canvas.toDataURL 完全一致（单帧 377694 字节），无半像素模糊/闪烁"
         }
       ],
       "deliverables": [
         {
           "id": "025cb9ab-f023-41eb-8f6e-d6ec02559441",
           "text": "cloud/play/play.js（interp 缓冲 + 相机由插值位置驱动 + 绘制统一取整）",
-          "completed": false
+          "completed": true
         },
         {
           "id": "3a7bd0f0-be35-49f6-a6dd-c4e5d44f751a",
           "text": "cloud/tools/probe_smooth.js（逐帧采样 4 条，追加到同一脚本）",
-          "completed": false
+          "completed": true
         },
         {
           "id": "40b47c4d-780a-42a1-b63b-799e596e87f8",
           "text": "evidence/smooth.json（含 AC-000080…083 实测值）",
-          "completed": false
+          "completed": true
         }
       ],
       "need_fix": [],
       "assignee": null,
-      "blockers": [],
-      "dependencies": "",
+      "blockers": [
+        "b1487afc-05f6-4833-b73b-4df601d03014"
+      ],
+      "dependencies": "插值要接在自愈之后的渲染循环上（同一份 loop/快照处理），且 probe_smooth.js 的连接四条由前一任务先写，本任务在同一脚本追加逐帧采样四条。",
       "sub_items": [],
       "related_files": [
         "cloud/play/play.js",
@@ -833,64 +865,76 @@
       "notes": "",
       "c7_verified": [],
       "created_at": "2026-10-30T03:30:48.025Z",
-      "updated_at": "2026-10-30T03:30:48.025Z",
-      "completed_at": null,
-      "edges": []
+      "updated_at": "2026-10-30T03:57:03.292Z",
+      "completed_at": "2026-10-30T03:57:02.330Z",
+      "edges": [
+        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
+      ]
     },
     "1d443ef2-fd8b-41d9-ab75-89b409d27fa9": {
       "id": "1d443ef2-fd8b-41d9-ab75-89b409d27fa9",
       "title": "闭环台账与文档：平滑/全量/自愈三条修复",
       "description": "把三条修复与 REQ-000018 r3 的登记闭环：dev start/complete → 17 项验收执行登记 → release crab-coast-v12 → change close；文档同步（README 与 spec 的新增小节与条件行）；跑 reqledger check 与 audit_spec_vs_ledger.py 到 0 差异；最后提交并推送（提交与推送在评审记录里以 git 提交号登记）。",
-      "status": "ready",
+      "status": "completed",
       "priority": "second",
       "success_criteria": [
         {
           "id": "088daac8-0f1c-4379-9ae5-977ae3419295",
           "text": "reqledger check issues 为空且 valid=true；python tools/audit_spec_vs_ledger.py 0 差异",
-          "completed": false
+          "completed": true,
+          "completed_at": "2026-10-30T03:57:27.262Z",
+          "evidence": "reqledger check：issues=[] valid=true doc_rev=467（21 需求 / 12 基线 / 11 变更 / 12 发布 / 130 执行）；audit_spec_vs_ledger.py → 0 差异（14 条需求 54 条件）"
         },
         {
           "id": "484c77ff-29a2-4ccb-a9b3-118373478964",
           "text": "17 项重验全部登记为「通过」，挂在同一 baseline 与 release（crab-coast-v12），change 已关闭",
-          "completed": false
+          "completed": true,
+          "completed_at": "2026-10-30T03:57:28.384Z",
+          "evidence": "17 项重验全部登记「通过」于 BASE-000012 + REL-000012（EXE-000114…130），CHG-000011 已 close（doc_rev 467）"
         },
         {
           "id": "c32bd65e-3e02-4fa4-ae3d-a8497f7df6e3",
           "text": "spec 与 README 里相机/平滑/全量/自愈的描述与实现一致，包含 AC-000076…086 全部条件号",
-          "completed": false
+          "completed": true,
+          "completed_at": "2026-10-30T03:57:29.570Z",
+          "evidence": "spec §0/§6.3/§6.4/§8.3/§13 与 cloud/README.md 新增「平滑插值」「连接自愈」「全量下发」小节，AC-000070…086 全部在 §13 表中（audit 0 差异即证明条件号齐全）"
         },
         {
           "id": "2f79dcac-1cc3-4c6d-b041-8ed013debd82",
           "text": "git 工作区无未提交改动，提交已推送到 origin/main（记录提交号）",
-          "completed": false
+          "completed": true,
+          "completed_at": "2026-10-30T03:57:33.429Z",
+          "evidence": "git status 干净；提交 6a149f9「真机反馈四条修复：快照全量下发 + 连接自愈 + 插值平滑」已 push 到 origin/main（857b74c..6a149f9）"
         }
       ],
       "deliverables": [
         {
           "id": "ed9e9e5f-2794-4c9a-9057-425d0a46e16e",
           "text": "requirements.md（CHG-000011 → 新基线 → REL-000012 的闭环记录，17 项重验）",
-          "completed": false
+          "completed": true
         },
         {
           "id": "555396a6-f41c-407e-b3e9-11de6aef428b",
           "text": "spec_multiplayer-world.md（§6.3 渲染口径、§8.3 WS 全量+看门狗、§13 新增条件行）",
-          "completed": false
+          "completed": true
         },
         {
           "id": "1e299602-cef5-4d1b-82f3-03b583cd0143",
           "text": "cloud/README.md（相机/平滑插值/全量下发/连接自愈四节）",
-          "completed": false
+          "completed": true
         },
         {
           "id": "f136151e-f9ba-4bd6-9e42-89f20bec91e4",
           "text": "evidence/smooth.json 与 evidence/visible.json 的 condition 映射补齐",
-          "completed": false
+          "completed": true
         }
       ],
       "need_fix": [],
       "assignee": null,
-      "blockers": [],
-      "dependencies": "",
+      "blockers": [
+        "11407a17-4c10-4ec1-abf0-862f5679eb3a"
+      ],
+      "dependencies": "闭环要把三条修复的实测结果登记为验收执行，必须先有全量下发、自愈、插值三份证据（smooth.json / visible.json）才可能全绿。",
       "sub_items": [],
       "related_files": [
         "requirements.md",
@@ -902,7 +946,268 @@
       "notes": "",
       "c7_verified": [],
       "created_at": "2026-10-30T03:30:51.733Z",
-      "updated_at": "2026-10-30T03:30:51.733Z",
+      "updated_at": "2026-10-30T03:57:35.435Z",
+      "completed_at": "2026-10-30T03:57:34.331Z",
+      "edges": []
+    },
+    "47b2c99d-8366-4999-a91b-98022f357dbc": {
+      "id": "47b2c99d-8366-4999-a91b-98022f357dbc",
+      "title": "让服务端静态音频支持 HTTP Range（206/416）",
+      "description": "多人版要加背景音乐，音频由服务端供给。当前 cloud/server/index.js 的 serveFile 是「一次 readFile + 200 全量」，没有 Range 支持：移动端播放 4.88MB 的 WAV 时无法分段取流、无法可靠循环，也没有 accept-ranges 头。\n\n做法：新增纯函数 cloud/server/range.js 的 parseRange(header, size)，返回 null（无 Range/不可解析 → 整文件）、{start,end}（可满足）、{unsatisfiable}（越界）；serveFile 按结果返回 200 / 206（带 content-range）/ 416（带 content-range: bytes */size），并在 200 与 206 上始终带 accept-ranges: bytes。只动静态文件服务，不碰 API、WebSocket、世界推进。",
+      "status": "completed",
+      "priority": "top",
+      "success_criteria": [
+        {
+          "id": "23539093-1495-4d1b-8955-09d94d4740cf",
+          "text": "GET /music/seaside_lazy_loop_40s.wav 无 Range → 200、content-type: audio/wav、accept-ranges: bytes、content-length = 5120044",
+          "completed": true,
+          "completed_at": "2026-10-30T07:17:25.675Z",
+          "evidence": "check_deploy.js 对 8090 实测：无 Range 200 + audio/wav + accept-ranges: bytes + content-length 5120044；Range bytes=0-1023 → 206 + content-range bytes 0-1023/5120044 + 1024 字节"
+        },
+        {
+          "id": "681d264b-274d-4afa-84ea-9f253485922b",
+          "text": "同一 URL 带 Range: bytes=0-1023 → 206、content-range: bytes 0-1023/5120044、正文 1024 字节",
+          "completed": true,
+          "completed_at": "2026-10-30T07:17:25.675Z",
+          "evidence": "check_deploy.js 对 8090 实测：无 Range 200 + audio/wav + accept-ranges: bytes + content-length 5120044；Range bytes=0-1023 → 206 + content-range bytes 0-1023/5120044 + 1024 字节"
+        },
+        {
+          "id": "329efbb7-8459-495e-a04d-4b966c48c3a8",
+          "text": "Range: bytes=99999999- → 416 且带 content-range: bytes */5120044",
+          "completed": true,
+          "completed_at": "2026-10-30T07:17:26.507Z",
+          "evidence": "Range bytes=99999999- → 416 + content-range: bytes */5120044（check_deploy.js 与 e2e_bgm.js 各验一次）"
+        },
+        {
+          "id": "92b67960-5989-43fd-a62b-b7780078569b",
+          "text": "node --test cloud/test/range.test.js 全过（覆盖无头/整段/后缀/越界/畸形/空文件，不写生产数据）",
+          "completed": true,
+          "completed_at": "2026-10-30T07:17:27.304Z",
+          "evidence": "node --test cloud/test/range.test.js → 9/9 通过（无头/整段/后缀/越界/畸形/多区间/空文件/头部文本）；单测抓到过一个真 bug：content-range 误用 '=' 当分隔符，已修成空格"
+        }
+      ],
+      "deliverables": [
+        {
+          "id": "0e229308-1ded-4f2e-929b-f6000ca08f24",
+          "text": "cloud/server/range.js（纯函数 parseRange）",
+          "completed": true
+        },
+        {
+          "id": "528c5dcf-c764-4ee0-b1b5-27a2ef61c9be",
+          "text": "cloud/server/index.js（serveFile 支持 206/416 + accept-ranges）",
+          "completed": true
+        },
+        {
+          "id": "245d4d40-d56f-489e-9794-a50d9f884aab",
+          "text": "cloud/test/range.test.js（node --test，仅导入纯函数）",
+          "completed": true
+        }
+      ],
+      "need_fix": [],
+      "assignee": null,
+      "blockers": [],
+      "dependencies": "",
+      "sub_items": [],
+      "related_files": [
+        "cloud/server/range.js",
+        "cloud/server/index.js",
+        "cloud/test/range.test.js"
+      ],
+      "notes": "",
+      "c7_verified": [],
+      "created_at": "2026-10-30T07:09:58.390Z",
+      "updated_at": "2026-10-30T07:17:28.899Z",
+      "completed_at": "2026-10-30T07:17:28.134Z",
+      "edges": [
+        "c69844a2-c801-4846-8f86-8432468eadce"
+      ]
+    },
+    "c69844a2-c801-4846-8f86-8432468eadce": {
+      "id": "c69844a2-c801-4846-8f86-8432468eadce",
+      "title": "多人页加入背景音乐播放器与静音开关",
+      "description": "多人页完全没有声音。新增 cloud/play/bgm.js，沿用单机版 music/bgm.js 的行为契约但要按多人页布局重排：按钮放在左列第三个位置（自身 14/14、附近 14/56、音乐 14/92），避免撞上右上连接角标与 touch.js 的收起开关（竖屏右上、横屏顶部居中）。\n\n行为：①进入游戏后才创建 Audio（preload 延迟，不在上传页拉 4.88MB）；②首次 keydown/pointerdown 或点按钮时同步 play()，被拦截只记状态不抛；③loop=true、音量常量 BGM_VOLUME=0.42、淡入；④静音开关记 localStorage，刷新后保持；⑤visibilitychange 隐藏时暂停、可见时按意愿恢复；⑥error 时隐藏按钮，不影响游戏。暴露 window.__play.bgm = {audio, muted, started, toggle, setMuted} 供验收。",
+      "status": "ready",
+      "priority": "top",
+      "success_criteria": [
+        {
+          "id": "44c4405b-f101-438f-bf8f-6b45cc4c5486",
+          "text": "390x844 进入游戏并派发一次 pointerdown 后 800ms 内：started=true、paused=false、currentTime>0、loop=true、音量为 0.42",
+          "completed": false
+        },
+        {
+          "id": "2dab7135-63ec-4070-958e-ce77fde23fc1",
+          "text": "点按钮静音 → muted=true 且 paused=true、localStorage 记录；刷新后仍静音且不自动出声；再点恢复播放",
+          "completed": false
+        },
+        {
+          "id": "3ee86779-c2c2-4a03-bb72-bb68da71f6f0",
+          "text": "派发 visibilitychange(hidden) 后 paused=true，(visible) 后 1 秒内 paused=false 且 currentTime 继续增长",
+          "completed": false
+        },
+        {
+          "id": "14807149-0298-4d24-96ca-92f0743fb5fa",
+          "text": "音乐按钮在竖屏/横屏都在视口内，且与三个 HUD、摇杆、ABXY、收起开关零重叠",
+          "completed": false
+        },
+        {
+          "id": "51fb74b3-1b45-48bb-b6e4-68f90be1e7ee",
+          "text": "把 audio.src 指向不存在文件并触发 error：按钮隐藏，connected 仍 true、快照 age<500ms、连续 5 帧画布像素一致",
+          "completed": false
+        }
+      ],
+      "deliverables": [
+        {
+          "id": "eb7d3463-0e20-4968-98bc-8a5d46a1e21a",
+          "text": "cloud/play/bgm.js（createBgm：手势播放 / 循环 / 静音记忆 / 可见性暂停 / 失败回落）",
+          "completed": false
+        },
+        {
+          "id": "cbf9eb87-14b1-4e1e-9d8b-ff0bd0b90593",
+          "text": "cloud/play/index.html（引入 bgm.js 与音乐按钮样式）",
+          "completed": false
+        }
+      ],
+      "need_fix": [],
+      "assignee": null,
+      "blockers": [
+        "47b2c99d-8366-4999-a91b-98022f357dbc"
+      ],
+      "dependencies": "播放器要能可靠取流与循环，前提是服务端先支持 Range；页面的播放验收也依赖 /music 音频按 206 可分段拉取。",
+      "sub_items": [],
+      "related_files": [
+        "cloud/play/bgm.js",
+        "cloud/play/index.html"
+      ],
+      "notes": "",
+      "c7_verified": [],
+      "created_at": "2026-10-30T07:09:58.464Z",
+      "updated_at": "2026-10-30T07:10:07.648Z",
+      "completed_at": null,
+      "edges": [
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1"
+      ]
+    },
+    "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1": {
+      "id": "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1",
+      "title": "为背景音乐补端到端验收（含单机版回归）",
+      "description": "为 REQ-000022 的 6 条条件写一份端到端验收：服务端侧用 HTTP 客户端读状态码与响应头（200 / 206 / 416）；页面侧用 CDP 打开真实 /play，断言首次手势后开始播放、静音记忆（含 refresh）、按钮与各控件零重叠（竖屏 + 横屏）、音频失败只隐藏按钮、切后台暂停回前台继续。结果按 condition 映射写 evidence/bgm.json，并顺带回归单机版 AC-000045/046（file:// 与零外链）。",
+      "status": "blocked",
+      "priority": "top",
+      "success_criteria": [
+        {
+          "id": "d40a96a0-6de5-4d5e-99bc-92d81c02ba32",
+          "text": "e2e_bgm.js 一次运行全 PASS 且退出码 0，输出 evidence/bgm.json（AC-000087…092 逐条实测值）",
+          "completed": false
+        },
+        {
+          "id": "d84931a1-539f-4210-ac40-4c37b3390447",
+          "text": "服务端三条 Range 断言实测：200 全量 5120044 字节 / 206 content-range 正确且正文 1024 字节 / 416 带 bytes */5120044",
+          "completed": false
+        },
+        {
+          "id": "2b6a360f-9429-4f2d-9d66-237160973208",
+          "text": "页面侧断言全部通过：手势后 800ms 内 started 且 currentTime>0；静音刷新后保持；两档视口按钮零重叠；audio error 后按钮隐藏而游戏不受影响；hidden 暂停 visible 恢复",
+          "completed": false
+        },
+        {
+          "id": "3e01b435-3acf-42a0-9686-62e91b0bc34d",
+          "text": "回归：e2e_multiplayer / e2e_control / e2e_touch_ui / e2e_camera 全部仍 PASS",
+          "completed": false
+        }
+      ],
+      "deliverables": [
+        {
+          "id": "3f1acf50-7386-4f80-b5ce-32d531d26a8a",
+          "text": "cloud/tools/e2e_bgm.js（Range 三态 + 页面播放/静音/布局/回落/可见性 共 6 类断言）",
+          "completed": false
+        },
+        {
+          "id": "ab5ce015-43aa-46b8-942d-83af975e27ef",
+          "text": "evidence/bgm.json（含 condition 映射与实测值）",
+          "completed": false
+        }
+      ],
+      "need_fix": [],
+      "assignee": null,
+      "blockers": [
+        "c69844a2-c801-4846-8f86-8432468eadce"
+      ],
+      "dependencies": "验收脚本要跑真实页面与真实播放状态，播放器没就位就无法断言 AC-000088…092。",
+      "sub_items": [],
+      "related_files": [
+        "cloud/tools/e2e_bgm.js",
+        "evidence/bgm.json"
+      ],
+      "notes": "",
+      "c7_verified": [],
+      "created_at": "2026-10-30T07:10:04.824Z",
+      "updated_at": "2026-10-30T07:10:10.225Z",
+      "completed_at": null,
+      "edges": [
+        "34feef52-6255-4354-8830-764da66920ca"
+      ]
+    },
+    "34feef52-6255-4354-8830-764da66920ca": {
+      "id": "34feef52-6255-4354-8830-764da66920ca",
+      "title": "闭环背景音乐台账、文档与部署断言",
+      "description": "把 REQ-000022 闭环：dev start/complete → 8 项验收执行登记（REQ-000022 六条 + REQ-000012 两条回归）→ 发布 → 关闭变更；同步文档（spec 新增「静态资源与音频」小节与 §13 条件行，README 加背景音乐小节）；跑 reqledger check 与 audit_spec_vs_ledger.py 到 0；部署到 8090 后做静态资源指纹核对（served sha256 = 本地文件）、/healthz、实例存活；最后 git 提交并推送。",
+      "status": "blocked",
+      "priority": "second",
+      "success_criteria": [
+        {
+          "id": "5bb8570b-d72c-4d70-8f34-9a20d1680287",
+          "text": "reqledger check issues 为空且 valid=true；python tools/audit_spec_vs_ledger.py 0 差异",
+          "completed": false
+        },
+        {
+          "id": "2e7fd466-5701-4823-bd5d-495d3bfda49b",
+          "text": "8 项重验全部登记「通过」并挂在同一 baseline 与 release（crab-coast-v13），change 已关闭",
+          "completed": false
+        },
+        {
+          "id": "6b54f416-f750-4fbd-8d09-4eb709dade5c",
+          "text": "部署后断言：/play/bgm.js、/play/index.html、/music/seaside_lazy_loop_40s.wav 三个资源的 served sha256 与本地一致；/healthz 200；8090 端口唯一实例存活",
+          "completed": false
+        },
+        {
+          "id": "67d8eda2-4360-4ec5-983c-8cb4c0ef7262",
+          "text": "git 工作区干净且提交已推送到 origin/main（记录提交号）",
+          "completed": false
+        }
+      ],
+      "deliverables": [
+        {
+          "id": "efe32d18-3aef-4d13-bf6f-0c409f8e2245",
+          "text": "requirements.md（CHG-000012 → 新基线 → REL-000013 闭环，8 项重验）",
+          "completed": false
+        },
+        {
+          "id": "7c3c43fd-cdb8-4096-9ef4-9200b5d271db",
+          "text": "spec_multiplayer-world.md（§8.5 静态资源与音频 Range、§13 新增条件行）",
+          "completed": false
+        },
+        {
+          "id": "5e8778e2-3ff2-4587-8bb7-c1852e2541f4",
+          "text": "cloud/README.md（背景音乐小节：服务端 Range + 播放器行为 + 验收命令）",
+          "completed": false
+        }
+      ],
+      "need_fix": [],
+      "assignee": null,
+      "blockers": [
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1"
+      ],
+      "dependencies": "闭环要把 8 项验收登记为执行结果，必须先有 e2e_bgm.js 全绿的实测证据。",
+      "sub_items": [],
+      "related_files": [
+        "requirements.md",
+        "spec_multiplayer-world.md",
+        "cloud/README.md"
+      ],
+      "notes": "",
+      "c7_verified": [],
+      "created_at": "2026-10-30T07:10:04.871Z",
+      "updated_at": "2026-10-30T07:10:11.869Z",
       "completed_at": null,
       "edges": []
     }
@@ -910,10 +1215,7 @@
   "indexes": {
     "byStatus": {
       "ready": [
-        "f4fce027-fb2d-4ce8-b512-ead3467271b9",
-        "b1487afc-05f6-4833-b73b-4df601d03014",
-        "11407a17-4c10-4ec1-abf0-862f5679eb3a",
-        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
+        "c69844a2-c801-4846-8f86-8432468eadce"
       ],
       "in_progress": [],
       "in_review": [],
@@ -925,9 +1227,17 @@
         "6567f110-8d78-4702-8090-7073c52da894",
         "0632fb40-4596-4697-ae3c-1685ddab8e10",
         "da5addbc-9192-4f65-ab2b-dbffde63db60",
-        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f",
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9",
+        "b1487afc-05f6-4833-b73b-4df601d03014",
+        "11407a17-4c10-4ec1-abf0-862f5679eb3a",
+        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9",
+        "47b2c99d-8366-4999-a91b-98022f357dbc"
       ],
-      "blocked": []
+      "blocked": [
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1",
+        "34feef52-6255-4354-8830-764da66920ca"
+      ]
     },
     "byPriority": {
       "top": [
@@ -938,13 +1248,17 @@
         "8488f778-3790-4d4d-b5a3-a5a9de3de67f",
         "f4fce027-fb2d-4ce8-b512-ead3467271b9",
         "b1487afc-05f6-4833-b73b-4df601d03014",
-        "11407a17-4c10-4ec1-abf0-862f5679eb3a"
+        "11407a17-4c10-4ec1-abf0-862f5679eb3a",
+        "47b2c99d-8366-4999-a91b-98022f357dbc",
+        "c69844a2-c801-4846-8f86-8432468eadce",
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1"
       ],
       "second": [
         "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
         "e0ca26b0-bf17-4955-87e6-f996023bd914",
         "da5addbc-9192-4f65-ab2b-dbffde63db60",
-        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
+        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9",
+        "34feef52-6255-4354-8830-764da66920ca"
       ],
       "later": []
     },
@@ -953,16 +1267,10 @@
       "6567f110-8d78-4702-8090-7073c52da894",
       "8488f778-3790-4d4d-b5a3-a5a9de3de67f",
       "f4fce027-fb2d-4ce8-b512-ead3467271b9",
-      "b1487afc-05f6-4833-b73b-4df601d03014",
-      "11407a17-4c10-4ec1-abf0-862f5679eb3a",
-      "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
+      "47b2c99d-8366-4999-a91b-98022f357dbc"
     ],
     "orphanTasks": [
-      "8488f778-3790-4d4d-b5a3-a5a9de3de67f",
-      "f4fce027-fb2d-4ce8-b512-ead3467271b9",
-      "b1487afc-05f6-4833-b73b-4df601d03014",
-      "11407a17-4c10-4ec1-abf0-862f5679eb3a",
-      "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
+      "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
     ],
     "searchText": {
       "0": [
@@ -972,7 +1280,9 @@
         "0632fb40-4596-4697-ae3c-1685ddab8e10",
         "da5addbc-9192-4f65-ab2b-dbffde63db60",
         "11407a17-4c10-4ec1-abf0-862f5679eb3a",
-        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
+        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9",
+        "c69844a2-c801-4846-8f86-8432468eadce",
+        "34feef52-6255-4354-8830-764da66920ca"
       ],
       "1": [
         "e0ca26b0-bf17-4955-87e6-f996023bd914",
@@ -996,17 +1306,29 @@
         "9542948d-664d-4498-9622-625a3571036b",
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
         "e0ca26b0-bf17-4955-87e6-f996023bd914",
-        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f",
+        "47b2c99d-8366-4999-a91b-98022f357dbc",
+        "c69844a2-c801-4846-8f86-8432468eadce"
       ],
       "6": [
         "9542948d-664d-4498-9622-625a3571036b",
-        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1"
+      ],
+      "8": [
+        "34feef52-6255-4354-8830-764da66920ca"
       ],
       "10": [
         "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
       ],
       "12": [
         "133c8431-492c-4a02-a6fc-dd07dce13ade"
+      ],
+      "13": [
+        "34feef52-6255-4354-8830-764da66920ca"
+      ],
+      "14": [
+        "c69844a2-c801-4846-8f86-8432468eadce"
       ],
       "17": [
         "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
@@ -1017,11 +1339,17 @@
       "40": [
         "133c8431-492c-4a02-a6fc-dd07dce13ade"
       ],
+      "42": [
+        "c69844a2-c801-4846-8f86-8432468eadce"
+      ],
       "46": [
         "133c8431-492c-4a02-a6fc-dd07dce13ade"
       ],
       "50": [
         "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+      ],
+      "56": [
+        "c69844a2-c801-4846-8f86-8432468eadce"
       ],
       "60": [
         "11407a17-4c10-4ec1-abf0-862f5679eb3a"
@@ -1040,6 +1368,9 @@
         "9542948d-664d-4498-9622-625a3571036b",
         "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
       ],
+      "92": [
+        "c69844a2-c801-4846-8f86-8432468eadce"
+      ],
       "96": [
         "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
       ],
@@ -1055,11 +1386,20 @@
       "197": [
         "133c8431-492c-4a02-a6fc-dd07dce13ade"
       ],
+      "198": [
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+      ],
       "200": [
         "6567f110-8d78-4702-8090-7073c52da894",
         "da5addbc-9192-4f65-ab2b-dbffde63db60",
         "8488f778-3790-4d4d-b5a3-a5a9de3de67f",
-        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9",
+        "47b2c99d-8366-4999-a91b-98022f357dbc",
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1"
+      ],
+      "206": [
+        "47b2c99d-8366-4999-a91b-98022f357dbc",
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1"
       ],
       "224": [
         "6567f110-8d78-4702-8090-7073c52da894"
@@ -1075,14 +1415,24 @@
         "da5addbc-9192-4f65-ab2b-dbffde63db60",
         "f4fce027-fb2d-4ce8-b512-ead3467271b9"
       ],
+      "416": [
+        "47b2c99d-8366-4999-a91b-98022f357dbc",
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1"
+      ],
       "540": [
         "0632fb40-4596-4697-ae3c-1685ddab8e10"
+      ],
+      "685": [
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
       ],
       "960": [
         "0632fb40-4596-4697-ae3c-1685ddab8e10"
       ],
       "1008": [
         "b1487afc-05f6-4833-b73b-4df601d03014"
+      ],
+      "8090": [
+        "34feef52-6255-4354-8830-764da66920ca"
       ],
       "10000": [
         "da5addbc-9192-4f65-ab2b-dbffde63db60"
@@ -1092,19 +1442,24 @@
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
         "e0ca26b0-bf17-4955-87e6-f996023bd914",
         "da5addbc-9192-4f65-ab2b-dbffde63db60",
-        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f",
+        "47b2c99d-8366-4999-a91b-98022f357dbc",
+        "c69844a2-c801-4846-8f86-8432468eadce"
       ],
       "play": [
         "9542948d-664d-4498-9622-625a3571036b",
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
         "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
-        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f",
+        "c69844a2-c801-4846-8f86-8432468eadce",
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1"
       ],
       "touch": [
         "9542948d-664d-4498-9622-625a3571036b",
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
         "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
-        "e0ca26b0-bf17-4955-87e6-f996023bd914"
+        "e0ca26b0-bf17-4955-87e6-f996023bd914",
+        "c69844a2-c801-4846-8f86-8432468eadce"
       ],
       "js": [
         "9542948d-664d-4498-9622-625a3571036b",
@@ -1113,7 +1468,9 @@
         "6567f110-8d78-4702-8090-7073c52da894",
         "da5addbc-9192-4f65-ab2b-dbffde63db60",
         "8488f778-3790-4d4d-b5a3-a5a9de3de67f",
-        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9",
+        "47b2c99d-8366-4999-a91b-98022f357dbc",
+        "c69844a2-c801-4846-8f86-8432468eadce"
       ],
       "controls": [
         "9542948d-664d-4498-9622-625a3571036b"
@@ -1147,7 +1504,8 @@
       ],
       "null": [
         "9542948d-664d-4498-9622-625a3571036b",
-        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "47b2c99d-8366-4999-a91b-98022f357dbc"
       ],
       "oncollapse": [
         "9542948d-664d-4498-9622-625a3571036b"
@@ -1220,10 +1578,13 @@
         "da5addbc-9192-4f65-ab2b-dbffde63db60",
         "8488f778-3790-4d4d-b5a3-a5a9de3de67f",
         "11407a17-4c10-4ec1-abf0-862f5679eb3a",
-        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
+        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9",
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1",
+        "34feef52-6255-4354-8830-764da66920ca"
       ],
       "000012": [
-        "9542948d-664d-4498-9622-625a3571036b"
+        "9542948d-664d-4498-9622-625a3571036b",
+        "34feef52-6255-4354-8830-764da66920ca"
       ],
       "asset": [
         "9542948d-664d-4498-9622-625a3571036b"
@@ -1236,7 +1597,8 @@
       ],
       "a": [
         "9542948d-664d-4498-9622-625a3571036b",
-        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
       ],
       "390x844": [
         "9542948d-664d-4498-9622-625a3571036b",
@@ -1254,7 +1616,8 @@
       ],
       "git": [
         "9542948d-664d-4498-9622-625a3571036b",
-        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
+        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9",
+        "34feef52-6255-4354-8830-764da66920ca"
       ],
       "diff": [
         "9542948d-664d-4498-9622-625a3571036b"
@@ -1263,7 +1626,8 @@
         "9542948d-664d-4498-9622-625a3571036b",
         "e0ca26b0-bf17-4955-87e6-f996023bd914",
         "da5addbc-9192-4f65-ab2b-dbffde63db60",
-        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f",
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1"
       ],
       "touch_layer": [
         "9542948d-664d-4498-9622-625a3571036b"
@@ -1272,7 +1636,8 @@
         "9542948d-664d-4498-9622-625a3571036b",
         "e0ca26b0-bf17-4955-87e6-f996023bd914",
         "da5addbc-9192-4f65-ab2b-dbffde63db60",
-        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f",
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1"
       ],
       "t4": [
         "9542948d-664d-4498-9622-625a3571036b",
@@ -1283,7 +1648,8 @@
       ],
       "index": [
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
-        "a893cd25-ca7e-46e7-9839-eb7c2f196c85"
+        "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
+        "47b2c99d-8366-4999-a91b-98022f357dbc"
       ],
       "html": [
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
@@ -1299,7 +1665,8 @@
         "133c8431-492c-4a02-a6fc-dd07dce13ade"
       ],
       "pointerdown": [
-        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "c69844a2-c801-4846-8f86-8432468eadce"
       ],
       "pointerup": [
         "133c8431-492c-4a02-a6fc-dd07dce13ade"
@@ -1308,7 +1675,8 @@
         "133c8431-492c-4a02-a6fc-dd07dce13ade"
       ],
       "__play": [
-        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "c69844a2-c801-4846-8f86-8432468eadce"
       ],
       "sendintent": [
         "133c8431-492c-4a02-a6fc-dd07dce13ade"
@@ -1320,10 +1688,12 @@
       "x": [
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
         "e0ca26b0-bf17-4955-87e6-f996023bd914",
-        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+        "0632fb40-4596-4697-ae3c-1685ddab8e10",
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
       ],
       "b": [
-        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
       ],
       "74px": [
         "133c8431-492c-4a02-a6fc-dd07dce13ade"
@@ -1364,7 +1734,8 @@
         "e0ca26b0-bf17-4955-87e6-f996023bd914"
       ],
       "true": [
-        "133c8431-492c-4a02-a6fc-dd07dce13ade"
+        "133c8431-492c-4a02-a6fc-dd07dce13ade",
+        "c69844a2-c801-4846-8f86-8432468eadce"
       ],
       "display": [
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
@@ -1480,7 +1851,8 @@
       "dev": [
         "e0ca26b0-bf17-4955-87e6-f996023bd914",
         "da5addbc-9192-4f65-ab2b-dbffde63db60",
-        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
+        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9",
+        "34feef52-6255-4354-8830-764da66920ca"
       ],
       "touch_ui": [
         "e0ca26b0-bf17-4955-87e6-f996023bd914"
@@ -1488,7 +1860,8 @@
       "websocket": [
         "6567f110-8d78-4702-8090-7073c52da894",
         "f4fce027-fb2d-4ce8-b512-ead3467271b9",
-        "b1487afc-05f6-4833-b73b-4df601d03014"
+        "b1487afc-05f6-4833-b73b-4df601d03014",
+        "47b2c99d-8366-4999-a91b-98022f357dbc"
       ],
       "ws": [
         "6567f110-8d78-4702-8090-7073c52da894",
@@ -1577,7 +1950,8 @@
       ],
       "cdp": [
         "da5addbc-9192-4f65-ab2b-dbffde63db60",
-        "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
+        "8488f778-3790-4d4d-b5a3-a5a9de3de67f",
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1"
       ],
       "2px": [
         "da5addbc-9192-4f65-ab2b-dbffde63db60"
@@ -1608,7 +1982,8 @@
         "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
       ],
       "condition": [
-        "da5addbc-9192-4f65-ab2b-dbffde63db60"
+        "da5addbc-9192-4f65-ab2b-dbffde63db60",
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1"
       ],
       "base": [
         "8488f778-3790-4d4d-b5a3-a5a9de3de67f"
@@ -1644,7 +2019,8 @@
       ],
       "check": [
         "8488f778-3790-4d4d-b5a3-a5a9de3de67f",
-        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
+        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9",
+        "34feef52-6255-4354-8830-764da66920ca"
       ],
       "buildstate": [
         "f4fce027-fb2d-4ce8-b512-ead3467271b9"
@@ -1662,6 +2038,15 @@
         "f4fce027-fb2d-4ce8-b512-ead3467271b9"
       ],
       "radius_margin": [
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+      ],
+      "700px": [
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+      ],
+      "490px": [
+        "f4fce027-fb2d-4ce8-b512-ead3467271b9"
+      ],
+      "480px": [
         "f4fce027-fb2d-4ce8-b512-ead3467271b9"
       ],
       "onclose": [
@@ -1686,7 +2071,8 @@
         "b1487afc-05f6-4833-b73b-4df601d03014"
       ],
       "visibilitychange": [
-        "b1487afc-05f6-4833-b73b-4df601d03014"
+        "b1487afc-05f6-4833-b73b-4df601d03014",
+        "c69844a2-c801-4846-8f86-8432468eadce"
       ],
       "pageshow": [
         "b1487afc-05f6-4833-b73b-4df601d03014"
@@ -1749,28 +2135,160 @@
         "11407a17-4c10-4ec1-abf0-862f5679eb3a"
       ],
       "start": [
-        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
+        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9",
+        "47b2c99d-8366-4999-a91b-98022f357dbc",
+        "34feef52-6255-4354-8830-764da66920ca"
       ],
       "complete": [
-        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
+        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9",
+        "34feef52-6255-4354-8830-764da66920ca"
       ],
       "v12": [
         "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
       ],
       "readme": [
-        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
+        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9",
+        "34feef52-6255-4354-8830-764da66920ca"
       ],
       "spec": [
-        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
+        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9",
+        "34feef52-6255-4354-8830-764da66920ca"
       ],
       "reqledger": [
-        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
+        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9",
+        "34feef52-6255-4354-8830-764da66920ca"
       ],
       "audit_spec_vs_ledger": [
-        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
+        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9",
+        "34feef52-6255-4354-8830-764da66920ca"
       ],
       "py": [
-        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
+        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9",
+        "34feef52-6255-4354-8830-764da66920ca"
+      ],
+      "http": [
+        "47b2c99d-8366-4999-a91b-98022f357dbc",
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1"
+      ],
+      "range": [
+        "47b2c99d-8366-4999-a91b-98022f357dbc"
+      ],
+      "server": [
+        "47b2c99d-8366-4999-a91b-98022f357dbc"
+      ],
+      "servefile": [
+        "47b2c99d-8366-4999-a91b-98022f357dbc"
+      ],
+      "readfile": [
+        "47b2c99d-8366-4999-a91b-98022f357dbc"
+      ],
+      "88mb": [
+        "47b2c99d-8366-4999-a91b-98022f357dbc",
+        "c69844a2-c801-4846-8f86-8432468eadce"
+      ],
+      "wav": [
+        "47b2c99d-8366-4999-a91b-98022f357dbc"
+      ],
+      "accept": [
+        "47b2c99d-8366-4999-a91b-98022f357dbc"
+      ],
+      "ranges": [
+        "47b2c99d-8366-4999-a91b-98022f357dbc"
+      ],
+      "parserange": [
+        "47b2c99d-8366-4999-a91b-98022f357dbc"
+      ],
+      "header": [
+        "47b2c99d-8366-4999-a91b-98022f357dbc"
+      ],
+      "size": [
+        "47b2c99d-8366-4999-a91b-98022f357dbc"
+      ],
+      "end": [
+        "47b2c99d-8366-4999-a91b-98022f357dbc"
+      ],
+      "unsatisfiable": [
+        "47b2c99d-8366-4999-a91b-98022f357dbc"
+      ],
+      "content": [
+        "47b2c99d-8366-4999-a91b-98022f357dbc"
+      ],
+      "bytes": [
+        "47b2c99d-8366-4999-a91b-98022f357dbc"
+      ],
+      "api": [
+        "47b2c99d-8366-4999-a91b-98022f357dbc"
+      ],
+      "bgm": [
+        "c69844a2-c801-4846-8f86-8432468eadce",
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1"
+      ],
+      "music": [
+        "c69844a2-c801-4846-8f86-8432468eadce"
+      ],
+      "audio": [
+        "c69844a2-c801-4846-8f86-8432468eadce"
+      ],
+      "preload": [
+        "c69844a2-c801-4846-8f86-8432468eadce"
+      ],
+      "keydown": [
+        "c69844a2-c801-4846-8f86-8432468eadce"
+      ],
+      "loop": [
+        "c69844a2-c801-4846-8f86-8432468eadce"
+      ],
+      "bgm_volume": [
+        "c69844a2-c801-4846-8f86-8432468eadce"
+      ],
+      "localstorage": [
+        "c69844a2-c801-4846-8f86-8432468eadce"
+      ],
+      "error": [
+        "c69844a2-c801-4846-8f86-8432468eadce"
+      ],
+      "window": [
+        "c69844a2-c801-4846-8f86-8432468eadce"
+      ],
+      "muted": [
+        "c69844a2-c801-4846-8f86-8432468eadce"
+      ],
+      "started": [
+        "c69844a2-c801-4846-8f86-8432468eadce"
+      ],
+      "toggle": [
+        "c69844a2-c801-4846-8f86-8432468eadce"
+      ],
+      "setmuted": [
+        "c69844a2-c801-4846-8f86-8432468eadce"
+      ],
+      "000022": [
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1",
+        "34feef52-6255-4354-8830-764da66920ca"
+      ],
+      "refresh": [
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1"
+      ],
+      "ac": [
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1"
+      ],
+      "000045": [
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1"
+      ],
+      "046": [
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1"
+      ],
+      "file": [
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1"
+      ],
+      "served": [
+        "34feef52-6255-4354-8830-764da66920ca"
+      ],
+      "sha256": [
+        "34feef52-6255-4354-8830-764da66920ca"
+      ],
+      "healthz": [
+        "34feef52-6255-4354-8830-764da66920ca"
       ]
     },
     "files": {
@@ -1800,7 +2318,8 @@
         "133c8431-492c-4a02-a6fc-dd07dce13ade",
         "a893cd25-ca7e-46e7-9839-eb7c2f196c85",
         "e0ca26b0-bf17-4955-87e6-f996023bd914",
-        "0632fb40-4596-4697-ae3c-1685ddab8e10"
+        "0632fb40-4596-4697-ae3c-1685ddab8e10",
+        "c69844a2-c801-4846-8f86-8432468eadce"
       ],
       "cloud/tools/e2e_touch_ui.js": [
         "e0ca26b0-bf17-4955-87e6-f996023bd914"
@@ -1809,7 +2328,8 @@
         "e0ca26b0-bf17-4955-87e6-f996023bd914",
         "da5addbc-9192-4f65-ab2b-dbffde63db60",
         "8488f778-3790-4d4d-b5a3-a5a9de3de67f",
-        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
+        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9",
+        "34feef52-6255-4354-8830-764da66920ca"
       ],
       "tools/audit_spec_vs_ledger.py": [
         "e0ca26b0-bf17-4955-87e6-f996023bd914",
@@ -1856,10 +2376,30 @@
         "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
       ],
       "spec_multiplayer-world.md": [
-        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
+        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9",
+        "34feef52-6255-4354-8830-764da66920ca"
       ],
       "cloud/README.md": [
-        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9"
+        "1d443ef2-fd8b-41d9-ab75-89b409d27fa9",
+        "34feef52-6255-4354-8830-764da66920ca"
+      ],
+      "cloud/server/range.js": [
+        "47b2c99d-8366-4999-a91b-98022f357dbc"
+      ],
+      "cloud/server/index.js": [
+        "47b2c99d-8366-4999-a91b-98022f357dbc"
+      ],
+      "cloud/test/range.test.js": [
+        "47b2c99d-8366-4999-a91b-98022f357dbc"
+      ],
+      "cloud/play/bgm.js": [
+        "c69844a2-c801-4846-8f86-8432468eadce"
+      ],
+      "cloud/tools/e2e_bgm.js": [
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1"
+      ],
+      "evidence/bgm.json": [
+        "2d05133e-4b08-4f8b-9df0-fcf7bdf459f1"
       ]
     }
   }

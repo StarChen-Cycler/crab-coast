@@ -91,9 +91,17 @@
     bg = await loadImage('/assets/bg_base.png');
     fit();
     mountTouchControls();
+    mountBgm();
     started = true;
     connect();
     requestAnimationFrame(loop);
+  }
+
+  /** 背景音乐（REQ-000022）：进入游戏后才建 Audio，上传页不去拉 4.88MB 音频。 */
+  let bgmCtl = null;
+  function mountBgm() {
+    if (bgmCtl || typeof window.createBgm !== 'function') return;
+    try { bgmCtl = window.createBgm({ onState: () => {} }); } catch { bgmCtl = null; }
   }
 
   /** 世界尺寸与半径上限（服务端仍是权威；这里只用于相机与半径推导）。 */
@@ -494,6 +502,7 @@
     worldToScreen,
     cameraTarget,               // 纯函数：四向边界与「视野大于世界」的单元断言
     renderPos,                  // 当前帧的插值位置（逐帧采样用）
+    get bgm() { return bgmCtl; },   // 背景音乐控制器（AC-000088…092）
     // 测试钩子：主动断开 WebSocket，用来验证自动重连（AC-000044）
     _drop() { if (ws) ws.close(); },
     // 测试钩子：模拟半开连接——不派发 close，也不再有任何数据（AC-000078）
